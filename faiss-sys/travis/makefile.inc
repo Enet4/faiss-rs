@@ -9,8 +9,8 @@
 # tested on CentOS 7, Ubuntu 16 and Ubuntu 14, see below to adjust flags to distribution.
 
 
-CC=gcc
-CXX=g++
+CC=gcc-6
+CXX=g++-6
 
 CFLAGS=-fPIC -m64 -Wall -g -O3 -mavx -msse4 -mpopcnt -fopenmp -Wno-sign-compare
 CXXFLAGS=$(CFLAGS) -std=c++11
@@ -68,7 +68,7 @@ FAISSSHAREDFLAGS=-shared
 BLASCFLAGS=-DFINTEGER=int
 
 # This is for Centos:
-BLASLDFLAGS?=/usr/lib64/libopenblas.so.0
+# BLASLDFLAGS?=/usr/lib64/libopenblas.so.0
 
 # for Ubuntu 16:
 # sudo apt-get install libopenblas-dev python-numpy python-dev
@@ -76,7 +76,7 @@ BLASLDFLAGS?=/usr/lib64/libopenblas.so.0
 
 # for Ubuntu 14:
 # sudo apt-get install libopenblas-dev liblapack3 python-numpy python-dev
-# BLASLDFLAGS?=/usr/lib/libopenblas.so.0 /usr/lib/lapack/liblapack.so.3.0
+BLASLDFLAGS?=/usr/lib/libopenblas.so.0 /usr/lib/lapack/liblapack.so.3.0
 #
 # 3. Atlas
 #

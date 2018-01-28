@@ -1,9 +1,29 @@
 language: rust
+sudo: true
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+
+before_install:
+    - sudo apt-get update
+    - sudo apt-get install -y g++-6 make libopenblas-dev liblapack3
+
 rust:
   - stable
   - beta
   - nightly
-script: cargo test --all
+
+before_script:
+  - cd ${TRAVIS_BUILD_DIR}/faiss-sys && ./travis/install_faiss_c.sh
+  - sudo cp $HOME/.faiss_c/libfaiss_c.so /usr/lib/
+
+script:
+ - cd ${TRAVIS_BUILD_DIR}/faiss-sys && cargo test
+ - cd ${TRAVIS_BUILD_DIR} && cargo test
+
+env:
 matrix:
   allow_failures:
     - rust: nightly
