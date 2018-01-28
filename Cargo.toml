@@ -1,0 +1,10 @@
+[package]
+name = "faiss"
+version = "0.1.0"
+authors = ["Eduardo Pinho <enet4mikeenet@gmail.com>"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/Enet4/faiss-rs"
+
+[dependencies.faiss-sys]
+version = "0.1.0"
+path = "faiss-sys"
