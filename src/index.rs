@@ -255,6 +255,9 @@ impl Index for IndexImpl {
     }
 }
 
+/// Use the index factory to create a native instance of a Faiss index, for `d`-dimensional
+/// vectors. `description` should follows the exact guidelines as the native Faiss interface
+/// (see the [Faiss wiki](https://github.com/facebookresearch/faiss/wiki/Faiss-indexes) for examples).
 pub fn index_factory<D: AsRef<str>>(d: u32, description: D, metric: MetricType) -> Result<IndexImpl> {
     unsafe {
         let metric = metric as c_uint;
