@@ -1087,3 +1087,314 @@ extern "C" {
         v: *const f32,
     ) -> ::std::os::raw::c_int;
 }
+pub const FaissIndicesOptions_INDICES_CPU: FaissIndicesOptions = 0;
+pub const FaissIndicesOptions_INDICES_IVF: FaissIndicesOptions = 1;
+pub const FaissIndicesOptions_INDICES_32_BIT: FaissIndicesOptions = 2;
+pub const FaissIndicesOptions_INDICES_64_BIT: FaissIndicesOptions = 3;
+pub type FaissIndicesOptions = u32;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct FaissGpuClonerOptions_H {
+    _unused: [u8; 0],
+}
+pub type FaissGpuClonerOptions = FaissGpuClonerOptions_H;
+extern "C" {
+    pub fn faiss_GpuClonerOptions_free(obj: *mut FaissGpuClonerOptions);
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_new(
+        arg1: *mut *mut FaissGpuClonerOptions,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_indicesOptions(
+        arg1: *const FaissGpuClonerOptions,
+    ) -> FaissIndicesOptions;
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_set_indicesOptions(
+        arg1: *mut FaissGpuClonerOptions,
+        arg2: FaissIndicesOptions,
+    );
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_useFloat16CoarseQuantizer(
+        arg1: *const FaissGpuClonerOptions,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_set_useFloat16CoarseQuantizer(
+        arg1: *mut FaissGpuClonerOptions,
+        arg2: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_useFloat16(
+        arg1: *const FaissGpuClonerOptions,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_set_useFloat16(
+        arg1: *mut FaissGpuClonerOptions,
+        arg2: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_usePrecomputed(
+        arg1: *const FaissGpuClonerOptions,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_set_usePrecomputed(
+        arg1: *mut FaissGpuClonerOptions,
+        arg2: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_reserveVecs(
+        arg1: *const FaissGpuClonerOptions,
+    ) -> ::std::os::raw::c_long;
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_set_reserveVecs(
+        arg1: *mut FaissGpuClonerOptions,
+        arg2: ::std::os::raw::c_long,
+    );
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_storeTransposed(
+        arg1: *const FaissGpuClonerOptions,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_set_storeTransposed(
+        arg1: *mut FaissGpuClonerOptions,
+        arg2: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_verbose(
+        arg1: *const FaissGpuClonerOptions,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_GpuClonerOptions_set_verbose(
+        arg1: *mut FaissGpuClonerOptions,
+        arg2: ::std::os::raw::c_int,
+    );
+}
+pub type FaissGpuMultipleClonerOptions = FaissGpuClonerOptions_H;
+extern "C" {
+    pub fn faiss_GpuMultipleClonerOptions_shard(
+        arg1: *const FaissGpuMultipleClonerOptions,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_GpuMultipleClonerOptions_set_shard(
+        arg1: *mut FaissGpuMultipleClonerOptions,
+        arg2: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn faiss_GpuMultipleClonerOptions_shard_type(
+        arg1: *const FaissGpuMultipleClonerOptions,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_GpuMultipleClonerOptions_set_shard_type(
+        arg1: *mut FaissGpuMultipleClonerOptions,
+        arg2: ::std::os::raw::c_int,
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct CUstream_st {
+    _unused: [u8; 0],
+}
+/// CUDA stream
+pub type cudaStream_t = *mut CUstream_st;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct cublasContext {
+    _unused: [u8; 0],
+}
+pub type cublasHandle_t = *mut cublasContext;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct FaissGpuResources_H {
+    _unused: [u8; 0],
+}
+pub type FaissGpuResources = FaissGpuResources_H;
+extern "C" {
+    pub fn faiss_GpuResources_free(obj: *mut FaissGpuResources);
+}
+extern "C" {
+    /// Call to pre-allocate resources for a particular device. If this is
+    /// not called, then resources will be allocated at the first time
+    /// of demand
+    pub fn faiss_GpuResources_initializeForDevice(
+        arg1: *mut FaissGpuResources,
+        arg2: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Returns the cuBLAS handle that we use for the given device
+    pub fn faiss_GpuResources_getBlasHandle(
+        arg1: *mut FaissGpuResources,
+        arg2: ::std::os::raw::c_int,
+        arg3: *mut cublasHandle_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Returns the stream that we order all computation on for the
+    /// given device
+    pub fn faiss_GpuResources_getDefaultStream(
+        arg1: *mut FaissGpuResources,
+        arg2: ::std::os::raw::c_int,
+        arg3: *mut cudaStream_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Returns the available CPU pinned memory buffer
+    pub fn faiss_GpuResources_getPinnedMemory(
+        arg1: *mut FaissGpuResources,
+        arg2: *mut *mut ::std::os::raw::c_void,
+        arg3: *mut usize,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Returns the stream on which we perform async CPU <-> GPU copies
+    pub fn faiss_GpuResources_getAsyncCopyStream(
+        arg1: *mut FaissGpuResources,
+        arg2: ::std::os::raw::c_int,
+        arg3: *mut cudaStream_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Calls getBlasHandle with the current device
+    pub fn faiss_GpuResources_getBlasHandleCurrentDevice(
+        arg1: *mut FaissGpuResources,
+        arg2: *mut cublasHandle_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Calls getDefaultStream with the current device
+    pub fn faiss_GpuResources_getDefaultStreamCurrentDevice(
+        arg1: *mut FaissGpuResources,
+        arg2: *mut cudaStream_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Synchronizes the CPU with respect to the default stream for the
+    /// given device
+    pub fn faiss_GpuResources_syncDefaultStream(
+        arg1: *mut FaissGpuResources,
+        arg2: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Calls syncDefaultStream for the current device
+    pub fn faiss_GpuResources_syncDefaultStreamCurrentDevice(
+        arg1: *mut FaissGpuResources,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Calls getAsyncCopyStream for the current device
+    pub fn faiss_GpuResources_getAsyncCopyStreamCurrentDevice(
+        arg1: *mut FaissGpuResources,
+        arg2: *mut cudaStream_t,
+    ) -> ::std::os::raw::c_int;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct FaissGpuIndexConfig_H {
+    _unused: [u8; 0],
+}
+pub type FaissGpuIndexConfig = FaissGpuIndexConfig_H;
+extern "C" {
+    pub fn faiss_GpuIndexConfig_device(arg1: *const FaissGpuIndexConfig) -> ::std::os::raw::c_int;
+}
+pub type FaissGpuIndex = FaissIndex_H;
+extern "C" {
+    /// converts any GPU index inside gpu_index to a CPU index
+    pub fn faiss_index_gpu_to_cpu(
+        gpu_index: *const FaissIndex,
+        p_out: *mut *mut FaissIndex,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// converts any CPU index that can be converted to GPU
+    pub fn faiss_index_cpu_to_gpu(
+        resources: *mut FaissGpuResources,
+        device: ::std::os::raw::c_int,
+        index: *const FaissIndex,
+        p_out: *mut *mut FaissGpuIndex,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// converts any CPU index that can be converted to GPU
+    pub fn faiss_index_cpu_to_gpu_with_options(
+        resources: *mut FaissGpuResources,
+        device: ::std::os::raw::c_int,
+        index: *const FaissIndex,
+        options: *const FaissGpuClonerOptions,
+        p_out: *mut *mut FaissGpuIndex,
+    ) -> ::std::os::raw::c_int;
+}
+pub type FaissGpuParameterSpace = FaissParameterSpace_H;
+pub type FaissStandardGpuResources = FaissGpuResources_H;
+extern "C" {
+    pub fn faiss_StandardGpuResources_free(obj: *mut FaissStandardGpuResources);
+}
+extern "C" {
+    /// Default constructor for StandardGpuResources
+    pub fn faiss_StandardGpuResources_new(
+        arg1: *mut *mut FaissStandardGpuResources,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Disable allocation of temporary memory; all temporary memory
+    /// requests will call cudaMalloc / cudaFree at the point of use
+    pub fn faiss_StandardGpuResources_noTempMemory(
+        arg1: *mut FaissStandardGpuResources,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Specify that we wish to use a certain fixed size of memory on
+    /// all devices as temporary memory
+    pub fn faiss_StandardGpuResources_setTempMemory(
+        arg1: *mut FaissStandardGpuResources,
+        size: usize,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Specify that we wish to use a certain fraction of memory on
+    /// all devices as temporary memory
+    pub fn faiss_StandardGpuResources_setTempMemoryFraction(
+        arg1: *mut FaissStandardGpuResources,
+        fraction: f32,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Set amount of pinned memory to allocate, for async GPU <-> CPU
+    /// transfers
+    pub fn faiss_StandardGpuResources_setPinnedMemory(
+        arg1: *mut FaissStandardGpuResources,
+        size: usize,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Called to change the stream for work ordering
+    pub fn faiss_StandardGpuResources_setDefaultStream(
+        arg1: *mut FaissStandardGpuResources,
+        device: ::std::os::raw::c_int,
+        stream: cudaStream_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// Called to change the work ordering streams to the null stream
+    /// for all devices
+    pub fn faiss_StandardGpuResources_setDefaultNullStreamAllDevices(
+        arg1: *mut FaissStandardGpuResources,
+    ) -> ::std::os::raw::c_int;
+}

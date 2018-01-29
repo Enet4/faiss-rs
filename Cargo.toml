@@ -1,14 +1,20 @@
 [package]
 name = "faiss"
+description = "High-level bindings for Faiss, the vector similarity search engine"
 version = "0.1.0"
 authors = ["Eduardo Pinho <enet4mikeenet@gmail.com>"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/Enet4/faiss-rs"
 categories = ["algorithms"]
 keywords = ["similarity search", "cbir", "clustering", "index"]
+readme = "README.md"
 
 [features]
 gpu = ["faiss-sys/gpu"]
+
+[badges.travis-ci]
+branch = "master"
+repository = "Enet4/faiss-rs"
 
 [dependencies.faiss-sys]
 version = "0.1.0"

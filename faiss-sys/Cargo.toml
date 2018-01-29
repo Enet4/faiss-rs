@@ -1,5 +1,6 @@
 [package]
 name = "faiss-sys"
+description = "Native bindings for Faiss"
 version = "0.1.0"
 authors = ["Eduardo Pinho <enet4mikeenet@gmail.com>"]
 license = "MIT/Apache-2.0"
@@ -10,3 +11,6 @@ categories = ["external-ffi-bindings", "algorithms"]
 [features]
 gpu = []
 
+[badges.travis-ci]
+branch = "master"
+repository = "Enet4/faiss-rs"

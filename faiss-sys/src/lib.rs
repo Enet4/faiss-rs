@@ -2,7 +2,14 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+#[cfg(feature = "gpu")]
+mod bindings_gpu;
+#[cfg(feature = "gpu")]
+pub use bindings_gpu::*;
+
+#[cfg(not(feature = "gpu"))]
 mod bindings;
+#[cfg(not(feature = "gpu"))]
 pub use bindings::*;
 
 #[cfg(test)]
@@ -16,7 +23,12 @@ mod tests {
     #[test]
     fn getting_last_error() {
         unsafe {
-            let _last_error: *const c_char = faiss_get_last_error();
+            let mut index_ptr: *mut FaissIndexFlatL2 = ptr::null_mut();
+            let desc = CString::new("noooo").unwrap();
+            let c = faiss_index_factory(&mut index_ptr, 4, desc.as_ptr(), 0);
+            assert_ne!(c, 0);
+            let last_error: *const c_char = faiss_get_last_error();
+            assert!(!last_error.is_null());
         }
     }
 
@@ -27,7 +39,7 @@ mod tests {
             let mut index_ptr: *mut FaissIndexFlatL2 = ptr::null_mut();
             let c = faiss_IndexFlatL2_new_with(&mut index_ptr as *mut _, D as idx_t);
             assert_eq!(c, 0);
-            assert_ne!(index_ptr, ptr::null_mut());
+            assert!(!index_ptr.is_null());
             let some_data = [
                 7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5,
                 -1., 1., 1., 1., 1., 1., 1., -1.,
@@ -93,8 +105,9 @@ mod tests {
             assert_eq!(c, 0);
             assert_ne!(clustering_ptr, ptr::null_mut());
             let mut index_ptr: *mut FaissIndexFlatL2 = ptr::null_mut();
-            let c = faiss_index_factory(&mut index_ptr as *mut _, D as i32,
-                                        CString::new("Flat").unwrap().as_ptr(),
+            let desc = CString::new("Flat").unwrap();
+            let c = faiss_index_factory(&mut index_ptr, D as i32,
+                                        desc.as_ptr(),
                                         FaissMetricType_METRIC_L2);
             assert_eq!(c, 0);
             assert_ne!(index_ptr, ptr::null_mut());
