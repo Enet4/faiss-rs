@@ -30,25 +30,45 @@ pub struct SearchResult {
 pub struct RangeSearchResult {
     inner: *mut FaissRangeSearchResult,
 }
+
 impl RangeSearchResult {
 
-    pub fn distance_and_labels(&self) -> (&[f32], &[Idx]) {
+    pub fn nq(&self) -> usize {
         unsafe {
-            let buf_size = faiss_RangeSearchResult_buffer_size(self.inner);
-            let mut distances_ptr: *mut _ = ptr::null_mut();
-            let mut labels_ptr: *mut _ = ptr::null_mut();
+            faiss_RangeSearchResult_nq(self.inner)
+        }
+    }
+
+    pub fn lims(&self) -> &[usize] {
+        unsafe {
+            let mut lims_ptr = ptr::null_mut();
+            faiss_RangeSearchResult_lims(self.inner, &mut lims_ptr);
+            ::std::slice::from_raw_parts(lims_ptr, self.nq() + 1)
+        }
+    }
+
+    /// getter for labels and respective distances (not sorted):
+    /// result for query `i` is `labels[lims[i] .. lims[i+1]]`
+    pub fn distance_and_labels(&self) -> (&[f32], &[Idx]) {
+        let lims = self.lims();
+        let full_len = lims.last().map(|x| *x).unwrap_or(0);
+        unsafe {
+            let mut distances_ptr = ptr::null_mut();
+            let mut labels_ptr = ptr::null_mut();
             faiss_RangeSearchResult_labels(self.inner, &mut labels_ptr, &mut distances_ptr);
-            let distances = ::std::slice::from_raw_parts(distances_ptr, buf_size);
-            let labels = ::std::slice::from_raw_parts(labels_ptr, buf_size);
+            let distances = ::std::slice::from_raw_parts(distances_ptr, full_len);
+            let labels = ::std::slice::from_raw_parts(labels_ptr, full_len);
             (distances, labels)
         }
     }
 
+    /// getter for labels and respective distances (not sorted):
+    /// result for query `i` is `labels[lims[i] .. lims[i+1]]`
     pub fn distance_and_labels_mut(&self) -> (&mut [f32], &mut [Idx]) {
         unsafe {
             let buf_size = faiss_RangeSearchResult_buffer_size(self.inner);
-            let mut distances_ptr: *mut _ = ptr::null_mut();
-            let mut labels_ptr: *mut _ = ptr::null_mut();
+            let mut distances_ptr = ptr::null_mut();
+            let mut labels_ptr = ptr::null_mut();
             faiss_RangeSearchResult_labels(self.inner, &mut labels_ptr, &mut distances_ptr);
             let distances = ::std::slice::from_raw_parts_mut(distances_ptr, buf_size);
             let labels = ::std::slice::from_raw_parts_mut(labels_ptr, buf_size);
@@ -428,6 +448,26 @@ mod tests {
         let result = index.search(&my_query, 5).unwrap();
         assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
         assert!(result.distances.iter().all(|x| *x > 0.));
+    }
+
+    #[test]
+    fn flat_index_range_search() {
+        let mut index = index_factory(8, "Flat", MetricType::L2).unwrap();
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5,
+            -1., 1., 1., 1., 1., 1., 1., -1.,
+            0., 0., 0., 1., 1., 0., 0., -1.,
+            100., 100., 100., 100., -100., 100., 100., 100.,
+            120., 100., 100., 105., -100., 100., 100., 105.,
+        ];
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        let my_query = [0. ; 8];
+        let result = index.range_search(&my_query, 8.125).unwrap();
+        let (distances, labels) = result.distance_and_labels();
+        assert!(labels == &[1, 2] || labels == &[2, 1]);
+        assert!(distances.iter().all(|x| *x > 0.));
     }
 
 }
