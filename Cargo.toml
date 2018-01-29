@@ -4,6 +4,11 @@ version = "0.1.0"
 authors = ["Eduardo Pinho <enet4mikeenet@gmail.com>"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/Enet4/faiss-rs"
+categories = ["algorithms"]
+keywords = ["similarity search", "cbir", "clustering", "index"]
+
+[features]
+gpu = ["faiss-sys/gpu"]
 
 [dependencies.faiss-sys]
 version = "0.1.0"
