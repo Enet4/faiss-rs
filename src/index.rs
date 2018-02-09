@@ -148,6 +148,9 @@ pub struct IndexImpl {
     inner: *mut FaissIndex,
 }
 
+unsafe impl Send for IndexImpl {}
+unsafe impl Sync for IndexImpl {}
+
 impl fmt::Debug for IndexImpl {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str("IndexImpl")

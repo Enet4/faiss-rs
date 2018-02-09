@@ -90,6 +90,7 @@ macro_rules! faiss_try {
     }}
 }
 
+pub mod cluster;
 pub mod error;
 pub mod index;
 pub mod metric;
