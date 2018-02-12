@@ -773,6 +773,25 @@ extern "C" {
 extern "C" {
     pub fn faiss_Clustering_free(clustering: *mut FaissClustering);
 }
+extern "C" {
+    /// simplified interface
+    ///
+    /// @param d dimension of the data
+    /// @param n nb of training vectors
+    /// @param k nb of output centroids
+    /// @param x training set (size n * d)
+    /// @param centroids output centroids (size k * d)
+    /// @param q_error final quantization error
+    /// @return error code
+    pub fn faiss_kmeans_clustering(
+        d: usize,
+        n: usize,
+        k: usize,
+        x: *const f32,
+        centroids: *mut f32,
+        q_error: *mut f32,
+    ) -> ::std::os::raw::c_int;
+}
 pub const FaissErrorCode_OK: FaissErrorCode = 0;
 pub const FaissErrorCode_UNKNOWN_EXCEPT: FaissErrorCode = -1;
 pub const FaissErrorCode_FAISS_EXCEPT: FaissErrorCode = -2;
@@ -795,6 +814,23 @@ extern "C" {
         d: idx_t,
         metric: FaissMetricType,
     ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    /// get a pointer to the index's internal data (the `xb` field). The outputs
+    /// become invalid after any data addition or removal operation.
+    ///
+    /// @param index   opaque pointer to index object
+    /// @param p_xb    output, the pointer to the beginning of `xb`.
+    /// @param p_size  output, the current size of `sb` in number of float values.
+    pub fn faiss_IndexFlat_xb(index: *mut FaissIndexFlat, p_xb: *mut *mut f32, p_size: *mut usize);
+}
+extern "C" {
+    /// attempt a dynamic cast from. This function can be used to
+    /// check whether the underlying index is a flat index.
+    ///
+    /// @param index opaque pointer to index object
+    /// @return the same pointer if the index is a flat index, NULL otherwise
+    pub fn faiss_IndexFlat_cast(index: *mut FaissIndex) -> *mut FaissIndexFlat;
 }
 extern "C" {
     pub fn faiss_IndexFlat_free(obj: *mut FaissIndexFlat);

@@ -2,7 +2,6 @@
 
 use error::Result;
 use metric::MetricType;
-use std::fmt;
 use std::os::raw::c_uint;
 use std::ptr;
 use std::ffi::CString;
@@ -32,11 +31,8 @@ pub struct RangeSearchResult {
 }
 
 impl RangeSearchResult {
-
     pub fn nq(&self) -> usize {
-        unsafe {
-            faiss_RangeSearchResult_nq(self.inner)
-        }
+        unsafe { faiss_RangeSearchResult_nq(self.inner) }
     }
 
     pub fn lims(&self) -> &[usize] {
@@ -143,7 +139,15 @@ pub trait Index {
     fn reset(&mut self) -> Result<()>;
 }
 
+/// Sub-trait for native implementations of a Faiss index.
+pub trait NativeIndex: Index {
+    fn inner_ptr(&self) -> *const FaissIndex;
+
+    fn inner_ptr_mut(&mut self) -> *mut FaissIndex;
+}
+
 /// Native implementation of a Faiss Index.
+#[derive(Debug)]
 pub struct IndexImpl {
     inner: *mut FaissIndex,
 }
@@ -151,15 +155,11 @@ pub struct IndexImpl {
 unsafe impl Send for IndexImpl {}
 unsafe impl Sync for IndexImpl {}
 
-impl fmt::Debug for IndexImpl {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str("IndexImpl")
-    }
-}
-
 impl Drop for IndexImpl {
     fn drop(&mut self) {
-        unsafe { faiss_Index_free(self.inner); }
+        unsafe {
+            faiss_Index_free(self.inner);
+        }
     }
 }
 
@@ -187,10 +187,7 @@ impl Index for IndexImpl {
     }
 
     fn metric_type(&self) -> MetricType {
-        unsafe {
-            MetricType::from_code(
-                faiss_Index_metric_type(self.inner) as u32).unwrap()
-        }
+        unsafe { MetricType::from_code(faiss_Index_metric_type(self.inner) as u32).unwrap() }
     }
 
     fn add(&mut self, x: &[f32]) -> Result<()> {
@@ -204,7 +201,12 @@ impl Index for IndexImpl {
     fn add_with_ids(&mut self, x: &[f32], xids: &[Idx]) -> Result<()> {
         unsafe {
             let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_add_with_ids(self.inner, n as i64, x.as_ptr(), xids.as_ptr()));
+            faiss_try!(faiss_Index_add_with_ids(
+                self.inner,
+                n as i64,
+                x.as_ptr(),
+                xids.as_ptr()
+            ));
             Ok(())
         }
     }
@@ -220,10 +222,13 @@ impl Index for IndexImpl {
             let nq = query.len() / self.d() as usize;
             let mut out_labels = vec![0 as Idx; k * nq];
             faiss_try!(faiss_Index_assign(
-                self.inner, nq as idx_t, query.as_ptr(), out_labels.as_mut_ptr(), k as i64));
-            Ok(AssignSearchResult {
-                labels: out_labels
-            })
+                self.inner,
+                nq as idx_t,
+                query.as_ptr(),
+                out_labels.as_mut_ptr(),
+                k as i64
+            ));
+            Ok(AssignSearchResult { labels: out_labels })
         }
     }
     fn search(&mut self, query: &[f32], k: usize) -> Result<SearchResult> {
@@ -232,11 +237,14 @@ impl Index for IndexImpl {
             let mut distances = vec![0_f32; k * nq];
             let mut labels = vec![0 as Idx; k * nq];
             faiss_try!(faiss_Index_search(
-                self.inner, nq as idx_t, query.as_ptr(), k as idx_t, distances.as_mut_ptr(), labels.as_mut_ptr()));
-            Ok(SearchResult {
-                distances,
-                labels
-            })
+                self.inner,
+                nq as idx_t,
+                query.as_ptr(),
+                k as idx_t,
+                distances.as_mut_ptr(),
+                labels.as_mut_ptr()
+            ));
+            Ok(SearchResult { distances, labels })
         }
     }
     fn range_search(&mut self, query: &[f32], radius: f32) -> Result<RangeSearchResult> {
@@ -245,7 +253,12 @@ impl Index for IndexImpl {
             let mut p_res: *mut FaissRangeSearchResult = ptr::null_mut();
             faiss_try!(faiss_RangeSearchResult_new(&mut p_res, nq));
             faiss_try!(faiss_Index_range_search(
-                self.inner, nq, query.as_ptr(), radius, p_res));
+                self.inner,
+                nq,
+                query.as_ptr(),
+                radius,
+                p_res
+            ));
             Ok(RangeSearchResult { inner: p_res })
         }
     }
@@ -258,23 +271,40 @@ impl Index for IndexImpl {
     }
 }
 
+impl NativeIndex for IndexImpl {
+    fn inner_ptr(&self) -> *const FaissIndex {
+        self.inner
+    }
+
+    fn inner_ptr_mut(&mut self) -> *mut FaissIndex {
+        self.inner
+    }
+}
+
 /// Use the index factory to create a native instance of a Faiss index, for `d`-dimensional
 /// vectors. `description` should follows the exact guidelines as the native Faiss interface
 /// (see the [Faiss wiki](https://github.com/facebookresearch/faiss/wiki/Faiss-indexes) for examples).
-/// 
+///
 /// # Panic
-/// 
+///
 /// Currently, this function panics if the description contains any byte with the value `\0`, since
 /// it cannot be converted to a C string.
-pub fn index_factory<D: AsRef<str>>(d: u32, description: D, metric: MetricType) -> Result<IndexImpl> {
+pub fn index_factory<D: AsRef<str>>(
+    d: u32,
+    description: D,
+    metric: MetricType,
+) -> Result<IndexImpl> {
     unsafe {
         let metric = metric as c_uint;
         let description = CString::new(description.as_ref()).unwrap();
         let mut index_ptr = ::std::ptr::null_mut();
-        faiss_try!(faiss_index_factory(&mut index_ptr, (d & 0x7FFFFFFF) as i32, description.as_ptr(), metric));
-        Ok(IndexImpl {
-            inner: index_ptr,
-        })
+        faiss_try!(faiss_index_factory(
+            &mut index_ptr,
+            (d & 0x7FFFFFFF) as i32,
+            description.as_ptr(),
+            metric
+        ));
+        Ok(IndexImpl { inner: index_ptr })
     }
 }
 
@@ -289,24 +319,37 @@ pub mod gpu {
     use error::Result;
     use gpu::GpuResources;
     use metric::MetricType;
-    use super::{Index, IndexImpl, Idx, AssignSearchResult, SearchResult, RangeSearchResult};
+    use super::{AssignSearchResult, Idx, Index, IndexImpl, NativeIndex, RangeSearchResult,
+                SearchResult};
 
+    #[derive(Debug)]
     pub struct GpuIndexImpl<'gpu> {
         inner: IndexImpl,
         phantom: PhantomData<&'gpu ()>,
     }
 
     impl IndexImpl {
-        pub fn to_gpu<'gpu, G>(self, gpu_res: &'gpu mut G, device: i32) -> Result<GpuIndexImpl<'gpu>>
+        pub fn to_gpu<'gpu, G>(
+            self,
+            gpu_res: &'gpu mut G,
+            device: i32,
+        ) -> Result<GpuIndexImpl<'gpu>>
         where
             G: GpuResources,
         {
             unsafe {
-                let mut gpuindex_ptr = ptr::null_mut(); 
-                faiss_try!(faiss_index_cpu_to_gpu(gpu_res.inner_ptr_mut(), device, self.inner_ptr(), &mut gpuindex_ptr));
+                let mut gpuindex_ptr = ptr::null_mut();
+                faiss_try!(faiss_index_cpu_to_gpu(
+                    gpu_res.inner_ptr_mut(),
+                    device,
+                    self.inner_ptr(),
+                    &mut gpuindex_ptr
+                ));
                 mem::forget(self); // don't free the index
                 Ok(GpuIndexImpl {
-                    inner: IndexImpl { inner: gpuindex_ptr },
+                    inner: IndexImpl {
+                        inner: gpuindex_ptr,
+                    },
                     phantom: PhantomData,
                 })
             }
@@ -314,18 +357,13 @@ pub mod gpu {
     }
 
     impl<'gpu> GpuIndexImpl<'gpu> {
-        pub fn inner_ptr(&self) -> *const FaissIndex {
-            self.inner.inner_ptr()
-        }
-
-        pub fn inner_ptr_mut(&mut self) -> *mut FaissIndex {
-            self.inner.inner_ptr_mut()
-        }
-
         pub fn to_cpu(self) -> Result<IndexImpl> {
             unsafe {
-                let mut cpuindex_ptr = ptr::null_mut(); 
-                faiss_try!(faiss_index_gpu_to_cpu(self.inner.inner_ptr(), &mut cpuindex_ptr));
+                let mut cpuindex_ptr = ptr::null_mut();
+                faiss_try!(faiss_index_gpu_to_cpu(
+                    self.inner.inner_ptr(),
+                    &mut cpuindex_ptr
+                ));
                 mem::forget(self); // don't free the index
                 Ok(IndexImpl {
                     inner: cpuindex_ptr,
@@ -380,6 +418,16 @@ pub mod gpu {
         }
     }
 
+    impl<'g> NativeIndex for GpuIndexImpl<'g> {
+        fn inner_ptr(&self) -> *const FaissIndex {
+            self.inner.inner_ptr()
+        }
+
+        fn inner_ptr_mut(&mut self) -> *mut FaissIndex {
+            self.inner.inner_ptr_mut()
+        }
+    }
+
     #[cfg(test)]
     mod tests {
         use super::super::index_factory;
@@ -391,35 +439,34 @@ pub mod gpu {
         fn flat_index_search() {
             let mut res = StandardGpuResources::new().unwrap();
 
-            let mut index = index_factory(8, "Flat", MetricType::L2).unwrap()
-                .to_gpu(&mut res, 0).unwrap();
+            let mut index = index_factory(8, "Flat", MetricType::L2)
+                .unwrap()
+                .to_gpu(&mut res, 0)
+                .unwrap();
             let some_data = &[
-                7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5,
-                -1., 1., 1., 1., 1., 1., 1., -1.,
-                0., 0., 0., 1., 1., 0., 0., -1.,
-                100., 100., 100., 100., -100., 100., 100., 100.,
-                120., 100., 100., 105., -100., 100., 100., 105.,
+                7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0.,
+                0., 0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120.,
+                100., 100., 105., -100., 100., 100., 105.,
             ];
             index.add(some_data).unwrap();
             assert_eq!(index.ntotal(), 5);
 
-            let my_query = [0. ; 8];
+            let my_query = [0.; 8];
             let result = index.search(&my_query, 5).unwrap();
             assert_eq!(result.labels, vec![2, 1, 0, 3, 4]);
             assert!(result.distances.iter().all(|x| *x > 0.));
 
-            let my_query = [100. ; 8];
+            let my_query = [100.; 8];
             let result = index.search(&my_query, 5).unwrap();
             assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
             assert!(result.distances.iter().all(|x| *x > 0.));
         }
-
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Index, index_factory};
+    use super::{index_factory, Index};
     use metric::MetricType;
 
     #[test]
@@ -441,21 +488,19 @@ mod tests {
     fn flat_index_search() {
         let mut index = index_factory(8, "Flat", MetricType::L2).unwrap();
         let some_data = &[
-            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5,
-            -1., 1., 1., 1., 1., 1., 1., -1.,
-            0., 0., 0., 1., 1., 0., 0., -1.,
-            100., 100., 100., 100., -100., 100., 100., 100.,
-            120., 100., 100., 105., -100., 100., 100., 105.,
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
         ];
         index.add(some_data).unwrap();
         assert_eq!(index.ntotal(), 5);
 
-        let my_query = [0. ; 8];
+        let my_query = [0.; 8];
         let result = index.search(&my_query, 5).unwrap();
         assert_eq!(result.labels, vec![2, 1, 0, 3, 4]);
         assert!(result.distances.iter().all(|x| *x > 0.));
 
-        let my_query = [100. ; 8];
+        let my_query = [100.; 8];
         let result = index.search(&my_query, 5).unwrap();
         assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
         assert!(result.distances.iter().all(|x| *x > 0.));
@@ -465,20 +510,17 @@ mod tests {
     fn flat_index_range_search() {
         let mut index = index_factory(8, "Flat", MetricType::L2).unwrap();
         let some_data = &[
-            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5,
-            -1., 1., 1., 1., 1., 1., 1., -1.,
-            0., 0., 0., 1., 1., 0., 0., -1.,
-            100., 100., 100., 100., -100., 100., 100., 100.,
-            120., 100., 100., 105., -100., 100., 100., 105.,
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
         ];
         index.add(some_data).unwrap();
         assert_eq!(index.ntotal(), 5);
 
-        let my_query = [0. ; 8];
+        let my_query = [0.; 8];
         let result = index.range_search(&my_query, 8.125).unwrap();
         let (distances, labels) = result.distance_and_labels();
         assert!(labels == &[1, 2] || labels == &[2, 1]);
         assert!(distances.iter().all(|x| *x > 0.));
     }
-
 }

@@ -1,8 +1,8 @@
 use error::Result;
 use std::{mem, ptr};
-use std::os::raw::{c_int};
+use std::os::raw::c_int;
 use faiss_sys::*;
-use index::IndexImpl;
+use index::NativeIndex;
 
 /// Parameters for the clustering algorithm.
 pub struct ClusteringParameters {
@@ -16,7 +16,6 @@ impl Default for ClusteringParameters {
 }
 
 impl ClusteringParameters {
-
     /// Create a new clustering parameters object.
     pub fn new() -> Self {
         unsafe {
@@ -116,7 +115,7 @@ impl Drop for Clustering {
 }
 
 impl Clustering {
-    /** 
+    /**
      * Obtain a new clustering object.
      */
     pub fn new(d: u32, k: u32) -> Result<Self> {
@@ -129,7 +128,7 @@ impl Clustering {
         }
     }
 
-    /** 
+    /**
      * Obtain a new clustering object with the given parameters.
      */
     pub fn new_with_params(d: u32, k: u32, params: &ClusteringParameters) -> Result<Self> {
@@ -137,39 +136,71 @@ impl Clustering {
             let d = d as c_int;
             let k = k as c_int;
             let mut inner: *mut FaissClustering = ptr::null_mut();
-            faiss_try!(faiss_Clustering_new_with_params(&mut inner, d, k, &params.inner));
+            faiss_try!(faiss_Clustering_new_with_params(
+                &mut inner,
+                d,
+                k,
+                &params.inner
+            ));
             Ok(Clustering { inner })
         }
     }
 
-    pub fn train(&mut self, x: &[f32], index: &mut IndexImpl) -> Result<()>
+    /**
+     * Perform the clustering algorithm with the given data and index.
+     * The index is used during the assignment stage.
+     */
+    pub fn train<I: ?Sized>(&mut self, x: &[f32], index: &mut I) -> Result<()>
+    where
+        I: NativeIndex,
     {
         unsafe {
             let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Clustering_train(self.inner, n as idx_t, x.as_ptr(), index.inner_ptr_mut()));
+            faiss_try!(faiss_Clustering_train(
+                self.inner,
+                n as idx_t,
+                x.as_ptr(),
+                index.inner_ptr_mut()
+            ));
             Ok(())
         }
     }
 
-    pub fn centroids(&self) -> Result<&[f32]> {
+    /**
+     * Retrieve the centroids from the clustering process. Returns
+     * a vector of `k` slices of size `d`.
+     */
+    pub fn centroids(&self) -> Result<Vec<&[f32]>> {
         unsafe {
             let mut data = ptr::null_mut();
             let mut size = 0;
             faiss_Clustering_centroids(self.inner, &mut data, &mut size);
-            Ok(::std::slice::from_raw_parts(data, size))
+            Ok(::std::slice::from_raw_parts(data, size)
+                .chunks(self.d() as usize)
+                .collect())
         }
     }
 
-    pub fn centroids_mut(&mut self) -> Result<&mut [f32]> {
+    /**
+     * Retrieve the centroids from the clustering process. Returns
+     * a vector of `k` slices of size `d`.
+     */
+    pub fn centroids_mut(&mut self) -> Result<Vec<&mut [f32]>> {
         unsafe {
             let mut data = ptr::null_mut();
             let mut size = 0;
             faiss_Clustering_centroids(self.inner, &mut data, &mut size);
-            Ok(::std::slice::from_raw_parts_mut(data, size))
+            Ok(::std::slice::from_raw_parts_mut(data, size)
+                .chunks_mut(self.d() as usize)
+                .collect())
         }
     }
 
-    pub fn obj(&self) -> Result<&[f32]> {
+    /**
+     * Retrieve the objective values achieved from the clustering process.
+     * Returns as many values as the number of iterations made.
+     */
+    pub fn objectives(&self) -> Result<&[f32]> {
         unsafe {
             let mut data = ptr::null_mut();
             let mut size = 0;
@@ -178,7 +209,11 @@ impl Clustering {
         }
     }
 
-    pub fn obj_mut(&mut self) -> Result<&mut [f32]> {
+    /**
+     * Retrieve the objective values (sum of distances reported by index).
+     * Returns as many values as the number of iterations made.
+     */
+    pub fn objectives_mut(&mut self) -> Result<&mut [f32]> {
         unsafe {
             let mut data = ptr::null_mut();
             let mut size = 0;
@@ -188,21 +223,42 @@ impl Clustering {
     }
 
     pub fn d(&self) -> u32 {
-        unsafe {
-            faiss_Clustering_d(self.inner) as u32
-        }
+        unsafe { faiss_Clustering_d(self.inner) as u32 }
     }
 
     pub fn k(&self) -> u32 {
-        unsafe {
-            faiss_Clustering_k(self.inner) as u32
-        }
+        unsafe { faiss_Clustering_k(self.inner) as u32 }
     }
 
     pub fn seed(&self) -> u32 {
-        unsafe {
-            faiss_Clustering_seed(self.inner) as u32
-        }
+        unsafe { faiss_Clustering_seed(self.inner) as u32 }
+    }
+}
+
+/** Simplified interface for k-means clustering.
+ *
+ * - `d`: dimension of the data
+ * - `k`: nb of output centroids
+ * - `x`: training set (size `n * d`)
+ *
+ * The number of points is inferred from `x` and `k`.
+ *
+ * Returns the final quantization error and centroids (size `k * d`).
+ */
+pub fn kmeans_clustering(d: u32, k: u32, x: &[f32]) -> Result<(f32, Vec<f32>)> {
+    unsafe {
+        let n = x.len() / d as usize;
+        let mut centroids = vec![0_f32; (d * k) as usize];
+        let mut error: f32 = 0.;
+        faiss_try!(faiss_kmeans_clustering(
+            d as usize,
+            n,
+            k as usize,
+            x.as_ptr(),
+            centroids.as_mut_ptr(),
+            &mut error
+        ));
+        Ok((error, centroids))
     }
 }
 
@@ -216,29 +272,81 @@ mod tests {
     fn test_clustering() {
         const D: u32 = 8;
         const K: u32 = 3;
+        const NITER: u32 = 12;
         let mut params = ClusteringParameters::default();
-        params.set_niter(5);
+        params.set_niter(NITER);
         params.set_min_points_per_centroid(1);
         params.set_max_points_per_centroid(10);
 
         let some_data = [
-            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5,
-            -1., 1., 1., 1., 1., 1., 1., -1.,
-            0., 0., 0., 1., 1., 0., 0., -1.,
-            100., 100., 100., 100., -100., 100., 100., 100.,
-            -7., 1., 4., 1., 2., 1., 3., -1.,
-            120., 100., 100., 120., -100., 100., 100., 120.,
-            0., 0., -12., 1., 1., 0., 6., -1.,
-            0., 0., -0.25, 1., 16., 24., 0., -1.,
-            100., 10., 100., 100., 10., 100., 50., 10.,
-            20., 22., 4.5, -2., -100., 0., 0., 100.,
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., -7., 1., 4.,
+            1., 2., 1., 3., -1., 120., 100., 100., 120., -100., 100., 100., 120., 0., 0., -12., 1.,
+            1., 0., 6., -1., 0., 0., -0.25, 1., 16., 24., 0., -1., 100., 10., 100., 100., 10.,
+            100., 50., 10., 20., 22., 4.5, -2., -100., 0., 0., 100.,
         ];
 
         let mut clustering = Clustering::new_with_params(D, K, &params).unwrap();
         let mut index = index_factory(D, "Flat", MetricType::L2).unwrap();
         clustering.train(&some_data, &mut index).unwrap();
 
-        let centroids: Vec<_> = clustering.centroids().unwrap().chunks(D as usize).collect();
+        let centroids: Vec<_> = clustering.centroids().unwrap();
         assert_eq!(centroids.len(), K as usize);
+
+        for c in centroids {
+            assert_eq!(c.len(), D as usize);
+        }
+
+        let objectives = clustering.objectives().unwrap();
+        assert_eq!(objectives.len(), NITER as usize);
+    }
+}
+
+#[cfg(feature = "gpu")]
+pub mod gpu {
+    #[cfg(test)]
+    mod tests {
+        use super::super::{Clustering, ClusteringParameters};
+        use gpu::StandardGpuResources;
+        use index::index_factory;
+        use MetricType;
+
+        #[test]
+        fn test_clustering() {
+            const D: u32 = 8;
+            const K: u32 = 3;
+            const NITER: u32 = 12;
+            let mut params = ClusteringParameters::default();
+            params.set_niter(NITER);
+            params.set_min_points_per_centroid(1);
+            params.set_max_points_per_centroid(10);
+
+            let some_data = [
+                7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0.,
+                0., 0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., -7.,
+                1., 4., 1., 2., 1., 3., -1., 120., 100., 100., 120., -100., 100., 100., 120., 0.,
+                0., -12., 1., 1., 0., 6., -1., 0., 0., -0.25, 1., 16., 24., 0., -1., 100., 10.,
+                100., 100., 10., 100., 50., 10., 20., 22., 4.5, -2., -100., 0., 0., 100.,
+            ];
+
+            let mut clustering = Clustering::new_with_params(D, K, &params).unwrap();
+            let mut res = StandardGpuResources::new().unwrap();
+            let mut index = index_factory(D, "Flat", MetricType::L2)
+                .unwrap()
+                .to_gpu(&mut res, 0)
+                .unwrap();
+            clustering.train(&some_data, &mut index).unwrap();
+
+            let centroids: Vec<_> = clustering.centroids().unwrap();
+            assert_eq!(centroids.len(), K as usize);
+
+            for c in centroids {
+                assert_eq!(c.len(), D as usize);
+            }
+
+            let objectives = clustering.objectives().unwrap();
+            assert_eq!(objectives.len(), NITER as usize);
+        }
+
     }
 }

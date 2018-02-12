@@ -41,11 +41,9 @@ mod tests {
             assert_eq!(c, 0);
             assert!(!index_ptr.is_null());
             let some_data = [
-                7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5,
-                -1., 1., 1., 1., 1., 1., 1., -1.,
-                0., 0., 0., 1., 1., 0., 0., -1.,
-                100., 100., 100., 100., -100., 100., 100., 100.,
-                200., 100., 100., 500., -100., 100., 100., 500.,
+                7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0.,
+                0., 0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 200.,
+                100., 100., 500., -100., 100., 100., 500.,
             ];
             let some_data_ptr = some_data.as_ptr();
             assert_eq!(faiss_Index_is_trained(index_ptr) != 0, true);
@@ -58,7 +56,14 @@ mod tests {
             let mut distances = [0_f32, 0., 0., 0., -1.];
             let mut labels = [0 as idx_t, 0, 0, 0, -1];
             // search for vectors closest to the origin
-            let c = faiss_Index_search(index_ptr, 1, some_query.as_ptr(), 4, distances.as_mut_ptr(), labels.as_mut_ptr());
+            let c = faiss_Index_search(
+                index_ptr,
+                1,
+                some_query.as_ptr(),
+                4,
+                distances.as_mut_ptr(),
+                labels.as_mut_ptr(),
+            );
             assert_eq!(c, 0);
             assert_eq!(labels, [2, 1, 0, 3, -1]);
             assert!(distances[0] > 0.);
@@ -88,16 +93,11 @@ mod tests {
             params.max_points_per_centroid = 10;
 
             let some_data = [
-                7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5,
-                -1., 1., 1., 1., 1., 1., 1., -1.,
-                0., 0., 0., 1., 1., 0., 0., -1.,
-                100., 100., 100., 100., -100., 100., 100., 100.,
-                -7., 1., 4., 1., 2., 1., 3., -1.,
-                120., 100., 100., 120., -100., 100., 100., 120.,
-                0., 0., -12., 1., 1., 0., 6., -1.,
-                0., 0., -0.25, 1., 16., 24., 0., -1.,
-                100., 10., 100., 100., 10., 100., 50., 10.,
-                20., 22., 4.5, -2., -100., 0., 0., 100.,
+                7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0.,
+                0., 0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., -7.,
+                1., 4., 1., 2., 1., 3., -1., 120., 100., 100., 120., -100., 100., 100., 120., 0.,
+                0., -12., 1., 1., 0., 6., -1., 0., 0., -0.25, 1., 16., 24., 0., -1., 100., 10.,
+                100., 100., 10., 100., 50., 10., 20., 22., 4.5, -2., -100., 0., 0., 100.,
             ];
 
             let mut clustering_ptr: *mut FaissClustering = ptr::null_mut();
@@ -106,14 +106,16 @@ mod tests {
             assert_ne!(clustering_ptr, ptr::null_mut());
             let mut index_ptr: *mut FaissIndexFlatL2 = ptr::null_mut();
             let desc = CString::new("Flat").unwrap();
-            let c = faiss_index_factory(&mut index_ptr, D as i32,
-                                        desc.as_ptr(),
-                                        FaissMetricType_METRIC_L2);
+            let c = faiss_index_factory(
+                &mut index_ptr,
+                D as i32,
+                desc.as_ptr(),
+                FaissMetricType_METRIC_L2,
+            );
             assert_eq!(c, 0);
             assert_ne!(index_ptr, ptr::null_mut());
 
-            let c = faiss_Clustering_train(
-                clustering_ptr, 10, some_data.as_ptr(), index_ptr);
+            let c = faiss_Clustering_train(clustering_ptr, 10, some_data.as_ptr(), index_ptr);
             assert_eq!(c, 0);
 
             faiss_Clustering_free(clustering_ptr);

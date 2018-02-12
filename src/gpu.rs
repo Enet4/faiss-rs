@@ -32,7 +32,6 @@ pub struct StandardGpuResources {
 }
 
 impl StandardGpuResources {
-
     /// Create a standard GPU resources object.
     pub fn new() -> Result<Self> {
         unsafe {
@@ -62,10 +61,12 @@ impl GpuResources for StandardGpuResources {
         }
     }
 
-
     fn set_temp_memory_fraction(&mut self, fraction: f32) -> Result<()> {
         unsafe {
-            faiss_try!(faiss_StandardGpuResources_setTempMemoryFraction(self.inner, fraction));
+            faiss_try!(faiss_StandardGpuResources_setTempMemoryFraction(
+                self.inner,
+                fraction
+            ));
             Ok(())
         }
     }
