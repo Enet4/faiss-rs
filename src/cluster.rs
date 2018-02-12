@@ -230,8 +230,40 @@ impl Clustering {
         unsafe { faiss_Clustering_k(self.inner) as u32 }
     }
 
+    pub fn niter(&self) -> u32 {
+        unsafe { faiss_Clustering_niter(self.inner) as u32 }
+    }
+
+    pub fn nredo(&self) -> u32 {
+        unsafe { faiss_Clustering_nredo(self.inner) as u32 }
+    }
+
+    pub fn verbose(&self) -> bool {
+        unsafe { faiss_Clustering_niter(self.inner) != 0 }
+    }
+
+    pub fn spherical(&self) -> bool {
+        unsafe { faiss_Clustering_spherical(self.inner) != 0 }
+    }
+
+    pub fn update_index(&self) -> bool {
+        unsafe { faiss_Clustering_update_index(self.inner) != 0 }
+    }
+
+    pub fn frozen_centroids(&self) -> bool {
+        unsafe { faiss_Clustering_frozen_centroids(self.inner) != 0 }
+    }
+
     pub fn seed(&self) -> u32 {
         unsafe { faiss_Clustering_seed(self.inner) as u32 }
+    }
+
+    pub fn min_points_per_centroid(&self) -> u32 {
+        unsafe { faiss_Clustering_min_points_per_centroid(self.inner) as u32 }
+    }
+
+    pub fn max_points_per_centroid(&self) -> u32 {
+        unsafe { faiss_Clustering_max_points_per_centroid(self.inner) as u32 }
     }
 }
 
