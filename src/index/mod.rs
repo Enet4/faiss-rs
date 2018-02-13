@@ -8,6 +8,8 @@ use std::ffi::CString;
 
 use faiss_sys::*;
 
+pub mod flat;
+
 #[cfg(feature = "gpu")]
 pub mod gpu;
 
