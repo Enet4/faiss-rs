@@ -15,6 +15,7 @@ pub struct FaissIDSelector_H {
 pub type FaissIDSelector = FaissIDSelector_H;
 pub const FaissMetricType_METRIC_INNER_PRODUCT: FaissMetricType = 0;
 pub const FaissMetricType_METRIC_L2: FaissMetricType = 1;
+/// Some algorithms support both an inner product version and a L2 search version.
 pub type FaissMetricType = u32;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -806,10 +807,10 @@ extern "C" {
 pub type FaissIndexFlat = FaissIndex_H;
 extern "C" {
     /// Opaque type for IndexFlat
-    pub fn faiss_IndexFlat_create(p_index: *mut *mut FaissIndexFlat) -> ::std::os::raw::c_int;
+    pub fn faiss_IndexFlat_new(p_index: *mut *mut FaissIndexFlat) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn faiss_IndexFlat_create_with(
+    pub fn faiss_IndexFlat_new_with(
         p_index: *mut *mut FaissIndexFlat,
         d: idx_t,
         metric: FaissMetricType,
@@ -1123,10 +1124,20 @@ extern "C" {
         v: *const f32,
     ) -> ::std::os::raw::c_int;
 }
+/// The user indices are only stored on the CPU; the GPU returns
+/// /// (inverted list, offset) to the CPU which is then translated to
+/// /// the real user index.
 pub const FaissIndicesOptions_INDICES_CPU: FaissIndicesOptions = 0;
+/// The indices are not stored at all, on either the CPU or
+/// /// GPU. Only (inverted list, offset) is returned to the user as the
+/// /// index.
 pub const FaissIndicesOptions_INDICES_IVF: FaissIndicesOptions = 1;
+/// Indices are stored as 32 bit integers on the GPU, but returned
+/// /// as 64 bit integers
 pub const FaissIndicesOptions_INDICES_32_BIT: FaissIndicesOptions = 2;
+/// Indices are stored as 64 bit integers on the GPU
 pub const FaissIndicesOptions_INDICES_64_BIT: FaissIndicesOptions = 3;
+/// How user vector index data is stored on the GPU
 pub type FaissIndicesOptions = u32;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]

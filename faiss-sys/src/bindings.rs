@@ -15,6 +15,7 @@ pub struct FaissIDSelector_H {
 pub type FaissIDSelector = FaissIDSelector_H;
 pub const FaissMetricType_METRIC_INNER_PRODUCT: FaissMetricType = 0;
 pub const FaissMetricType_METRIC_L2: FaissMetricType = 1;
+/// Some algorithms support both an inner product version and a L2 search version.
 pub type FaissMetricType = u32;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -806,10 +807,10 @@ extern "C" {
 pub type FaissIndexFlat = FaissIndex_H;
 extern "C" {
     /// Opaque type for IndexFlat
-    pub fn faiss_IndexFlat_create(p_index: *mut *mut FaissIndexFlat) -> ::std::os::raw::c_int;
+    pub fn faiss_IndexFlat_new(p_index: *mut *mut FaissIndexFlat) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn faiss_IndexFlat_create_with(
+    pub fn faiss_IndexFlat_new_with(
         p_index: *mut *mut FaissIndexFlat,
         d: idx_t,
         metric: FaissMetricType,
