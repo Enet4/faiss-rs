@@ -310,7 +310,7 @@ pub fn kmeans_clustering(d: u32, k: u32, x: &[f32]) -> Result<KMeansResult> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Clustering, ClusteringParameters};
+    use super::{Clustering, ClusteringParameters, kmeans_clustering};
     use index::index_factory;
     use MetricType;
 
@@ -345,6 +345,23 @@ mod tests {
 
         let objectives = clustering.objectives().unwrap();
         assert_eq!(objectives.len(), NITER as usize);
+    }
+
+    #[test]
+    fn test_simple_clustering() {
+        const D: u32 = 8;
+        const K: u32 = 2;
+        let some_data = [
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., -7., 1., 4.,
+            1., 2., 1., 3., -1., 120., 100., 100., 120., -100., 100., 100., 120., 0., 0., -12., 1.,
+            1., 0., 6., -1., 0., 0., -0.25, 1., 16., 24., 0., -1., 100., 10., 100., 100., 10.,
+            100., 50., 10., 20., 22., 4.5, -2., -100., 0., 0., 100.,
+        ];
+
+        let out = kmeans_clustering(D, K, &some_data).unwrap();
+        assert!(out.q_error > 0.);
+        assert_eq!(out.centroids.len(), (D * K) as usize);
     }
 }
 
