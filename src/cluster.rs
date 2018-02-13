@@ -1,3 +1,5 @@
+//! Vector clustering interface and implementation.
+
 use error::Result;
 use std::{mem, ptr};
 use std::os::raw::c_int;
@@ -267,6 +269,18 @@ impl Clustering {
     }
 }
 
+/// Plain data structure for the outcome of the simple k-means clustering
+/// function (see [`kmeans_clustering`]).
+/// 
+/// [`kmeans_clustering`]: fn.kmeans_clustering.html
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub struct KMeansResult {
+    /// The centroids of each cluster as a single contiguous vector (size `k * d`)
+    pub centroids: Vec<f32>,
+    /// The quantization error
+    pub q_error: f32,
+}
+
 /** Simplified interface for k-means clustering.
  *
  * - `d`: dimension of the data
@@ -277,20 +291,20 @@ impl Clustering {
  *
  * Returns the final quantization error and centroids (size `k * d`).
  */
-pub fn kmeans_clustering(d: u32, k: u32, x: &[f32]) -> Result<(f32, Vec<f32>)> {
+pub fn kmeans_clustering(d: u32, k: u32, x: &[f32]) -> Result<KMeansResult> {
     unsafe {
         let n = x.len() / d as usize;
         let mut centroids = vec![0_f32; (d * k) as usize];
-        let mut error: f32 = 0.;
+        let mut q_error: f32 = 0.;
         faiss_try!(faiss_kmeans_clustering(
             d as usize,
             n,
             k as usize,
             x.as_ptr(),
             centroids.as_mut_ptr(),
-            &mut error
+            &mut q_error
         ));
-        Ok((error, centroids))
+        Ok(KMeansResult { centroids, q_error })
     }
 }
 
