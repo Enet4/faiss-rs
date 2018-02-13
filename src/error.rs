@@ -9,7 +9,28 @@ use faiss_sys::*;
 pub type Result<T> = ::std::result::Result<T, Error>;
 
 /// The main error type.
-pub type Error = NativeError;
+#[derive(Debug, Clone, PartialEq)]
+pub enum Error {
+    /// The error came from a native Faiss exception.
+    Native(NativeError),
+    /// Invalid index type cast. 
+    BadCast,
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.write_str(self.description())
+    }
+}
+
+impl StdError for Error {
+    fn description(&self) -> &str {
+        match self {
+            &Error::Native(ref e) => &e.msg,
+            &Error::BadCast => "Invalid index type cast.",
+        }
+    }
+}
 
 /// An error derived from a native Faiss exception.
 #[derive(Debug, Clone, PartialEq)]
@@ -62,5 +83,11 @@ impl fmt::Display for NativeError {
 impl StdError for NativeError {
     fn description(&self) -> &str {
         &self.msg
+    }
+}
+
+impl From<NativeError> for Error {
+    fn from(e: NativeError) -> Self {
+        Error::Native(e)
     }
 }

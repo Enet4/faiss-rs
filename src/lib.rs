@@ -85,7 +85,7 @@ macro_rules! faiss_try {
     ($e: expr) => {{
         let c = $e;
         if c != 0 {
-            return Err(::error::Error::from_last_error(c));
+            return Err(::error::NativeError::from_last_error(c).into());
         }
     }}
 }
