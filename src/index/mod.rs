@@ -339,9 +339,7 @@ mod tests {
 
     #[test]
     fn index_factory_flat() {
-        let r = index_factory(64, "Flat", MetricType::L2);
-        assert!(r.is_ok());
-        let index = r.unwrap();
+        let index = index_factory(64, "Flat", MetricType::L2).unwrap();
         assert_eq!(index.is_trained(), true); // Flat index does not need training
         assert_eq!(index.ntotal(), 0);
     }

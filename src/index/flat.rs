@@ -18,6 +18,8 @@ pub struct FlatIndexImpl {
 unsafe impl Send for FlatIndexImpl {}
 unsafe impl Sync for FlatIndexImpl {}
 
+impl CpuIndex for FlatIndexImpl {}
+
 impl Drop for FlatIndexImpl {
     fn drop(&mut self) {
         unsafe {
@@ -204,11 +206,30 @@ impl Index for FlatIndexImpl {
 
 #[cfg(test)]
 mod tests {
-    use super::super::Index;
+    use super::super::{Index, index_factory};
     use super::FlatIndexImpl;
     use metric::MetricType;
 
     const D: u32 = 8;
+
+    #[test]
+    fn flat_index_from_cast() {
+        let mut index = index_factory(8, "Flat", MetricType::L2).unwrap();
+        assert_eq!(index.is_trained(), true); // Flat index does not need training
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
+        ];
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        let index = index.as_flat().unwrap();
+        assert_eq!(index.is_trained(), true);
+        assert_eq!(index.ntotal(), 5);
+        let xb = index.xb();
+        assert_eq!(xb.len(), 8 * 5);
+    }
 
     #[test]
     fn flat_index_search() {

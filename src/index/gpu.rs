@@ -199,13 +199,17 @@ impl FlatIndexImpl {
 #[cfg(test)]
 mod tests {
     use super::super::index_factory;
-    use super::super::Index;
+    use super::super::{CpuIndex, Index};
     use super::super::flat::FlatIndex;
+    use super::GpuIndex;
     use gpu::{GpuResources, StandardGpuResources};
     use metric::MetricType;
 
+    fn is_in_gpu<I: GpuIndex>(_: &I) {}
+    fn is_in_cpu<I: CpuIndex>(_: &I) {}
+
     #[test]
-    fn in_and_out() {
+    fn flat_in_and_out() {
         let mut res = StandardGpuResources::new().unwrap();
         res.set_temp_memory(10).unwrap();
 
@@ -219,7 +223,10 @@ mod tests {
         index.add(some_data).unwrap();
 
         for _ in 0..10 {
-            index = index.to_gpu(&mut res, 0).unwrap().to_cpu().unwrap();
+            let gpu_index = index.to_gpu(&mut res, 0).unwrap();
+            is_in_gpu(&gpu_index);
+            index = gpu_index.to_cpu().unwrap();
+            is_in_cpu(&index);
         }
     }
 
