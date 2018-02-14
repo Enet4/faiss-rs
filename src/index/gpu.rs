@@ -14,11 +14,13 @@ use super::flat::FlatIndexImpl;
 /// Trait for Faiss index types known to be running on the GPU.
 pub trait GpuIndex: Index {}
 
-/// Native GPU implementation of a Faiss index. GPU indexes in Faiss
-/// are first built on the CPU, and subsequently transferred to one
-/// or more GPU's via the [`to_gpu`] method.
-/// Calling [`to_cpu`] enables the user to bring the index back to
-/// CPU memory.
+/// Native GPU implementation of a Faiss index. GPU indexes in Faiss are first
+/// built on the CPU, and subsequently transferred to one or more GPU's via the
+/// [`to_gpu`] method. Calling [`to_cpu`] enables the user to bring the index
+/// back to CPU memory.
+/// 
+/// The `'gpu` lifetime ensures that the [GPU resources] are in scope for as
+/// long as the index lives.
 ///
 /// [`to_gpu`]: ../struct.IndexImpl.html#method.to_gpu
 /// [`to_cpu`]: struct.GpuIndexImpl.html#method.to_cpu
