@@ -8,11 +8,10 @@ the state-of-the-art vector search and clustering library.
 
 ## Installing as a dependency
 
-Currently, this crate does not build Faiss automatically for you. The dynamic library needs to be installed
-manually to your system.
+Currently, this crate does not build Faiss automatically for you. The dynamic library needs to be installed manually to your system.
 
-  1. Follow the instructions [here](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md) to build Faiss.
-  2. Afterwards, follow the instructions on [building the C API of Faiss](https://github.com/facebookresearch/faiss/blob/master/c_api/INSTALL.md). This will result in the dynamic library `faiss_c`, which needs to be installed in a place where your system will pick up (in Linux, try somewhere in the `LD_LIBRARY_PATH` environment variable, such as "/usr/lib", or try adding a new path to this variable).
+  1. Follow the instructions [here](https://github.com/Enet4/faiss/tree/c_api_head/INSTALL.md) to build Faiss. At the moment, it is best to build Faiss from [this fork](https://github.com/Enet4/faiss/tree/c_api_head), which is a custom version containing the latest bindings to the C interface (see [facebookresearch/faiss#317](https://github.com/facebookresearch/faiss/pull/317) for its potential inclusion to the main repository).
+  2. Afterwards, follow the instructions on [building the C API of Faiss](https://github.com/Enet4/faiss/tree/c_api_head/c_api/INSTALL.md). This will result in the dynamic library `faiss_c`, which needs to be installed in a place where your system will pick up (in Linux, try somewhere in the `LD_LIBRARY_PATH` environment variable, such as "/usr/lib", or try adding a new path to this variable).
   3. You are now ready to include this crate as a dependency:
 
 ```toml
