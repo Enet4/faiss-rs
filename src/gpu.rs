@@ -7,7 +7,7 @@ use std::ptr;
 /// Common interface for GPU resources used by Faiss.
 pub trait GpuResources {
     /// Obtain a raw pointer to the native GPU resources object.
-    fn inner_ptr_mut(&mut self) -> *mut FaissGpuResources;
+    fn inner_ptr(&self) -> *mut FaissGpuResources;
 
     /// Disable allocation of temporary memory; all temporary memory
     /// requests will call `cudaMalloc` / `cudaFree` at the point of use
@@ -43,7 +43,7 @@ impl StandardGpuResources {
 }
 
 impl GpuResources for StandardGpuResources {
-    fn inner_ptr_mut(&mut self) -> *mut FaissGpuResources {
+    fn inner_ptr(&self) -> *mut FaissGpuResources {
         self.inner
     }
 
@@ -76,5 +76,28 @@ impl GpuResources for StandardGpuResources {
             faiss_try!(faiss_StandardGpuResources_setPinnedMemory(self.inner, size));
             Ok(())
         }
+    }
+}
+
+
+impl<'g> GpuResources for &'g mut StandardGpuResources {
+    fn inner_ptr(&self) -> *mut FaissGpuResources {
+        self.inner
+    }
+
+    fn no_temp_memory(&mut self) -> Result<()> {
+        (**self).no_temp_memory()
+    }
+
+    fn set_temp_memory(&mut self, size: usize) -> Result<()> {
+        (**self).set_temp_memory(size)
+    }
+
+    fn set_temp_memory_fraction(&mut self, fraction: f32) -> Result<()> {
+        (**self).set_temp_memory_fraction(fraction)
+    }
+
+    fn set_pinned_memory(&mut self, size: usize) -> Result<()> {
+        (**self).set_pinned_memory(size)
     }
 }

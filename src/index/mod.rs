@@ -16,6 +16,73 @@ pub mod gpu;
 /// Primitive data type for identifying a vector in an index.
 pub type Idx = idx_t;
 
+/// Interface for a Faiss index.
+pub trait Index {
+    /// Whether the index is trained
+    fn is_trained(&self) -> bool;
+
+    /// The total number of vectors indexed
+    fn ntotal(&self) -> u64;
+
+    /// The dimensionality of the indexed vectors
+    fn d(&self) -> u32;
+
+    /// The metric type assumed by the index
+    fn metric_type(&self) -> MetricType;
+
+    /// Add new data vectors to the index.
+    /// This assumes a contiguous memory slice of vectors, where the total
+    /// number of vectors is `x.len() / d`.
+    fn add(&mut self, x: &[f32]) -> Result<()>;
+
+    /// Add new data vectors to the index with ids.
+    /// This assumes a contiguous memory slice of vectors, where the total
+    /// number of vectors is `x.len() / d`.
+    /// Not all index types may support this operation.
+    fn add_with_ids(&mut self, x: &[f32], xids: &[Idx]) -> Result<()>;
+
+    /// Train the underlying index with the given data.
+    fn train(&mut self, x: &[f32]) -> Result<()>;
+
+    /// Similar to `search`, but only provides the labels.
+    fn assign(&mut self, q: &[f32], k: usize) -> Result<AssignSearchResult>;
+
+    /// Perform a search for the `k` closest vectors to the given query vectors.
+    fn search(&mut self, q: &[f32], k: usize) -> Result<SearchResult>;
+
+    /// Perform a ranged search for the vectors closest to the given query vectors
+    /// by the given radius.
+    fn range_search(&mut self, q: &[f32], radius: f32) -> Result<RangeSearchResult>;
+
+    /// Clear the entire index.
+    fn reset(&mut self) -> Result<()>;
+}
+
+/// Sub-trait for native implementations of a Faiss index.
+pub trait NativeIndex: Index {
+    /// Retrieve a pointer to the native index object.
+    fn inner_ptr(&self) -> *mut FaissIndex;
+}
+
+/// Trait for Faiss index types known to be running on the CPU.
+pub trait CpuIndex: Index {}
+
+/// Trait for Faiss index types which can be built from a pointer
+/// to a native implementation.
+pub trait FromInnerPtr: NativeIndex {
+    /// Create an index using the given pointer to a native object.
+    ///
+    /// # Safety
+    ///
+    /// `inner_ptr` must point to a valid, non-freed index. The inner index
+    /// must also be compatible with the target `NativeIndex` type according
+    /// to the native class hierarchy. For example, creating an `IndexImpl` out
+    /// of a pointer to `FaissIndexFlatL2` is valid, but creating a
+    /// `FlatIndexImpl` out of a plain `FaissIndex` can cause undefined
+    /// behaviour.
+    unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self;
+}
+
 /// The outcome of an index assign operation.
 #[derive(Debug, Clone, PartialEq)]
 pub struct AssignSearchResult {
@@ -102,56 +169,8 @@ impl Drop for RangeSearchResult {
     }
 }
 
-/// Interface for a Faiss index.
-pub trait Index {
-    /// Whether the index is trained
-    fn is_trained(&self) -> bool;
-
-    /// The total number of vectors indexed
-    fn ntotal(&self) -> u64;
-
-    /// The dimensionality of the indexed vectors
-    fn d(&self) -> u32;
-
-    /// The metric type assumed by the index
-    fn metric_type(&self) -> MetricType;
-
-    /// Add new data vectors to the index.
-    /// This assumes a contiguous memory slice of vectors, where the total
-    /// number of vectors is `x.len() / d`.
-    fn add(&mut self, x: &[f32]) -> Result<()>;
-
-    /// Add new data vectors to the index with ids.
-    /// This assumes a contiguous memory slice of vectors, where the total
-    /// number of vectors is `x.len() / d`.
-    /// Not all index types may support this operation.
-    fn add_with_ids(&mut self, x: &[f32], xids: &[Idx]) -> Result<()>;
-
-    /// Train the underlying index with the given data.
-    fn train(&mut self, x: &[f32]) -> Result<()>;
-
-    /// Similar to `search`, but only provides the labels.
-    fn assign(&mut self, q: &[f32], k: usize) -> Result<AssignSearchResult>;
-
-    /// Perform a search for the `k` closest vectors to the given query vectors.
-    fn search(&mut self, q: &[f32], k: usize) -> Result<SearchResult>;
-
-    /// Perform a ranged search for the vectors closest to the given query vectors
-    /// by the given radius.
-    fn range_search(&mut self, q: &[f32], radius: f32) -> Result<RangeSearchResult>;
-
-    /// Clear the entire index.
-    fn reset(&mut self) -> Result<()>;
-}
-
-/// Sub-trait for native implementations of a Faiss index.
-pub trait NativeIndex: Index {
-    fn inner_ptr(&self) -> *const FaissIndex;
-
-    fn inner_ptr_mut(&mut self) -> *mut FaissIndex;
-}
-
-/// Native implementation of a Faiss Index.
+/// Native implementation of a Faiss Index
+/// running on the CPU.
 #[derive(Debug)]
 pub struct IndexImpl {
     inner: *mut FaissIndex,
@@ -159,6 +178,8 @@ pub struct IndexImpl {
 
 unsafe impl Send for IndexImpl {}
 unsafe impl Sync for IndexImpl {}
+
+impl CpuIndex for IndexImpl {}
 
 impl Drop for IndexImpl {
     fn drop(&mut self) {
@@ -169,12 +190,14 @@ impl Drop for IndexImpl {
 }
 
 impl IndexImpl {
-    pub fn inner_ptr(&self) -> *const FaissIndex {
+    pub fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
     }
+}
 
-    pub fn inner_ptr_mut(&mut self) -> *mut FaissIndex {
-        self.inner
+impl FromInnerPtr for IndexImpl {
+    unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self {
+        IndexImpl { inner: inner_ptr }
     }
 }
 
@@ -277,11 +300,7 @@ impl Index for IndexImpl {
 }
 
 impl NativeIndex for IndexImpl {
-    fn inner_ptr(&self) -> *const FaissIndex {
-        self.inner
-    }
-
-    fn inner_ptr_mut(&mut self) -> *mut FaissIndex {
+    fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
     }
 }

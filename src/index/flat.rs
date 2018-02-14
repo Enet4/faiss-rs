@@ -77,9 +77,9 @@ impl FlatIndexImpl {
 
 impl IndexImpl {
     /// Attempt a dynamic cast of an index to the flat index type.
-    pub fn as_flat(mut self) -> Result<FlatIndexImpl> {
+    pub fn as_flat(self) -> Result<FlatIndexImpl> {
         unsafe {
-            let new_inner = faiss_IndexFlat_cast(self.inner_ptr_mut());
+            let new_inner = faiss_IndexFlat_cast(self.inner_ptr());
             if new_inner.is_null() {
                 Err(Error::BadCast)
             } else {
@@ -91,12 +91,16 @@ impl IndexImpl {
 }
 
 impl NativeIndex for FlatIndexImpl {
-    fn inner_ptr(&self) -> *const FaissIndex {
+    fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
     }
+}
 
-    fn inner_ptr_mut(&mut self) -> *mut FaissIndex {
-        self.inner
+impl FromInnerPtr for FlatIndexImpl {
+    unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self {
+        FlatIndexImpl {
+            inner: inner_ptr as *mut FaissIndexFlat
+        }
     }
 }
 

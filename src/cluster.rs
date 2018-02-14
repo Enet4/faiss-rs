@@ -162,7 +162,7 @@ impl Clustering {
                 self.inner,
                 n as idx_t,
                 x.as_ptr(),
-                index.inner_ptr_mut()
+                index.inner_ptr()
             ));
             Ok(())
         }
