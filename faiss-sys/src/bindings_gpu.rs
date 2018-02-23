@@ -826,8 +826,8 @@ extern "C" {
     pub fn faiss_IndexFlat_xb(index: *mut FaissIndexFlat, p_xb: *mut *mut f32, p_size: *mut usize);
 }
 extern "C" {
-    /// attempt a dynamic cast from. This function can be used to
-    /// check whether the underlying index is a flat index.
+    /// attempt a dynamic cast to a flat index, thus checking
+    /// check whether the underlying index type is `IndexFlat`.
     ///
     /// @param index opaque pointer to index object
     /// @return the same pointer if the index is a flat index, NULL otherwise

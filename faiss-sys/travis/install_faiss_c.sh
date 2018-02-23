@@ -1,6 +1,6 @@
 #!/bin/sh
 repo_url=https://github.com/Enet4/faiss.git
-repo_rev=63c2f6ba5c15543724ff178816d53d05d5fe0978
+repo_rev=284885915c2d25cf213d6abdaeba643f80873d58
 
 git clone $repo_url faiss
 cd faiss
