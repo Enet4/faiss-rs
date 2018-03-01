@@ -6,7 +6,7 @@ if ! which bindgen > /dev/null; then
 fi
 
 repo_url=https://github.com/Enet4/faiss.git
-repo_rev=284885915c2d25cf213d6abdaeba643f80873d58
+repo_rev=4d440b6698fcc7b08607534bc622902b52bf9c49
 cuda_root=/opt/cuda
 
 git clone $repo_url faiss
