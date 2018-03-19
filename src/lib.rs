@@ -52,11 +52,12 @@
 //! # run().unwrap()
 //! ```
 //!
-//! With GPU support, use the [`to_gpu`] and [`to_cpu`] methods
-//! to move an index to and from the GPU.
+//! With GPU support, create a [`StandardGpuResources`] and use the
+//! [`into_gpu`] and [`into_cpu`] methods to move an index to and from the GPU.
 //!
-//! [`to_gpu`]: index/struct.IndexImpl.html#method.to_gpu
-//! [`to_cpu`]: index/gpu/struct.GpuIndexImpl.html#method.to_cpu
+//! [`StandardGpuResources`]: gpu/struct.StandardGpuResources.html
+//! [`into_gpu`]: index/struct.IndexImpl.html#method.into_gpu
+//! [`into_cpu`]: index/gpu/struct.GpuIndexImpl.html#method.into_cpu
 //!
 //! ```
 //! # #[cfg(feature = "gpu")]
@@ -66,8 +67,8 @@
 //! # #[cfg(feature = "gpu")]
 //! # fn run() -> Result<()> {
 //! let index = index_factory(8, "Flat", MetricType::L2)?;
-//! let mut gpu_res = StandardGpuResources::new()?;
-//! let index = index.to_gpu(&mut gpu_res, 0)?;
+//! let gpu_res = StandardGpuResources::new()?;
+//! let index = index.into_gpu(&gpu_res, 0)?;
 //! # Ok(())
 //! # }
 //! # #[cfg(feature = "gpu")]

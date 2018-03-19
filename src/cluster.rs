@@ -396,7 +396,7 @@ pub mod gpu {
             let mut res = StandardGpuResources::new().unwrap();
             let mut index = index_factory(D, "Flat", MetricType::L2)
                 .unwrap()
-                .to_gpu(&mut res, 0)
+                .into_gpu(&mut res, 0)
                 .unwrap();
             clustering.train(&some_data, &mut index).unwrap();
 

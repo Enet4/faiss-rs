@@ -16,16 +16,19 @@ pub trait GpuIndex: Index {}
 
 /// Native GPU implementation of a Faiss index. GPU indexes in Faiss are first
 /// built on the CPU, and subsequently transferred to one or more GPU's via the
-/// [`to_gpu`] method. Calling [`to_cpu`] enables the user to bring the index
+/// [`into_gpu`] method. Calling [`to_cpu`] enables the user to bring the index
 /// back to CPU memory.
 /// 
 /// The `'gpu` lifetime ensures that the [GPU resources] are in scope for as
 /// long as the index lives.
 ///
-/// [`to_gpu`]: ../struct.IndexImpl.html#method.to_gpu
-/// [`to_cpu`]: struct.GpuIndexImpl.html#method.to_cpu
+/// [`into_gpu`]: ../struct.IndexImpl.html#method.into_gpu
+/// [`into_cpu`]: struct.GpuIndexImpl.html#method.into_cpu
 #[derive(Debug)]
 pub struct GpuIndexImpl<'gpu, I> {
+    /// We keep the descriptor of the original (CPU) index, so it's
+    /// cleaned up alongside the GPU index. It also allows us to
+    /// recover the original CPU index type.
     index: I,
     inner: *mut FaissGpuIndex,
     phantom: PhantomData<&'gpu ()>,
@@ -37,14 +40,10 @@ where
 {
 }
 
+// `GpuIndexImpl` is deliberately not `Sync`!
 unsafe impl<'g, I> Send for GpuIndexImpl<'g, I>
 where
     I: Send,
-{
-}
-unsafe impl<'g, I> Sync for GpuIndexImpl<'g, I>
-where
-    I: Sync,
 {
 }
 
@@ -62,7 +61,7 @@ where
 {
     /// Build a GPU from the given CPU native index. The operation fails if the
     /// index does not provide GPU support.
-    pub fn from_cpu<G>(index: I, gpu_res: G, device: i32) -> Result<Self>
+    pub fn from_cpu<G>(index: I, gpu_res: &G, device: i32) -> Result<Self>
     where
         I: NativeIndex,
         I: CpuIndex,
@@ -86,9 +85,9 @@ where
 }
 
 impl IndexImpl {
-    pub fn to_gpu<'gpu, G: 'gpu>(
+    pub fn into_gpu<'gpu, G: 'gpu>(
         self,
-        gpu_res: G,
+        gpu_res: &'gpu G,
         device: i32,
     ) -> Result<GpuIndexImpl<'gpu, IndexImpl>>
     where
@@ -104,7 +103,7 @@ where
     I: FromInnerPtr,
 {
     /// Transfer the GPU index back to its original CPU implementation.
-    pub fn to_cpu(self) -> Result<I> {
+    pub fn into_cpu(self) -> Result<I> {
         unsafe {
             let mut cpuindex_ptr = ptr::null_mut();
             faiss_try!(faiss_index_gpu_to_cpu(self.inner, &mut cpuindex_ptr));
@@ -173,9 +172,9 @@ where
 }
 
 impl FlatIndexImpl {
-    pub fn to_gpu<'gpu, G>(
+    pub fn into_gpu<'gpu, G>(
         self,
-        gpu_res: &'gpu mut G,
+        gpu_res: &'gpu G,
         device: i32,
     ) -> Result<GpuIndexImpl<'gpu, FlatIndexImpl>>
     where
@@ -225,20 +224,20 @@ mod tests {
         index.add(some_data).unwrap();
 
         for _ in 0..10 {
-            let gpu_index = index.to_gpu(&mut res, 0).unwrap();
+            let gpu_index = index.into_gpu(&res, 0).unwrap();
             is_in_gpu(&gpu_index);
-            index = gpu_index.to_cpu().unwrap();
+            index = gpu_index.into_cpu().unwrap();
             is_in_cpu(&index);
         }
     }
 
     #[test]
     fn flat_index_search() {
-        let mut res = StandardGpuResources::new().unwrap();
+        let res = StandardGpuResources::new().unwrap();
 
         let mut index = index_factory(8, "Flat", MetricType::L2)
             .unwrap()
-            .to_gpu(&mut res, 0)
+            .into_gpu(&res, 0)
             .unwrap();
         let some_data = &[
             7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
