@@ -19,3 +19,6 @@ repository = "Enet4/faiss-rs"
 [dependencies.faiss-sys]
 version = "0.2.0"
 path = "faiss-sys"
+
+[package.metadata.docs.rs]
+features = ["gpu"]
