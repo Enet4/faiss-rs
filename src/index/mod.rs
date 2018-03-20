@@ -91,12 +91,12 @@ pub trait FromInnerPtr: NativeIndex {
     ///
     /// # Safety
     ///
-    /// `inner_ptr` must point to a valid, non-freed index. The inner index
-    /// must also be compatible with the target `NativeIndex` type according
-    /// to the native class hierarchy. For example, creating an `IndexImpl` out
-    /// of a pointer to `FaissIndexFlatL2` is valid, but creating a
-    /// `FlatIndexImpl` out of a plain `FaissIndex` can cause undefined
-    /// behaviour.
+    /// `inner_ptr` must point to a valid, non-freed index, and cannot be
+    /// shared across multiple instances. The inner index  must also be
+    /// compatible with the target `NativeIndex` type according to the native
+    /// class hierarchy. For example, creating an `IndexImpl` out of a pointer
+    /// to `FaissIndexFlatL2` is valid, but creating a `FlatIndexImpl` out of
+    /// a plain `FaissIndex` can cause undefined behaviour.
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self;
 }
 
