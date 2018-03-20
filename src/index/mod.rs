@@ -390,6 +390,31 @@ mod tests {
     }
 
     #[test]
+    fn flat_index_assign() {
+        let mut index = index_factory(8, "Flat", MetricType::L2).unwrap();
+        assert_eq!(index.d(), 8);
+        assert_eq!(index.ntotal(), 0);
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
+        ];
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        let my_query = [0.; 8 as usize];
+        let result = index.assign(&my_query, 5).unwrap();
+        assert_eq!(result.labels, vec![2, 1, 0, 3, 4]);
+
+        let my_query = [100.; 8 as usize];
+        let result = index.assign(&my_query, 5).unwrap();
+        assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
+
+        index.reset().unwrap();
+        assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
     fn flat_index_range_search() {
         let mut index = index_factory(8, "Flat", MetricType::L2).unwrap();
         let some_data = &[
