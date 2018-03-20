@@ -151,15 +151,15 @@ impl Index for FlatIndexImpl {
         }
     }
     fn assign(&mut self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
-        <Self as ConcurrentIndex>::assign(self, query, k)
+        ConcurrentIndex::assign(self, query, k)
     }
     
     fn search(&mut self, query: &[f32], k: usize) -> Result<SearchResult> {
-        <Self as ConcurrentIndex>::search(self, query, k)
+        ConcurrentIndex::search(self, query, k)
     }
 
     fn range_search(&mut self, query: &[f32], radius: f32) -> Result<RangeSearchResult> {
-        <Self as ConcurrentIndex>::range_search(self, query, radius)
+        ConcurrentIndex::range_search(self, query, radius)
     }
 
     fn reset(&mut self) -> Result<()> {
