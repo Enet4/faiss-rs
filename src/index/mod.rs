@@ -64,6 +64,23 @@ pub trait NativeIndex: Index {
     fn inner_ptr(&self) -> *mut FaissIndex;
 }
 
+/// Trait for a Faiss index that can be safely searched over multiple threads.
+/// Operations which do not modify the index are given a method taking an
+/// immutable reference. This is not the default for every index type because
+/// some implementations (such as the GPU implementations) do not allow
+/// concurrent searches.
+pub trait ConcurrentIndex: Index {
+    /// Similar to `search`, but only provides the labels.
+    fn assign(&self, q: &[f32], k: usize) -> Result<AssignSearchResult>;
+
+    /// Perform a search for the `k` closest vectors to the given query vectors.
+    fn search(&self, q: &[f32], k: usize) -> Result<SearchResult>;
+
+    /// Perform a ranged search for the vectors closest to the given query vectors
+    /// by the given radius.
+    fn range_search(&self, q: &[f32], radius: f32) -> Result<RangeSearchResult>;
+}
+
 /// Trait for Faiss index types known to be running on the CPU.
 pub trait CpuIndex: Index {}
 

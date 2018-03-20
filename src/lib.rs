@@ -99,7 +99,7 @@ pub mod metric;
 #[cfg(feature = "gpu")]
 pub mod gpu;
 
-pub use index::{index_factory, Index};
+pub use index::{index_factory, Index, ConcurrentIndex};
 pub use metric::MetricType;
 
 #[cfg(feature = "gpu")]

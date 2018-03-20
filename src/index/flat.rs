@@ -151,6 +151,27 @@ impl Index for FlatIndexImpl {
         }
     }
     fn assign(&mut self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
+        <Self as ConcurrentIndex>::assign(self, query, k)
+    }
+    
+    fn search(&mut self, query: &[f32], k: usize) -> Result<SearchResult> {
+        <Self as ConcurrentIndex>::search(self, query, k)
+    }
+
+    fn range_search(&mut self, query: &[f32], radius: f32) -> Result<RangeSearchResult> {
+        <Self as ConcurrentIndex>::range_search(self, query, radius)
+    }
+
+    fn reset(&mut self) -> Result<()> {
+        unsafe {
+            faiss_try!(faiss_Index_reset(self.inner));
+            Ok(())
+        }
+    }
+}
+
+impl ConcurrentIndex for FlatIndexImpl {
+    fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
         unsafe {
             let nq = query.len() / self.d() as usize;
             let mut out_labels = vec![0 as Idx; k * nq];
@@ -164,7 +185,7 @@ impl Index for FlatIndexImpl {
             Ok(AssignSearchResult { labels: out_labels })
         }
     }
-    fn search(&mut self, query: &[f32], k: usize) -> Result<SearchResult> {
+    fn search(&self, query: &[f32], k: usize) -> Result<SearchResult> {
         unsafe {
             let nq = query.len() / self.d() as usize;
             let mut distances = vec![0_f32; k * nq];
@@ -180,7 +201,7 @@ impl Index for FlatIndexImpl {
             Ok(SearchResult { distances, labels })
         }
     }
-    fn range_search(&mut self, query: &[f32], radius: f32) -> Result<RangeSearchResult> {
+    fn range_search(&self, query: &[f32], radius: f32) -> Result<RangeSearchResult> {
         unsafe {
             let nq = (query.len() / self.d() as usize) as idx_t;
             let mut p_res: *mut FaissRangeSearchResult = ptr::null_mut();
@@ -195,18 +216,11 @@ impl Index for FlatIndexImpl {
             Ok(RangeSearchResult { inner: p_res })
         }
     }
-
-    fn reset(&mut self) -> Result<()> {
-        unsafe {
-            faiss_try!(faiss_Index_reset(self.inner));
-            Ok(())
-        }
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::{Index, index_factory};
+    use super::super::{Index, ConcurrentIndex, index_factory};
     use super::FlatIndexImpl;
     use metric::MetricType;
 
@@ -224,7 +238,7 @@ mod tests {
         index.add(some_data).unwrap();
         assert_eq!(index.ntotal(), 5);
 
-        let index = index.as_flat().unwrap();
+        let index: FlatIndexImpl = index.as_flat().unwrap();
         assert_eq!(index.is_trained(), true);
         assert_eq!(index.ntotal(), 5);
         let xb = index.xb();
@@ -250,9 +264,36 @@ mod tests {
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = [100.; D as usize];
-        let result = index.search(&my_query, 5).unwrap();
+        // flat index can be used behind an immutable ref
+        let result = (&index).search(&my_query, 5).unwrap();
         assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
         assert!(result.distances.iter().all(|x| *x > 0.));
+
+        index.reset().unwrap();
+        assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn flat_index_assign() {
+        let mut index = FlatIndexImpl::new(D, MetricType::L2).unwrap();
+        assert_eq!(index.d(), D);
+        assert_eq!(index.ntotal(), 0);
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
+        ];
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        let my_query = [0.; D as usize];
+        let result = index.assign(&my_query, 5).unwrap();
+        assert_eq!(result.labels, vec![2, 1, 0, 3, 4]);
+
+        let my_query = [100.; D as usize];
+        // flat index can be used behind an immutable ref
+        let result = (&index).assign(&my_query, 5).unwrap();
+        assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
 
         index.reset().unwrap();
         assert_eq!(index.ntotal(), 0);
@@ -272,7 +313,7 @@ mod tests {
         assert_eq!(index.ntotal(), 5);
 
         let my_query = [0.; D as usize];
-        let result = index.range_search(&my_query, 8.125).unwrap();
+        let result = (&index).range_search(&my_query, 8.125).unwrap();
         let (distances, labels) = result.distance_and_labels();
         assert!(labels == &[1, 2] || labels == &[2, 1]);
         assert!(distances.iter().all(|x| *x > 0.));
