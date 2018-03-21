@@ -38,9 +38,9 @@ pub trait GpuResources {
 /// use faiss::{StandardGpuResources, MetricType};
 /// use faiss::index::flat::FlatIndex;
 ///
-/// let mut gpu = StandardGpuResources::new()?;
+/// let gpu = StandardGpuResources::new()?;
 /// let index = FlatIndex::new(64, MetricType::L2)?;
-/// let gpu_index = index.into_gpu(&mut gpu, 0)?;
+/// let gpu_index = index.into_gpu(&gpu, 0)?;
 /// # Ok(())
 /// # }
 /// # run().unwrap();
