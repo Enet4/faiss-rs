@@ -54,11 +54,11 @@ pub trait GpuResources {
 /// use faiss::{GpuResources, StandardGpuResources, MetricType};
 /// use faiss::index::flat::FlatIndex;
 /// 
-/// fn use_gpu<T: Sync>(res: &mut T) {}
+/// fn use_elsewhere<T: Sync>(_: &T) {}
 /// 
 /// # fn run() -> Result<(), Box<::std::error::Error>> {
 /// let gpu = StandardGpuResources::new()?;
-/// use_gpu(&gpu); // using GPU in another thread fails
+/// use_elsewhere(&gpu); // using GPU in another thread fails
 /// # Ok(())
 /// # }
 /// # run().unwrap();
