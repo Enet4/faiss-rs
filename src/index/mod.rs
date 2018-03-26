@@ -397,6 +397,13 @@ mod tests {
     }
 
     #[test]
+    fn index_factory_hnsw() {
+        let index = index_factory(64, "HNSW8", MetricType::L2).unwrap();
+        assert_eq!(index.is_trained(), true); // training is not required
+        assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
     fn bad_index_factory_description() {
         let r = index_factory(64, "fdnoyq", MetricType::L2);
         assert!(r.is_err());
