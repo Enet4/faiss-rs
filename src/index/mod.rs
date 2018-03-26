@@ -67,8 +67,11 @@ pub trait NativeIndex: Index {
 /// Trait for a Faiss index that can be safely searched over multiple threads.
 /// Operations which do not modify the index are given a method taking an
 /// immutable reference. This is not the default for every index type because
-/// some implementations (such as the GPU implementations) do not allow
+/// some implementations (such as the ones running on the GPU) do not allow
 /// concurrent searches.
+/// 
+/// Users of these methods should still note that batched querying is
+/// considerably faster than running queries one by one, even in parallel.
 pub trait ConcurrentIndex: Index {
     /// Similar to `search`, but only provides the labels.
     fn assign(&self, q: &[f32], k: usize) -> Result<AssignSearchResult>;
@@ -92,7 +95,7 @@ pub trait FromInnerPtr: NativeIndex {
     /// # Safety
     ///
     /// `inner_ptr` must point to a valid, non-freed index, and cannot be
-    /// shared across multiple instances. The inner index  must also be
+    /// shared across multiple instances. The inner index must also be
     /// compatible with the target `NativeIndex` type according to the native
     /// class hierarchy. For example, creating an `IndexImpl` out of a pointer
     /// to `FaissIndexFlatL2` is valid, but creating a `FlatIndexImpl` out of
@@ -358,6 +361,38 @@ mod tests {
     fn index_factory_flat() {
         let index = index_factory(64, "Flat", MetricType::L2).unwrap();
         assert_eq!(index.is_trained(), true); // Flat index does not need training
+        assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn index_factory_ivf_flat() {
+        let index = index_factory(64, "IVF8,Flat", MetricType::L2).unwrap();
+        assert_eq!(index.is_trained(), false);
+        assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn index_factory_sq() {
+        let index = index_factory(64, "SQ8", MetricType::L2).unwrap();
+        assert_eq!(index.is_trained(), false);
+        assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn index_factory_pq() {
+        let index = index_factory(64, "PQ8", MetricType::L2).unwrap();
+        assert_eq!(index.is_trained(), false);
+        assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn index_factory_ivf_sq() {
+        let index = index_factory(64, "IVF8,SQ4", MetricType::L2).unwrap();
+        assert_eq!(index.is_trained(), false);
+        assert_eq!(index.ntotal(), 0);
+
+        let index = index_factory(64, "IVF8,SQ8", MetricType::L2).unwrap();
+        assert_eq!(index.is_trained(), false);
         assert_eq!(index.ntotal(), 0);
     }
 
