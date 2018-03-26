@@ -387,6 +387,18 @@ mod tests {
         let result = index.search(&my_query, 5).unwrap();
         assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
         assert!(result.distances.iter().all(|x| *x > 0.));
+
+        let my_query = vec![
+            0., 0., 0., 0., 0., 0., 0., 0.,
+            100., 100., 100., 100., 100., 100., 100., 100.,
+        ];
+        let result = index.search(&my_query, 5).unwrap();
+        assert_eq!(result.labels, vec![
+            2, 1, 0, 3, 4,
+            3, 4, 0, 1, 2
+        ]);
+        assert!(result.distances.iter().all(|x| *x > 0.));
+
     }
 
     #[test]
@@ -402,13 +414,32 @@ mod tests {
         index.add(some_data).unwrap();
         assert_eq!(index.ntotal(), 5);
 
-        let my_query = [0.; 8 as usize];
+        let my_query = [0.; 8];
         let result = index.assign(&my_query, 5).unwrap();
         assert_eq!(result.labels, vec![2, 1, 0, 3, 4]);
 
-        let my_query = [100.; 8 as usize];
+        let my_query = [0.; 32];
+        let result = index.assign(&my_query, 5).unwrap();
+        assert_eq!(result.labels, vec![
+            2, 1, 0, 3, 4,
+            2, 1, 0, 3, 4,
+            2, 1, 0, 3, 4,
+            2, 1, 0, 3, 4,
+        ]);
+
+        let my_query = [100.; 8];
         let result = index.assign(&my_query, 5).unwrap();
         assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
+
+        let my_query = vec![
+            0., 0., 0., 0., 0., 0., 0., 0.,
+            100., 100., 100., 100., 100., 100., 100., 100.,
+        ];
+        let result = index.assign(&my_query, 5).unwrap();
+        assert_eq!(result.labels, vec![
+            2, 1, 0, 3, 4,
+            3, 4, 0, 1, 2,
+        ]);
 
         index.reset().unwrap();
         assert_eq!(index.ntotal(), 0);
