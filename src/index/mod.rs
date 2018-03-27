@@ -1,6 +1,6 @@
 //! Index interface and implementations
 
-use error::Result;
+use error::{Error, Result};
 use metric::MetricType;
 use std::os::raw::c_uint;
 use std::ptr;
@@ -69,7 +69,7 @@ pub trait NativeIndex: Index {
 /// immutable reference. This is not the default for every index type because
 /// some implementations (such as the ones running on the GPU) do not allow
 /// concurrent searches.
-/// 
+///
 /// Users of these methods should still note that batched querying is
 /// considerably faster than running queries one by one, even in parallel.
 pub trait ConcurrentIndex: Index {
@@ -326,13 +326,13 @@ impl NativeIndex for IndexImpl {
 }
 
 /// Use the index factory to create a native instance of a Faiss index, for `d`-dimensional
-/// vectors. `description` should follows the exact guidelines as the native Faiss interface
+/// vectors. `description` should follow the exact guidelines as the native Faiss interface
 /// (see the [Faiss wiki](https://github.com/facebookresearch/faiss/wiki/Faiss-indexes) for examples).
 ///
-/// # Panic
+/// # Error
 ///
-/// Currently, this function panics if the description contains any byte with the value `\0`, since
-/// it cannot be converted to a C string.
+/// This function returns an error if the description contains any byte with the value `\0` (since
+/// it cannot be converted to a C string), or if the internal index factory operation fails.
 pub fn index_factory<D: AsRef<str>>(
     d: u32,
     description: D,
@@ -340,7 +340,7 @@ pub fn index_factory<D: AsRef<str>>(
 ) -> Result<IndexImpl> {
     unsafe {
         let metric = metric as c_uint;
-        let description = CString::new(description.as_ref()).unwrap();
+        let description = CString::new(description.as_ref()).map_err(|_| Error::IndexDescription)?;
         let mut index_ptr = ::std::ptr::null_mut();
         faiss_try!(faiss_index_factory(
             &mut index_ptr,
@@ -431,16 +431,11 @@ mod tests {
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = vec![
-            0., 0., 0., 0., 0., 0., 0., 0.,
-            100., 100., 100., 100., 100., 100., 100., 100.,
+            0., 0., 0., 0., 0., 0., 0., 0., 100., 100., 100., 100., 100., 100., 100., 100.
         ];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![
-            2, 1, 0, 3, 4,
-            3, 4, 0, 1, 2
-        ]);
+        assert_eq!(result.labels, vec![2, 1, 0, 3, 4, 3, 4, 0, 1, 2]);
         assert!(result.distances.iter().all(|x| *x > 0.));
-
     }
 
     #[test]
@@ -462,26 +457,20 @@ mod tests {
 
         let my_query = [0.; 32];
         let result = index.assign(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![
-            2, 1, 0, 3, 4,
-            2, 1, 0, 3, 4,
-            2, 1, 0, 3, 4,
-            2, 1, 0, 3, 4,
-        ]);
+        assert_eq!(
+            result.labels,
+            vec![2, 1, 0, 3, 4, 2, 1, 0, 3, 4, 2, 1, 0, 3, 4, 2, 1, 0, 3, 4]
+        );
 
         let my_query = [100.; 8];
         let result = index.assign(&my_query, 5).unwrap();
         assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
 
         let my_query = vec![
-            0., 0., 0., 0., 0., 0., 0., 0.,
-            100., 100., 100., 100., 100., 100., 100., 100.,
+            0., 0., 0., 0., 0., 0., 0., 0., 100., 100., 100., 100., 100., 100., 100., 100.
         ];
         let result = index.assign(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![
-            2, 1, 0, 3, 4,
-            3, 4, 0, 1, 2,
-        ]);
+        assert_eq!(result.labels, vec![2, 1, 0, 3, 4, 3, 4, 0, 1, 2]);
 
         index.reset().unwrap();
         assert_eq!(index.ntotal(), 0);

@@ -15,6 +15,8 @@ pub enum Error {
     Native(NativeError),
     /// Invalid index type cast. 
     BadCast,
+    /// Invalid index description
+    IndexDescription,
 }
 
 impl fmt::Display for Error {
@@ -25,9 +27,10 @@ impl fmt::Display for Error {
 
 impl StdError for Error {
     fn description(&self) -> &str {
-        match self {
-            &Error::Native(ref e) => &e.msg,
-            &Error::BadCast => "Invalid index type cast.",
+        match *self {
+            Error::Native(ref e) => &e.msg,
+            Error::BadCast => "Invalid index type cast",
+            Error::IndexDescription => "Invalid index description",
         }
     }
 }
