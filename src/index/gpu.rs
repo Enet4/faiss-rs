@@ -59,8 +59,11 @@ impl<'g, I> GpuIndexImpl<'g, I>
 where
     I: CpuIndex,
 {
-    /// Build a GPU from the given CPU native index. The operation fails if the
+    /// Build a GPU in from the given CPU native index. The operation fails if the
     /// index does not provide GPU support.
+    /// Users should prefer calling [`into_gpu`] instead.
+    /// 
+    /// [`into_gpu`]: ../struct.IndexImpl.html#method.into_gpu
     pub fn from_cpu<G>(index: I, gpu_res: &G, device: i32) -> Result<Self>
     where
         I: NativeIndex,
@@ -85,6 +88,8 @@ where
 }
 
 impl IndexImpl {
+    /// Build a GPU in from the given CPU native index. The operation fails if the
+    /// index does not provide GPU support.
     pub fn into_gpu<'gpu, G: 'gpu>(
         self,
         gpu_res: &'gpu G,
@@ -172,6 +177,8 @@ where
 }
 
 impl FlatIndexImpl {
+    /// Build a GPU in from the given CPU native index. The operation fails if the
+    /// index does not provide GPU support.
     pub fn into_gpu<'gpu, G>(
         self,
         gpu_res: &'gpu G,

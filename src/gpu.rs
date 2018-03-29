@@ -30,8 +30,10 @@ pub trait GpuResources {
 /// 
 /// # Examples
 /// 
-/// GPU resources are meant to be used via the [`into_gpu`] method
-/// of an index.
+/// GPU resources are meant to be passed to an index implementation's
+/// [`into_gpu`] method.
+/// 
+/// [`into_gpu`]: ../index/struct.IndexImpl.html#method.into_gpu
 /// 
 /// ```
 /// # fn run() -> Result<(), Box<::std::error::Error>> {
@@ -46,26 +48,30 @@ pub trait GpuResources {
 /// # run().unwrap();
 /// ```
 ///
-/// Since GPU implementations are not thread-safe, attempting to
-/// use the GPU resources from another thread will fail at
-/// compile time.
+/// Since GPU implementations are not thread-safe, attempting to use the GPU
+/// resources from another thread will fail at compile time.
 /// 
 /// ```compile_fail
 /// use faiss::{GpuResources, StandardGpuResources, MetricType};
 /// use faiss::index::flat::FlatIndex;
-/// 
-/// fn use_elsewhere<T: Sync>(_: &T) {}
+/// use std::sync::Arc;
+/// use std::thread;
 /// 
 /// # fn run() -> Result<(), Box<::std::error::Error>> {
-/// let gpu = StandardGpuResources::new()?;
-/// use_elsewhere(&gpu); // using GPU in another thread fails
+/// let gpu = Arc::new(StandardGpuResources::new()?);
+/// let gpu_rc = gpu.clone();
+/// thread::spawn(move || {
+///     let index = FlatIndex::new(64, MetricType::L2)?;
+///     let gpu_index = index.into_gpu(&*gpu_rc, 0)?; // will not compile
+///     Ok(())
+/// });
 /// # Ok(())
 /// # }
 /// # run().unwrap();
 /// ```
 /// 
-/// Other than that, indexes can share the same GPU resources,
-/// so long as neither of them cross any thread boundaries.
+/// Other than that, indexes can share the same GPU resources, so long as
+/// neither of them cross any thread boundaries.
 /// 
 /// ```
 /// use faiss::{GpuResources, StandardGpuResources, MetricType, index_factory};
