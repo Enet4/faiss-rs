@@ -21,7 +21,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! "faiss" = {version = "0.2.0", features = ["gpu"]}
+//! "faiss" = {version = "0.4.0", features = ["gpu"]}
 //! ```
 //!
 //! # Examples
@@ -100,6 +100,7 @@ pub mod metric;
 pub mod gpu;
 
 pub use index::{index_factory, Index, ConcurrentIndex};
+pub use index::flat::FlatIndex;
 pub use metric::MetricType;
 
 #[cfg(feature = "gpu")]
