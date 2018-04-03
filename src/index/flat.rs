@@ -43,6 +43,16 @@ impl FlatIndexImpl {
         }
     }
 
+    /// Create a new flat index with L2 as the metric type.
+    pub fn new_l2(d: u32) -> Result<Self> {
+        FlatIndexImpl::new(d, MetricType::L2)
+    }
+
+    /// Create a new flat index with IP (inner product) as the metric type.
+    pub fn new_ip(d: u32) -> Result<Self> {
+        FlatIndexImpl::new(d, MetricType::InnerProduct)
+    }
+
     /// Obtain a reference to the indexed data.
     pub fn xb(&self) -> &[f32] {
         unsafe {
@@ -247,7 +257,7 @@ mod tests {
 
     #[test]
     fn flat_index_search() {
-        let mut index = FlatIndexImpl::new(D, MetricType::L2).unwrap();
+        let mut index = FlatIndexImpl::new_l2(D).unwrap();
         assert_eq!(index.d(), D);
         assert_eq!(index.ntotal(), 0);
         let some_data = &[

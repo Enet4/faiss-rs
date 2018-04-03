@@ -31,8 +31,9 @@ pub trait GpuResources {
 /// # Examples
 /// 
 /// GPU resources are meant to be passed to an index implementation's
-/// [`into_gpu`] method.
+/// [`into_gpu`] or [`to_gpu`] methods.
 /// 
+/// [`to_gpu`]: ../index/struct.IndexImpl.html#method.to_gpu
 /// [`into_gpu`]: ../index/struct.IndexImpl.html#method.into_gpu
 /// 
 /// ```
@@ -49,10 +50,10 @@ pub trait GpuResources {
 /// ```
 ///
 /// Since GPU implementations are not thread-safe, attempting to use the GPU
-/// resources from another thread will fail at compile time.
+/// resources from another thread is not allowed.
 /// 
 /// ```compile_fail
-/// use faiss::{GpuResources, StandardGpuResources, MetricType};
+/// use faiss::{GpuResources, StandardGpuResources};
 /// use faiss::index::flat::FlatIndex;
 /// use std::sync::Arc;
 /// use std::thread;
@@ -61,7 +62,7 @@ pub trait GpuResources {
 /// let gpu = Arc::new(StandardGpuResources::new()?);
 /// let gpu_rc = gpu.clone();
 /// thread::spawn(move || {
-///     let index = FlatIndex::new(64, MetricType::L2)?;
+///     let index = FlatIndex::new_l2(64)?;
 ///     let gpu_index = index.into_gpu(&*gpu_rc, 0)?; // will not compile
 ///     Ok(())
 /// });
@@ -80,7 +81,7 @@ pub trait GpuResources {
 /// let mut gpu = StandardGpuResources::new()?;
 /// let index1 = index_factory(64, "Flat", MetricType::L2)?
 ///     .into_gpu(&gpu, 0)?;
-/// let index2 = index_factory(32, "Flat", MetricType::L2)?
+/// let index2 = index_factory(32, "Flat", MetricType::InnerProduct)?
 ///     .into_gpu(&gpu, 0)?;
 /// # Ok(())
 /// # }
