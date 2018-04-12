@@ -87,7 +87,8 @@ pub trait GpuResources {
 /// # }
 /// # run().unwrap();
 /// ```
-///
+/// 
+#[derive(Debug)]
 pub struct StandardGpuResources {
     inner: *mut FaissGpuResources,
 }
