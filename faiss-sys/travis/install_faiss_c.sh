@@ -1,8 +1,8 @@
 #!/bin/sh
 repo_url=https://github.com/Enet4/faiss.git
-repo_rev=3bdc5abeaf0cea28430b34fd02b5f9491c122884
+repo_rev=56a7e0fca4fe0f0c48e59fa4790eeba58586454a
 
-git clone --single-branch $repo_url faiss
+git clone $repo_url faiss
 cd faiss
 git checkout -q $repo_rev
 
