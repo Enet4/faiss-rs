@@ -82,14 +82,8 @@
 
 extern crate faiss_sys;
 
-macro_rules! faiss_try {
-    ($e: expr) => {{
-        let c = $e;
-        if c != 0 {
-            return Err(::error::NativeError::from_last_error(c).into());
-        }
-    }}
-}
+#[macro_use]
+mod macros;
 
 pub mod cluster;
 pub mod error;

@@ -2,9 +2,9 @@
 
 use error::{Error, Result};
 use metric::MetricType;
+use std::ffi::CString;
 use std::os::raw::c_uint;
 use std::ptr;
-use std::ffi::CString;
 
 use faiss_sys::*;
 
@@ -221,103 +221,7 @@ impl FromInnerPtr for IndexImpl {
     }
 }
 
-impl Index for IndexImpl {
-    fn is_trained(&self) -> bool {
-        unsafe { faiss_Index_is_trained(self.inner) != 0 }
-    }
-
-    fn ntotal(&self) -> u64 {
-        unsafe { faiss_Index_ntotal(self.inner) as u64 }
-    }
-
-    fn d(&self) -> u32 {
-        unsafe { faiss_Index_d(self.inner) as u32 }
-    }
-
-    fn metric_type(&self) -> MetricType {
-        unsafe { MetricType::from_code(faiss_Index_metric_type(self.inner) as u32).unwrap() }
-    }
-
-    fn add(&mut self, x: &[f32]) -> Result<()> {
-        unsafe {
-            let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_add(self.inner, n as i64, x.as_ptr()));
-            Ok(())
-        }
-    }
-
-    fn add_with_ids(&mut self, x: &[f32], xids: &[Idx]) -> Result<()> {
-        unsafe {
-            let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_add_with_ids(
-                self.inner,
-                n as i64,
-                x.as_ptr(),
-                xids.as_ptr()
-            ));
-            Ok(())
-        }
-    }
-    fn train(&mut self, x: &[f32]) -> Result<()> {
-        unsafe {
-            let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_train(self.inner, n as i64, x.as_ptr()));
-            Ok(())
-        }
-    }
-    fn assign(&mut self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
-        unsafe {
-            let nq = query.len() / self.d() as usize;
-            let mut out_labels = vec![0 as Idx; k * nq];
-            faiss_try!(faiss_Index_assign(
-                self.inner,
-                nq as idx_t,
-                query.as_ptr(),
-                out_labels.as_mut_ptr(),
-                k as i64
-            ));
-            Ok(AssignSearchResult { labels: out_labels })
-        }
-    }
-    fn search(&mut self, query: &[f32], k: usize) -> Result<SearchResult> {
-        unsafe {
-            let nq = query.len() / self.d() as usize;
-            let mut distances = vec![0_f32; k * nq];
-            let mut labels = vec![0 as Idx; k * nq];
-            faiss_try!(faiss_Index_search(
-                self.inner,
-                nq as idx_t,
-                query.as_ptr(),
-                k as idx_t,
-                distances.as_mut_ptr(),
-                labels.as_mut_ptr()
-            ));
-            Ok(SearchResult { distances, labels })
-        }
-    }
-    fn range_search(&mut self, query: &[f32], radius: f32) -> Result<RangeSearchResult> {
-        unsafe {
-            let nq = (query.len() / self.d() as usize) as idx_t;
-            let mut p_res: *mut FaissRangeSearchResult = ptr::null_mut();
-            faiss_try!(faiss_RangeSearchResult_new(&mut p_res, nq));
-            faiss_try!(faiss_Index_range_search(
-                self.inner,
-                nq,
-                query.as_ptr(),
-                radius,
-                p_res
-            ));
-            Ok(RangeSearchResult { inner: p_res })
-        }
-    }
-
-    fn reset(&mut self) -> Result<()> {
-        unsafe {
-            faiss_try!(faiss_Index_reset(self.inner));
-            Ok(())
-        }
-    }
-}
+impl_native_index!(IndexImpl);
 
 impl NativeIndex for IndexImpl {
     fn inner_ptr(&self) -> *mut FaissIndex {
@@ -431,7 +335,7 @@ mod tests {
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = vec![
-            0., 0., 0., 0., 0., 0., 0., 0., 100., 100., 100., 100., 100., 100., 100., 100.
+            0., 0., 0., 0., 0., 0., 0., 0., 100., 100., 100., 100., 100., 100., 100., 100.,
         ];
         let result = index.search(&my_query, 5).unwrap();
         assert_eq!(result.labels, vec![2, 1, 0, 3, 4, 3, 4, 0, 1, 2]);
@@ -467,7 +371,7 @@ mod tests {
         assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
 
         let my_query = vec![
-            0., 0., 0., 0., 0., 0., 0., 0., 100., 100., 100., 100., 100., 100., 100., 100.
+            0., 0., 0., 0., 0., 0., 0., 0., 100., 100., 100., 100., 100., 100., 100., 100.,
         ];
         let result = index.assign(&my_query, 5).unwrap();
         assert_eq!(result.labels, vec![2, 1, 0, 3, 4, 3, 4, 0, 1, 2]);

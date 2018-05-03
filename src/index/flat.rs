@@ -116,69 +116,7 @@ impl FromInnerPtr for FlatIndexImpl {
     }
 }
 
-impl Index for FlatIndexImpl {
-    fn is_trained(&self) -> bool {
-        unsafe { faiss_Index_is_trained(self.inner) != 0 }
-    }
-
-    fn ntotal(&self) -> u64 {
-        unsafe { faiss_Index_ntotal(self.inner) as u64 }
-    }
-
-    fn d(&self) -> u32 {
-        unsafe { faiss_Index_d(self.inner) as u32 }
-    }
-
-    fn metric_type(&self) -> MetricType {
-        unsafe { MetricType::from_code(faiss_Index_metric_type(self.inner) as u32).unwrap() }
-    }
-
-    fn add(&mut self, x: &[f32]) -> Result<()> {
-        unsafe {
-            let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_add(self.inner, n as i64, x.as_ptr()));
-            Ok(())
-        }
-    }
-
-    fn add_with_ids(&mut self, x: &[f32], xids: &[Idx]) -> Result<()> {
-        unsafe {
-            let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_add_with_ids(
-                self.inner,
-                n as i64,
-                x.as_ptr(),
-                xids.as_ptr()
-            ));
-            Ok(())
-        }
-    }
-    fn train(&mut self, x: &[f32]) -> Result<()> {
-        unsafe {
-            let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_train(self.inner, n as i64, x.as_ptr()));
-            Ok(())
-        }
-    }
-    fn assign(&mut self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
-        ConcurrentIndex::assign(self, query, k)
-    }
-    
-    fn search(&mut self, query: &[f32], k: usize) -> Result<SearchResult> {
-        ConcurrentIndex::search(self, query, k)
-    }
-
-    fn range_search(&mut self, query: &[f32], radius: f32) -> Result<RangeSearchResult> {
-        ConcurrentIndex::range_search(self, query, radius)
-    }
-
-    fn reset(&mut self) -> Result<()> {
-        unsafe {
-            faiss_try!(faiss_Index_reset(self.inner));
-            Ok(())
-        }
-    }
-}
+impl_native_index!(FlatIndex);
 
 impl ConcurrentIndex for FlatIndexImpl {
     fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
