@@ -9,6 +9,7 @@ use std::ptr;
 use faiss_sys::*;
 
 pub mod flat;
+pub mod lsh;
 
 #[cfg(feature = "gpu")]
 pub mod gpu;
