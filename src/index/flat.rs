@@ -168,7 +168,7 @@ impl ConcurrentIndex for FlatIndexImpl {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{Index, ConcurrentIndex, index_factory};
+    use index::{Index, ConcurrentIndex, FromInnerPtr, NativeIndex, index_factory};
     use super::FlatIndexImpl;
     use metric::MetricType;
 
@@ -265,5 +265,30 @@ mod tests {
         let (distances, labels) = result.distance_and_labels();
         assert!(labels == &[1, 2] || labels == &[2, 1]);
         assert!(distances.iter().all(|x| *x > 0.));
+    }
+
+
+    #[test]
+    fn index_transition() {
+        let index = {
+            let mut index = FlatIndexImpl::new_l2(D).unwrap();
+            assert_eq!(index.d(), D);
+            assert_eq!(index.ntotal(), 0);
+            let some_data = &[
+                7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 4.,
+                -4., -8., 1., 1., 2., 4., -1., 8., 8., 10., -10., -10., 10., -10., 10., 16., 16., 32.,
+                25., 20., 20., 40., 15.,
+            ];
+            index.add(some_data).unwrap();
+            assert_eq!(index.ntotal(), 5);
+
+            unsafe {
+                let inner = index.inner_ptr();
+                // forget index, rebuild it into another object
+                ::std::mem::forget(index);
+                FlatIndexImpl::from_inner_ptr(inner)
+            }
+        };
+        assert_eq!(index.ntotal(), 5);
     }
 }

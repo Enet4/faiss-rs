@@ -9,6 +9,7 @@ use std::ptr;
 use faiss_sys::*;
 
 pub mod flat;
+pub mod io;
 pub mod lsh;
 
 #[cfg(feature = "gpu")]
@@ -95,7 +96,7 @@ pub trait FromInnerPtr: NativeIndex {
     ///
     /// # Safety
     ///
-    /// `inner_ptr` must point to a valid, non-freed index, and cannot be
+    /// `inner_ptr` must point to a valid, non-freed CPU index, and cannot be
     /// shared across multiple instances. The inner index must also be
     /// compatible with the target `NativeIndex` type according to the native
     /// class hierarchy. For example, creating an `IndexImpl` out of a pointer
@@ -238,11 +239,10 @@ impl NativeIndex for IndexImpl {
 ///
 /// This function returns an error if the description contains any byte with the value `\0` (since
 /// it cannot be converted to a C string), or if the internal index factory operation fails.
-pub fn index_factory<D: AsRef<str>>(
-    d: u32,
-    description: D,
-    metric: MetricType,
-) -> Result<IndexImpl> {
+pub fn index_factory<D>(d: u32, description: D, metric: MetricType) -> Result<IndexImpl>
+where
+    D: AsRef<str>,
+{
     unsafe {
         let metric = metric as c_uint;
         let description = CString::new(description.as_ref()).map_err(|_| Error::IndexDescription)?;
