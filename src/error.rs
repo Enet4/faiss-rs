@@ -16,8 +16,10 @@ pub enum Error {
     Native(NativeError),
     /// Invalid index type cast. 
     BadCast,
-    /// Invalid index description
+    /// Invalid index description.
     IndexDescription,
+    /// Invalid file path.
+    BadFilePath,
 }
 
 impl fmt::Display for Error {
@@ -32,6 +34,7 @@ impl StdError for Error {
             Error::Native(ref e) => &e.msg,
             Error::BadCast => "Invalid index type cast",
             Error::IndexDescription => "Invalid index description",
+            Error::BadFilePath => "Invalid file path",
         }
     }
 }

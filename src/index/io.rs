@@ -20,7 +20,7 @@ where
 {
     unsafe {
         let f = file_name.as_ref();
-        let f = CString::new(f).map_err(|_| Error::IndexDescription)?;
+        let f = CString::new(f).map_err(|_| Error::BadFilePath)?;
 
         faiss_try!(faiss_write_index_fname(index.inner_ptr(), f.as_ptr()));
         Ok(())
@@ -39,7 +39,7 @@ where
 {
     unsafe {
         let f = file_name.as_ref();
-        let f = CString::new(f).map_err(|_| Error::IndexDescription)?;
+        let f = CString::new(f).map_err(|_| Error::BadFilePath)?;
         let mut inner = ptr::null_mut();
         faiss_try!(faiss_read_index_fname(f.as_ptr(), 0, &mut inner));
         Ok(IndexImpl::from_inner_ptr(inner))
