@@ -217,6 +217,12 @@ impl IndexImpl {
     }
 }
 
+impl NativeIndex for IndexImpl {
+    fn inner_ptr(&self) -> *mut FaissIndex {
+        self.inner
+    }
+}
+
 impl FromInnerPtr for IndexImpl {
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self {
         IndexImpl { inner: inner_ptr }
@@ -225,11 +231,7 @@ impl FromInnerPtr for IndexImpl {
 
 impl_native_index!(IndexImpl);
 
-impl NativeIndex for IndexImpl {
-    fn inner_ptr(&self) -> *mut FaissIndex {
-        self.inner
-    }
-}
+impl_native_index_clone!(IndexImpl);
 
 /// Use the index factory to create a native instance of a Faiss index, for `d`-dimensional
 /// vectors. `description` should follow the exact guidelines as the native Faiss interface
@@ -312,6 +314,30 @@ mod tests {
     fn bad_index_factory_description() {
         let r = index_factory(64, "fdnoyq", MetricType::L2);
         assert!(r.is_err());
+    }
+
+    #[test]
+    fn index_clone() {
+        let mut index = index_factory(4, "Flat", MetricType::L2).unwrap();
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1.,
+        ];
+
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 6);
+
+        let mut index2 = index.try_clone().unwrap();
+        assert_eq!(index2.ntotal(), 6);
+
+        let some_more_data = &[
+            100., 100., 100., 100., -100., 100., 100., 100., 120., 100., 100., 105., -100., 100.,
+            100., 105.,
+        ];
+
+        index2.add(some_more_data).unwrap();
+        assert_eq!(index.ntotal(), 6);
+        assert_eq!(index2.ntotal(), 10);
     }
 
     #[test]

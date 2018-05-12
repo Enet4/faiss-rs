@@ -118,6 +118,8 @@ impl FromInnerPtr for FlatIndexImpl {
 
 impl_native_index!(FlatIndex);
 
+impl_native_index_clone!(FlatIndex);
+
 impl ConcurrentIndex for FlatIndexImpl {
     fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
         unsafe {

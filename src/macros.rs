@@ -1,11 +1,11 @@
 #[macro_export]
 macro_rules! faiss_try {
-    ($e: expr) => {{
+    ($e:expr) => {{
         let c = $e;
         if c != 0 {
             return Err(::error::NativeError::from_last_error(c).into());
         }
-    }}
+    }};
 }
 
 /// A macro which provides a native index implementation to the given type.
@@ -108,6 +108,28 @@ macro_rules! impl_native_index {
                 unsafe {
                     faiss_try!(faiss_Index_reset(self.inner_ptr()));
                     Ok(())
+                }
+            }
+        }
+    };
+}
+
+/// A macro which provides a Clone implementation to native index types.
+#[macro_export]
+macro_rules! impl_native_index_clone {
+    ($t:ty) => {
+        impl $t {
+            /// Create an independent clone of this index.
+            ///
+            /// # Error
+            ///
+            /// May result in a native error if the clone operation is not
+            /// supported for the internal type of index.
+            pub fn try_clone(&self) -> Result<Self> {
+                unsafe {
+                    let mut new_index_ptr = ::std::ptr::null_mut();
+                    faiss_try!(faiss_clone_index(self.inner_ptr(), &mut new_index_ptr));
+                    Ok(::index::FromInnerPtr::from_inner_ptr(new_index_ptr))
                 }
             }
         }

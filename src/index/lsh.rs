@@ -90,6 +90,8 @@ impl LshIndex {
 
 impl_native_index!(LshIndex);
 
+impl_native_index_clone!(LshIndex);
+
 impl IndexImpl {
     /// Attempt a dynamic cast of an index to the LSH index type.
     pub fn as_lsh(self) -> Result<LshIndex> {
