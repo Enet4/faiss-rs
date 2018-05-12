@@ -3,6 +3,7 @@
 use std::fmt;
 use std::error::Error as StdError;
 use std::ffi::CStr;
+use std::os::raw::c_int;
 use faiss_sys::*;
 
 /// Type alias for results of functions in this crate.
@@ -39,14 +40,14 @@ impl StdError for Error {
 #[derive(Debug, Clone, PartialEq)]
 pub struct NativeError {
     /// The error code retrieved from the C API
-    code: i32,
+    code: c_int,
     /// The exception's message
     msg: String,
 }
 
 impl NativeError {
     /// Getter for the internal error code.
-    pub fn code(&self) -> i32 {
+    pub fn code(&self) -> c_int {
         self.code
     }
 
@@ -66,7 +67,7 @@ impl NativeError {
     /// a operation which returned a non-zero error code.
     /// This function might panic if no operation was made
     /// or the last operation was successful.
-    pub fn from_last_error(code: i32) -> Self {
+    pub fn from_last_error(code: c_int) -> Self {
         unsafe {
             let e: *const _ = faiss_get_last_error();
             assert!(!e.is_null());
