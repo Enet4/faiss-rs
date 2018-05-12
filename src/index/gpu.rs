@@ -1,14 +1,16 @@
 //! GPU Index implementation
 
-use std::marker::PhantomData;
-use std::ptr;
-use faiss_sys::*;
+use super::flat::FlatIndexImpl;
+use super::{
+    AssignSearchResult, CpuIndex, FromInnerPtr, Idx, Index, IndexImpl, NativeIndex,
+    RangeSearchResult, SearchResult,
+};
 use error::Result;
+use faiss_sys::*;
 use gpu::GpuResources;
 use metric::MetricType;
-use super::{AssignSearchResult, CpuIndex, FromInnerPtr, Idx, Index, IndexImpl, NativeIndex,
-            RangeSearchResult, SearchResult};
-use super::flat::FlatIndexImpl;
+use std::marker::PhantomData;
+use std::ptr;
 
 /// Trait for Faiss index types known to be running on the GPU.
 pub trait GpuIndex: Index {}
@@ -17,12 +19,12 @@ pub trait GpuIndex: Index {}
 /// built on the CPU, and subsequently transferred to one or more GPU's via the
 /// [`into_gpu`] or [`to_gpu`] methods. Calling [`into_cpu`] (or [`to_cpu`])
 /// enables the user to bring the index back to CPU memory.
-/// 
+///
 /// When using [`to_gpu`]() or [`to_cpu`](), the indexes will contain the same
 /// indexed vectors, but are independent at the point of creation. The use of
 /// [`into_gpu`] or [`into_cpu`] isn't necessarily faster, but will automatically
 /// free the originating index.
-/// 
+///
 /// The `'gpu` lifetime ensures that the [GPU resources] are in scope for as
 /// long as the index lives.
 ///
@@ -67,7 +69,7 @@ where
     /// Build a GPU in from the given CPU native index. The operation fails if the
     /// index does not provide GPU support.
     /// Users will indirectly use this through [`to_gpu`] or [`into_gpu`].
-    /// 
+    ///
     /// [`to_gpu`]: ../struct.IndexImpl.html#method.to_gpu
     /// [`into_gpu`]: ../struct.IndexImpl.html#method.into_gpu
     pub(crate) fn from_cpu<G>(index: &I, gpu_res: &G, device: i32) -> Result<Self>
@@ -271,7 +273,7 @@ impl FlatIndexImpl {
     {
         GpuIndexImpl::from_cpu(self, gpu_res, device)
     }
-    
+
     /// Build a GPU in from the given CPU native index, discarding the
     /// CPU-backed index. The operation fails if the index does not
     /// provide GPU support.
@@ -289,9 +291,7 @@ impl FlatIndexImpl {
 
 #[cfg(test)]
 mod tests {
-    use super::super::index_factory;
-    use super::super::{CpuIndex, Index};
-    use super::super::flat::FlatIndex;
+    use super::super::{CpuIndex, Index, FlatIndex, index_factory};
     use super::GpuIndex;
     use gpu::{GpuResources, StandardGpuResources};
     use metric::MetricType;
@@ -369,10 +369,8 @@ mod tests {
     fn flat_index_search_to_gpu() {
         let res = StandardGpuResources::new().unwrap();
 
-        let mut index_cpu = index_factory(8, "Flat", MetricType::L2)
-            .unwrap();
-        let mut index_gpu = index_cpu.to_gpu(&res, 0)
-            .unwrap();
+        let mut index_cpu = index_factory(8, "Flat", MetricType::L2).unwrap();
+        let mut index_gpu = index_cpu.to_gpu(&res, 0).unwrap();
         let some_data = &[
             7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
             0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
