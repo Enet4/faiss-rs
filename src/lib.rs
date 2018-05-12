@@ -95,6 +95,7 @@ pub mod gpu;
 
 pub use index::{index_factory, Index, ConcurrentIndex};
 pub use index::flat::FlatIndex;
+pub use index::lsh::LshIndex;
 pub use index::io::{read_index, write_index};
 pub use metric::MetricType;
 
