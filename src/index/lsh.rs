@@ -17,6 +17,14 @@ unsafe impl Sync for LshIndex {}
 
 impl CpuIndex for LshIndex {}
 
+impl Drop for LshIndex {
+    fn drop(&mut self) {
+        unsafe {
+            faiss_IndexLSH_free(self.inner);
+        }
+    }
+}
+
 impl NativeIndex for LshIndex {
     fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
