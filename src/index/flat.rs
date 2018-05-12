@@ -10,6 +10,7 @@ use std::ptr;
 /// Alias for the native implementation of a flat index.
 pub type FlatIndex = FlatIndexImpl;
 
+/// Native implementation of a flat index.
 #[derive(Debug)]
 pub struct FlatIndexImpl {
     inner: *mut FaissIndexFlat,

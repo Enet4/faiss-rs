@@ -1,4 +1,14 @@
-//! Index interface and implementations
+//! Index interface and native implementations.
+//!
+//! This module hosts the vital [`Index`] trait, through which index building
+//! and searching is made. It also contains [`index_factory`], a generic
+//! function through which the user can retrieve most of the available index
+//! implementations. A very typical usage scenario of this crate is to create
+//! the index through this function, but some statically verified index types
+//! are available as well.
+//!
+//! [`Index`]: trait.Index.html
+//! [`index_factory`]: fn.index_factory.html
 
 use error::{Error, Result};
 use metric::MetricType;
@@ -18,9 +28,18 @@ pub mod gpu;
 /// Primitive data type for identifying a vector in an index.
 pub type Idx = idx_t;
 
-/// Interface for a Faiss index.
+/// Interface for a Faiss index. Most methods in this trait match the ones in
+/// the native library, whereas some others serve as getters to the index'
+/// parameters.
+/// 
+/// Although all methods appear to be available for all index implementations,
+/// some methods may not be supported. For instance, a [`FlatIndex`] stores
+/// vectors sequentially, and so does not support `add_with_ids` nor
+/// `remove_with_ids`. Users are advised to read the Faiss wiki pages when
+/// 
+/// [`FlatIndex`]: flat/struct.FlatIndex.html
 pub trait Index {
-    /// Whether the index is trained
+    /// Whether the Index does not require training, or if training is done already
     fn is_trained(&self) -> bool;
 
     /// The total number of vectors indexed
