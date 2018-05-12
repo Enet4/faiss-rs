@@ -21,7 +21,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! "faiss" = {version = "0.5.0", features = ["gpu"]}
+//! "faiss" = {version = "0.5.1", features = ["gpu"]}
 //! ```
 //!
 //! # Examples
