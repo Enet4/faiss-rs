@@ -19,6 +19,7 @@ use std::ptr;
 use faiss_sys::*;
 
 pub mod flat;
+pub mod id_map;
 pub mod io;
 pub mod lsh;
 
@@ -35,7 +36,8 @@ pub type Idx = idx_t;
 /// Although all methods appear to be available for all index implementations,
 /// some methods may not be supported. For instance, a [`FlatIndex`] stores
 /// vectors sequentially, and so does not support `add_with_ids` nor
-/// `remove_with_ids`. Users are advised to read the Faiss wiki pages when
+/// `remove_with_ids`. Users are advised to read the Faiss wiki pages in order
+/// to understand which index algorithms support which operations.
 /// 
 /// [`FlatIndex`]: flat/struct.FlatIndex.html
 pub trait Index {
