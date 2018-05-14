@@ -291,7 +291,8 @@ impl FlatIndexImpl {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{CpuIndex, Index, FlatIndex, index_factory};
+    use super::super::{CpuIndex, Index, index_factory};
+    use index::flat::FlatIndex;
     use super::GpuIndex;
     use gpu::{GpuResources, StandardGpuResources};
     use metric::MetricType;
