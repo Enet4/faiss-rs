@@ -1,6 +1,7 @@
 //! GPU Index implementation
 
 use super::flat::FlatIndexImpl;
+use super::id_map::IdMap;
 use super::{
     AssignSearchResult, CpuIndex, FromInnerPtr, Idx, Index, IndexImpl, NativeIndex,
     RangeSearchResult, SearchResult,
@@ -288,6 +289,56 @@ impl FlatIndexImpl {
         self.to_gpu(gpu_res, device)
     }
 }
+
+impl<I> IdMap<I>
+where
+    I: CpuIndex,
+    I: NativeIndex,
+{
+    /// Build a GPU in from the given CPU native index, yielding two
+    /// independent indices. The operation fails if the index does
+    /// not provide GPU support.
+    pub fn to_gpu<'gpu, G>(
+        &self,
+        gpu_res: &'gpu G,
+        device: i32,
+    ) -> Result<IdMap<GpuIndexImpl<'gpu, I>>>
+    where
+        G: GpuResources,
+    {
+        unsafe {
+            let index_inner = self.index_inner_ptr();
+            let mut gpuindex_ptr = ptr::null_mut();
+            faiss_try!(faiss_index_cpu_to_gpu(
+                gpu_res.inner_ptr(),
+                device,
+                index_inner,
+                &mut gpuindex_ptr
+            ));
+            let gpu_index = IdMap::new(GpuIndexImpl {
+                inner: gpuindex_ptr,
+                phantom: PhantomData,
+            })?;
+            // TODO restore ID map 
+            Ok(gpu_index)
+        }
+    }
+
+    /// Build a GPU in from the given CPU native index, discarding the
+    /// CPU-backed index. The operation fails if the index does not
+    /// provide GPU support.
+    pub fn into_gpu<'gpu, G>(
+        self,
+        gpu_res: &'gpu G,
+        device: i32,
+    ) -> Result<IdMap<GpuIndexImpl<'gpu, I>>>
+    where
+        G: GpuResources,
+    {
+        self.to_gpu(gpu_res, device)
+    }
+}
+
 
 #[cfg(test)]
 mod tests {

@@ -6,7 +6,9 @@
 //! Please see the [Faiss wiki] for more information.
 //!
 //! For implementations which do not support arbitrary IDs, this module provides
-//! the [`IdMap`] wrapper type.
+//! the [`IdMap`] wrapper type. An `IdMap<I>` retains the algorithm and compile
+//! time properties of the index type `I`, while ensuring the extra ID mapping
+//! functionality.
 //!
 //! [Faiss wiki]: https://github.com/facebookresearch/faiss/wiki/Pre--and-post-processing#faiss-id-mapping
 //! [`Index#add_with_id`]: ../trait.Index.html#add_with_ids
@@ -30,11 +32,31 @@
 //! # run().unwrap();
 //! ```
 //!
+//! Moving an index to the GPU results in a new `IdMap` where the internal
+//! index type is a GPU-backed index. The ID map will still reside in CPU
+//! memory.
+//! 
+//! # #[cfg(feature = "gpu")]
+//! # use faiss::{GpuResources, StandardGpuResources, Index, FlatIndex, IdMap};
+//! # #[cfg(feature = "gpu")]
+//! # use faiss::error::Result;
+//!
+//! # #[cfg(feature = "gpu")]
+//! # fn run() -> Result<()> {
+//! let index = IdMap::new(FlatIndex::new_l2(8)?)?;
+//! let gpu_res = StandardGpuResources::new()?;
+//! let index: IdMap<_> = index.into_gpu(&gpu_res, 0)?;
+//! # Ok(())
+//! # }
+//! # #[cfg(feature = "gpu")]
+//! # run().unwrap()
+//! ```
+//! 
 
 use error::Result;
 use faiss_sys::*;
 use index::{
-    AssignSearchResult, ConcurrentIndex, CpuIndex, Idx, Index, NativeIndex, RangeSearchResult,
+    AssignSearchResult, ConcurrentIndex, CpuIndex, FromInnerPtr, Idx, Index, NativeIndex, RangeSearchResult,
     SearchResult,
 };
 
@@ -50,6 +72,7 @@ use std::ptr;
 #[derive(Debug)]
 pub struct IdMap<I> {
     inner: *mut FaissIndexIDMap,
+    index_inner: *mut FaissIndex,
     phantom: PhantomData<I>,
 }
 
@@ -78,16 +101,53 @@ where
     /// Augment an index with arbitrary ID mapping.
     pub fn new(index: I) -> Result<Self> {
         unsafe {
+            let index_inner = index.inner_ptr();
             let mut inner_ptr = ptr::null_mut();
-            faiss_try!(faiss_IndexIDMap_new(&mut inner_ptr, index.inner_ptr()));
+            faiss_try!(faiss_IndexIDMap_new(&mut inner_ptr,index_inner));
             // let IDMap take ownership of the index
             faiss_IndexIDMap_set_own_fields(inner_ptr, 1);
             mem::forget(index);
 
             Ok(IdMap {
                 inner: inner_ptr,
+                index_inner,
                 phantom: PhantomData,
             })
+        }
+    }
+
+    /// Retrieve a slice of the internal ID map.
+    pub fn id_map(&self) -> &[Idx] {
+        unsafe {
+            let mut id_ptr = ptr::null_mut();
+            let mut psize = 0;
+            faiss_IndexIDMap_id_map(self.inner, &mut id_ptr, &mut psize);
+            ::std::slice::from_raw_parts(id_ptr, psize)
+        }
+    }
+
+    /// Obtain the raw pointer to the internal index.
+    /// 
+    /// # Safety
+    /// 
+    /// While this method is safe, note that the returned index pointer is
+    /// already owned by this ID map. Therefore, it is undefined behaviour to
+    /// create a high-level index value from this pointer without first
+    /// decoupling this ownership. See [`into_inner`] for a safe alternative.
+    pub fn index_inner_ptr(&self) -> *mut FaissIndex {
+        self.index_inner
+    }
+
+    /// Discard the ID map, recovering the originally created index.
+    pub fn into_inner(self) -> I
+    where
+        I: FromInnerPtr,
+    {
+        unsafe {
+            // make id map disown the index
+            faiss_IndexIDMap_set_own_fields(self.inner, 0);
+            // now it's safe to build a managed index
+            I::from_inner_ptr(self.index_inner)
         }
     }
 }
@@ -193,7 +253,10 @@ impl<I> Index for IdMap<I> {
     }
 }
 
-impl<I: ConcurrentIndex> ConcurrentIndex for IdMap<I> {
+impl<I> ConcurrentIndex for IdMap<I>
+where
+    I: ConcurrentIndex,
+{
     fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
         unsafe {
             let nq = query.len() / self.d() as usize;
