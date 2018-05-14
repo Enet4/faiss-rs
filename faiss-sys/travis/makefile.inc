@@ -2,8 +2,9 @@
 # Copyright (c) 2015-present, Facebook, Inc.
 # All rights reserved.
 #
-# This source code is licensed under the BSD+Patents license found in the
-# LICENSE file in the root directory of this source tree.
+# This file is licensed under the BSD+Patents license found in the
+# LICENSE file in the root directory of the following source tree:
+# https://github.com/facebookresearch/faiss
 
 # -*- makefile -*-
 # tested on CentOS 7, Ubuntu 16 and Ubuntu 14, see below to adjust flags to distribution.
