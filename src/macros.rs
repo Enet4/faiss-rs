@@ -1,4 +1,3 @@
-#[macro_export]
 macro_rules! faiss_try {
     ($e:expr) => {{
         let c = $e;
@@ -9,7 +8,6 @@ macro_rules! faiss_try {
 }
 
 /// A macro which provides a native index implementation to the given type.
-#[macro_export]
 macro_rules! impl_native_index {
     ($t:ty) => {
         impl ::index::Index for $t {
@@ -115,7 +113,6 @@ macro_rules! impl_native_index {
 }
 
 /// A macro which provides a Clone implementation to native index types.
-#[macro_export]
 macro_rules! impl_native_index_clone {
     ($t:ty) => {
         impl $t {
