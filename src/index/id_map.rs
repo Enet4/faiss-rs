@@ -32,9 +32,9 @@
 //! # run().unwrap();
 //! ```
 //!
-//! Moving an index to the GPU results in a new `IdMap` where the internal
-//! index type is a GPU-backed index. The ID map will still reside in CPU
-//! memory.
+//! `IdMap` also works for GPU backed indexes, but the index map will reside
+//! in CPU memory. Once an index map is made, moving an index to/from the GPU
+//! is not possible.
 //! 
 //! # #[cfg(feature = "gpu")]
 //! # use faiss::{GpuResources, StandardGpuResources, Index, FlatIndex, IdMap};
@@ -43,9 +43,9 @@
 //!
 //! # #[cfg(feature = "gpu")]
 //! # fn run() -> Result<()> {
-//! let index = IdMap::new(FlatIndex::new_l2(8)?)?;
+//! let index = FlatIndex::new_l2(8)?;
 //! let gpu_res = StandardGpuResources::new()?;
-//! let index: IdMap<_> = index.into_gpu(&gpu_res, 0)?;
+//! let index: IdMap<_> = IdMap::new(index.into_gpu(&gpu_res, 0)?)?;
 //! # Ok(())
 //! # }
 //! # #[cfg(feature = "gpu")]
@@ -138,7 +138,7 @@ where
         self.index_inner
     }
 
-    /// Discard the ID map, recovering the originally created index.
+    /// Discard the ID map, recovering the index originally created without it.
     pub fn into_inner(self) -> I
     where
         I: FromInnerPtr,
