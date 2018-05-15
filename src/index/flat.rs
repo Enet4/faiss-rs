@@ -197,6 +197,32 @@ mod tests {
     }
 
     #[test]
+    fn index_clone() {
+        let mut index = FlatIndexImpl::new_l2(D).unwrap();
+        assert_eq!(index.is_trained(), true); // Flat index does not need training
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
+        ];
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        {
+            let mut index: FlatIndexImpl = index.try_clone().unwrap();
+            assert_eq!(index.is_trained(), true);
+            assert_eq!(index.ntotal(), 5);
+            {
+                let xb = index.xb();
+                assert_eq!(xb.len(), 8 * 5);
+            }
+            index.reset().unwrap();
+            assert_eq!(index.ntotal(), 0);
+        }
+        assert_eq!(index.ntotal(), 5);
+    }
+
+    #[test]
     fn flat_index_search() {
         let mut index = FlatIndexImpl::new_l2(D).unwrap();
         assert_eq!(index.d(), D);
