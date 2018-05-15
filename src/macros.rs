@@ -118,7 +118,7 @@ macro_rules! impl_native_index_clone {
         impl $t {
             /// Create an independent clone of this index.
             ///
-            /// # Error
+            /// # Errors
             ///
             /// May result in a native error if the clone operation is not
             /// supported for the internal type of index.

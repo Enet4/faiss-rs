@@ -66,9 +66,12 @@ impl<'g, I> GpuIndexImpl<'g, I>
 where
     I: CpuIndex,
 {
-    /// Build a GPU in from the given CPU native index. The operation fails if the
-    /// index does not provide GPU support.
+    /// Build a GPU in from the given CPU native index.
     /// Users will indirectly use this through [`to_gpu`] or [`into_gpu`].
+    /// 
+    /// # Error
+    /// 
+    /// The operation fails if the index does not provide GPU support.
     ///
     /// [`to_gpu`]: ../struct.IndexImpl.html#method.to_gpu
     /// [`into_gpu`]: ../struct.IndexImpl.html#method.into_gpu
@@ -95,8 +98,11 @@ where
 }
 
 impl IndexImpl {
-    /// Build a GPU index from the given CPU native index. The operation fails if the
-    /// index type does not provide GPU support.
+    /// Build a GPU index from the given CPU native index.
+    /// 
+    /// # Errors
+    /// 
+    /// The operation fails if the index type does not provide GPU support.
     pub fn to_gpu<'gpu, G: 'gpu>(
         &self,
         gpu_res: &'gpu G,
@@ -108,8 +114,12 @@ impl IndexImpl {
         GpuIndexImpl::from_cpu(&self, gpu_res, device)
     }
 
-    /// Build a GPU index from the given CPU native index. The operation fails if the
-    /// index does not provide GPU support.
+    /// Build a GPU index from the given CPU native index. The index residing
+    /// in CPU memory is discarded in the process.
+    /// 
+    /// # Errors
+    /// 
+    /// The operation fails if the index does not provide GPU support.
     pub fn into_gpu<'gpu, G: 'gpu>(
         self,
         gpu_res: &'gpu G,
