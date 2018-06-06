@@ -54,12 +54,12 @@ pub trait Index {
     fn metric_type(&self) -> MetricType;
 
     /// Add new data vectors to the index.
-    /// This assumes a contiguous memory slice of vectors, where the total
+    /// This assumes a C-contiguous memory slice of vectors, where the total
     /// number of vectors is `x.len() / d`.
     fn add(&mut self, x: &[f32]) -> Result<()>;
 
-    /// Add new data vectors to the index with ids.
-    /// This assumes a contiguous memory slice of vectors, where the total
+    /// Add new data vectors to the index with IDs.
+    /// This assumes a C-contiguous memory slice of vectors, where the total
     /// number of vectors is `x.len() / d`.
     /// Not all index types may support this operation.
     fn add_with_ids(&mut self, x: &[f32], xids: &[Idx]) -> Result<()>;
@@ -121,8 +121,8 @@ pub trait FromInnerPtr: NativeIndex {
     /// shared across multiple instances. The inner index must also be
     /// compatible with the target `NativeIndex` type according to the native
     /// class hierarchy. For example, creating an `IndexImpl` out of a pointer
-    /// to `FaissIndexFlatL2` is valid, but creating a `FlatIndexImpl` out of
-    /// a plain `FaissIndex` can cause undefined behaviour.
+    /// to `FaissIndexFlatL2` is valid, but creating a `FlatIndex` out of a
+    /// plain `FaissIndex` can cause undefined behaviour.
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self;
 }
 
@@ -187,18 +187,26 @@ impl RangeSearchResult {
         }
     }
 
+    /// getter for distances (not sorted):
+    /// result for query `i` is `distances[lims[i] .. lims[i+1]]`
     pub fn distances(&self) -> &[f32] {
         self.distance_and_labels().0
     }
 
+    /// getter for distances (not sorted):
+    /// result for query `i` is `distances[lims[i] .. lims[i+1]]`
     pub fn distances_mut(&mut self) -> &mut [f32] {
         self.distance_and_labels_mut().0
     }
 
+    /// getter for labels (not sorted):
+    /// result for query `i` is `labels[lims[i] .. lims[i+1]]`
     pub fn labels(&self) -> &[Idx] {
         self.distance_and_labels().1
     }
 
+    /// getter for labels (not sorted):
+    /// result for query `i` is `labels[lims[i] .. lims[i+1]]`
     pub fn labels_mut(&mut self) -> &mut [Idx] {
         self.distance_and_labels_mut().1
     }
@@ -334,6 +342,8 @@ mod tests {
     #[test]
     fn bad_index_factory_description() {
         let r = index_factory(64, "fdnoyq", MetricType::L2);
+        assert!(r.is_err());
+        let r = index_factory(64, "Flat\0Flat", MetricType::L2);
         assert!(r.is_err());
     }
 
