@@ -1,20 +1,22 @@
 #!/bin/sh
 repo_url=https://github.com/Enet4/faiss.git
-repo_rev=1fe2872013685092d697f08a2a48e110acd25b2b
+repo_rev=2fc1c5242804dac81cc0e850772b56d8ed91f63e
 
 git clone $repo_url faiss
 cd faiss
 git checkout -q $repo_rev
 
 # Build
-cp ../travis/makefile.inc ./
+./configure
+echo '----- makefile.inc -----'
+cat makefile.inc
+echo '--- end makefile.inc ---'
+
 make libfaiss.a
 cd c_api
 make libfaiss_c.so
 mkdir -p $HOME/.faiss_c
 cp libfaiss_c.so $HOME/.faiss_c/
-
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.faiss_c
 
 echo libfaiss_c.so installed in $HOME/.faiss_c/
 
