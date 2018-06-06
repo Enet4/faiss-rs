@@ -5,7 +5,7 @@ version = "0.5.1"
 authors = ["Eduardo Pinho <enet4mikeenet@gmail.com>"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/Enet4/faiss-rs"
-categories = ["algorithms"]
+categories = ["algorithms", "science"]
 keywords = ["cbir", "clustering", "index", "similarity"]
 readme = "README.md"
 
