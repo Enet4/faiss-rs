@@ -79,6 +79,7 @@
 //! the [Faiss wiki](https://github.com/facebookresearch/faiss/wiki)
 //! for additional guidance.
 //!
+#![doc(html_root_url = "https://docs.rs/faiss/0.5.1")]
 
 extern crate faiss_sys;
 
