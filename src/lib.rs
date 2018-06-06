@@ -74,6 +74,9 @@
 //! # #[cfg(feature = "gpu")]
 //! # run().unwrap()
 //! ```
+//! 
+//! Unless otherwise indicated, vectors are added and retrieved from the
+//! library under the form of contiguous column-first slices of `f32` elements.
 //!
 //! Details from the official Faiss APIs still apply. Please visit
 //! the [Faiss wiki](https://github.com/facebookresearch/faiss/wiki)

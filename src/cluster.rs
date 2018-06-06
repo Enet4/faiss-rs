@@ -1,10 +1,10 @@
 //! Vector clustering interface and implementation.
 
 use error::Result;
-use std::{mem, ptr};
-use std::os::raw::c_int;
 use faiss_sys::*;
 use index::NativeIndex;
+use std::os::raw::c_int;
+use std::{mem, ptr};
 
 /// Parameters for the clustering algorithm.
 pub struct ClusteringParameters {
@@ -118,7 +118,8 @@ impl Drop for Clustering {
 
 impl Clustering {
     /**
-     * Obtain a new clustering object.
+     * Obtain a new clustering object with the given dimensionality
+     * `d` and number of centroids `k`.
      */
     pub fn new(d: u32, k: u32) -> Result<Self> {
         unsafe {
@@ -131,7 +132,7 @@ impl Clustering {
     }
 
     /**
-     * Obtain a new clustering object with the given parameters.
+     * Obtain a new clustering object, with the given clustering parameters.
      */
     pub fn new_with_params(d: u32, k: u32, params: &ClusteringParameters) -> Result<Self> {
         unsafe {
@@ -224,46 +225,57 @@ impl Clustering {
         }
     }
 
+    /** Getter for the clustering object's vector dimensionality. */
     pub fn d(&self) -> u32 {
         unsafe { faiss_Clustering_d(self.inner) as u32 }
     }
 
+    /** Getter for the number of centroids. */
     pub fn k(&self) -> u32 {
         unsafe { faiss_Clustering_k(self.inner) as u32 }
     }
 
+    /** Getter for the number of k-means iterations. */
     pub fn niter(&self) -> u32 {
         unsafe { faiss_Clustering_niter(self.inner) as u32 }
     }
 
+    /** Getter for the `nredo` property of `Clustering`. */
     pub fn nredo(&self) -> u32 {
         unsafe { faiss_Clustering_nredo(self.inner) as u32 }
     }
 
+    /** Getter for the `verbose` property of `Clustering`. */
     pub fn verbose(&self) -> bool {
         unsafe { faiss_Clustering_niter(self.inner) != 0 }
     }
 
+    /** Getter for whether spherical clustering is intended. */
     pub fn spherical(&self) -> bool {
         unsafe { faiss_Clustering_spherical(self.inner) != 0 }
     }
 
+    /** Getter for the `update_index` property of `Clustering`. */
     pub fn update_index(&self) -> bool {
         unsafe { faiss_Clustering_update_index(self.inner) != 0 }
     }
 
+    /** Getter for the `frozen_centroids` property of `Clustering`. */
     pub fn frozen_centroids(&self) -> bool {
         unsafe { faiss_Clustering_frozen_centroids(self.inner) != 0 }
     }
 
+    /** Getter for the `seed` property of `Clustering`. */
     pub fn seed(&self) -> u32 {
         unsafe { faiss_Clustering_seed(self.inner) as u32 }
     }
 
+    /** Getter for the minimum number of points per centroid. */
     pub fn min_points_per_centroid(&self) -> u32 {
         unsafe { faiss_Clustering_min_points_per_centroid(self.inner) as u32 }
     }
 
+    /** Getter for the maximum number of points per centroid. */
     pub fn max_points_per_centroid(&self) -> u32 {
         unsafe { faiss_Clustering_max_points_per_centroid(self.inner) as u32 }
     }
@@ -281,16 +293,16 @@ pub struct KMeansResult {
     pub q_error: f32,
 }
 
-/** Simplified interface for k-means clustering.
- *
- * - `d`: dimension of the data
- * - `k`: nb of output centroids
- * - `x`: training set (size `n * d`)
- *
- * The number of points is inferred from `x` and `k`.
- *
- * Returns the final quantization error and centroids (size `k * d`).
- */
+/// Simplified interface for k-means clustering.
+///
+/// - `d`: dimension of the data
+/// - `k`: nb of output centroids
+/// - `x`: training set (size `n * d`)
+///
+/// The number of points is inferred from `x` and `k`.
+///
+/// Returns the final quantization error and centroids (size `k * d`).
+///
 pub fn kmeans_clustering(d: u32, k: u32, x: &[f32]) -> Result<KMeansResult> {
     unsafe {
         let n = x.len() / d as usize;
@@ -310,7 +322,7 @@ pub fn kmeans_clustering(d: u32, k: u32, x: &[f32]) -> Result<KMeansResult> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Clustering, ClusteringParameters, kmeans_clustering};
+    use super::{kmeans_clustering, Clustering, ClusteringParameters};
     use index::index_factory;
     use MetricType;
 
