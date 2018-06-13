@@ -16,14 +16,14 @@ Currently, this crate does not build Faiss automatically for you. The dynamic li
 
 ```toml
 [dependencies]
-"faiss" = "0.5.1"
+"faiss" = "0.6.0"
 ```
 
 If you have built Faiss with GPU support, you can include the "gpu" feature in the bindings:
 
 ```toml
 [dependencies]
-"faiss" = {version = "0.5.1", features = ["gpu"]}
+"faiss" = {version = "0.6.0", features = ["gpu"]}
 ```
 
 ## Using
