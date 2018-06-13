@@ -8,9 +8,6 @@ git checkout -q $repo_rev
 
 # Build
 ./configure
-echo '----- makefile.inc -----'
-cat makefile.inc
-echo '--- end makefile.inc ---'
 
 make libfaiss.a
 cd c_api
