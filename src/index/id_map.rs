@@ -10,8 +10,8 @@
 //! time properties of the index type `I`, while ensuring the extra ID mapping
 //! functionality.
 //!
+//! [`Index#add_with_ids`]: ../trait.Index.html#tymethod.add_with_ids
 //! [Faiss wiki]: https://github.com/facebookresearch/faiss/wiki/Pre--and-post-processing#faiss-id-mapping
-//! [`Index#add_with_id`]: ../trait.Index.html#add_with_ids
 //! [`IdMap`]: struct.IdMap.html
 //!
 //! # Examples
@@ -36,11 +36,11 @@
 //! in CPU memory. Once an index map is made, moving an index to/from the GPU
 //! is not possible.
 //! 
+//! ```
 //! # #[cfg(feature = "gpu")]
 //! # use faiss::{GpuResources, StandardGpuResources, Index, FlatIndex, IdMap};
 //! # #[cfg(feature = "gpu")]
 //! # use faiss::error::Result;
-//!
 //! # #[cfg(feature = "gpu")]
 //! # fn run() -> Result<()> {
 //! let index = FlatIndex::new_l2(8)?;
@@ -68,7 +68,7 @@ use std::ptr;
 ///
 /// See the [module level documentation] for more information.
 ///
-/// [module level documentation](./index.html)
+/// [module level documentation]: ./index.html
 #[derive(Debug)]
 pub struct IdMap<I> {
     inner: *mut FaissIndexIDMap,
