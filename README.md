@@ -2,6 +2,7 @@
 
 [![faiss at crates.io](https://img.shields.io/crates/v/faiss.svg)](https://crates.io/crates/faiss)
 [![Build Status](https://travis-ci.org/Enet4/faiss-rs.svg?branch=master)](https://travis-ci.org/Enet4/faiss-rs)
+[![dependency status](https://deps.rs/repo/github/Enet4/faiss-rs/status.svg)](https://deps.rs/repo/github/Enet4/faiss-rs)
 
 This project provides Rust bindings to [Faiss](https://github.com/facebookresearch/faiss),
 the state-of-the-art vector search and clustering library.
