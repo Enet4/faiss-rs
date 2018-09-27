@@ -32,7 +32,7 @@ pub trait GpuIndex: Index {}
 /// [`to_gpu`]: ../struct.IndexImpl.html#method.to_gpu
 /// [`into_cpu`]: struct.GpuIndexImpl.html#method.into_cpu
 /// [`to_cpu`]: struct.GpuIndexImpl.html#method.to_cpu
-/// [GPU resources]: ../gpu/index.html
+/// [GPU resources]: ../../gpu/index.html
 #[derive(Debug)]
 pub struct GpuIndexImpl<'gpu, I> {
     inner: *mut FaissGpuIndex,
