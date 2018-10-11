@@ -22,6 +22,8 @@ pub enum Error {
     BadFilePath,
     /// Invalid parameter name of index.
     ParameterName,
+    /// The number of GPU resources and devices do not match.
+    GpuResourcesMatch,
 }
 
 impl fmt::Display for Error {
