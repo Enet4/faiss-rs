@@ -251,6 +251,18 @@ impl<I> Index for IdMap<I> {
             Ok(())
         }
     }
+
+    fn remove_ids(&mut self, sel: &[::index::Idx]) -> Result<()> {
+        unsafe {
+            let mut n_removed = 0;
+            faiss_try!(faiss_Index_remove_ids(
+                self.inner_ptr(),
+                sel.as_ptr(),
+                n_removed.as_mut_ptr()
+            ));
+            Ok(())
+        }
+    }
 }
 
 impl<I> ConcurrentIndex for IdMap<I>
@@ -339,5 +351,23 @@ mod tests {
         let result = index.search(&my_query, 5).unwrap();
         assert_eq!(result.labels, vec![9, 6, 3, 12, 15, 12, 15, 3, 6, 9]);
         assert!(result.distances.iter().all(|x| *x > 0.));
+    }
+
+    #[test]
+    fn index_remove_ids() {
+        let mut index = index_factory(4, "Flat", MetricType::L2).unwrap();
+        let mut id_index = IdMap::new(index).unwrap();
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1.,
+        ];
+
+        let id = [42];
+
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 6);
+
+        index.remove_ids(&id).unwrap();
+        assert_eq!(index.ntotal(), 0);
     }
 }
