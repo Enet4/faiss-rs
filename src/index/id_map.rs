@@ -252,13 +252,13 @@ impl<I> Index for IdMap<I> {
         }
     }
 
-    fn remove_ids(&mut self, sel: &[::index::Idx]) -> Result<()> {
+    fn remove_ids(&mut self, sel: &[faiss_sys::FaissIDSelector_H]) -> Result<()> {
         unsafe {
             let mut n_removed = 0;
             faiss_try!(faiss_Index_remove_ids(
                 self.inner_ptr(),
                 sel.as_ptr(),
-                n_removed.as_mut_ptr()
+                &mut n_removed
             ));
             Ok(())
         }
@@ -367,7 +367,10 @@ mod tests {
         index.add(some_data).unwrap();
         assert_eq!(index.ntotal(), 6);
 
-        index.remove_ids(&id).unwrap();
+        // TODO
+        let id_sel: faiss_sys::FaissIDSelector_H = faiss_sys::FaissIDSelector{_unused: []};
+
+        index.remove_ids(&[id_sel]).unwrap();
         assert_eq!(index.ntotal(), 0);
     }
 }

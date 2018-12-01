@@ -108,6 +108,18 @@ macro_rules! impl_native_index {
                     Ok(())
                 }
             }
+
+            fn remove_ids(&mut self, sel: &[faiss_sys::FaissIDSelector_H]) -> Result<()> {
+                unsafe {
+                    let mut n_removed = 0;
+                    faiss_try!(faiss_Index_remove_ids(
+                        self.inner_ptr(),
+                        sel.as_ptr(),
+                        &mut n_removed
+                    ));
+                    Ok(())
+                }
+            }
         }
     };
 }

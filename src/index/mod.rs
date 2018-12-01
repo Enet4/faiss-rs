@@ -79,6 +79,9 @@ pub trait Index {
 
     /// Clear the entire index.
     fn reset(&mut self) -> Result<()>;
+
+    /// Remove data vectors represented by IDs.
+    fn remove_ids(&mut self, sel: &[faiss_sys::FaissIDSelector_H]) -> Result<()>;
 }
 
 /// Sub-trait for native implementations of a Faiss index.
