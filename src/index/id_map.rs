@@ -59,6 +59,7 @@ use index::{
     AssignSearchResult, ConcurrentIndex, CpuIndex, FromInnerPtr, Idx, Index, NativeIndex, RangeSearchResult,
     SearchResult,
 };
+use selector::IdSelector;
 
 use std::marker::PhantomData;
 use std::mem;
@@ -252,15 +253,15 @@ impl<I> Index for IdMap<I> {
         }
     }
 
-    fn remove_ids(&mut self, sel: &[faiss_sys::FaissIDSelector_H]) -> Result<()> {
+    fn remove_ids(&mut self, sel: &IdSelector) -> Result<(i64)> {
         unsafe {
             let mut n_removed = 0;
             faiss_try!(faiss_Index_remove_ids(
                 self.inner_ptr(),
-                sel.as_ptr(),
+                sel.inner,
                 &mut n_removed
             ));
-            Ok(())
+            Ok(n_removed)
         }
     }
 }
@@ -320,6 +321,7 @@ where
 mod tests {
     use super::IdMap;
     use index::{index_factory, Index};
+    use selector::IdSelector;
     use MetricType;
 
     #[test]
@@ -367,10 +369,9 @@ mod tests {
         index.add(some_data).unwrap();
         assert_eq!(index.ntotal(), 6);
 
-        // TODO
-        let id_sel: faiss_sys::FaissIDSelector_H = faiss_sys::FaissIDSelector{_unused: []};
+        let id_sel = IdSelector::batch(1, &6);
 
-        index.remove_ids(&[id_sel]).unwrap();
+        index.remove_ids(&id_sel).unwrap();
         assert_eq!(index.ntotal(), 0);
     }
 }

@@ -109,15 +109,15 @@ macro_rules! impl_native_index {
                 }
             }
 
-            fn remove_ids(&mut self, sel: &[faiss_sys::FaissIDSelector_H]) -> Result<()> {
+            fn remove_ids(&mut self, sel: &IdSelector) -> Result<(i64)> {
                 unsafe {
                     let mut n_removed = 0;
                     faiss_try!(faiss_Index_remove_ids(
                         self.inner_ptr(),
-                        sel.as_ptr(),
+                        sel.inner,
                         &mut n_removed
                     ));
-                    Ok(())
+                    Ok(n_removed)
                 }
             }
         }

@@ -12,6 +12,7 @@
 
 use error::{Error, Result};
 use metric::MetricType;
+use selector::IdSelector;
 use std::ffi::CString;
 use std::os::raw::c_uint;
 use std::ptr;
@@ -81,7 +82,7 @@ pub trait Index {
     fn reset(&mut self) -> Result<()>;
 
     /// Remove data vectors represented by IDs.
-    fn remove_ids(&mut self, sel: &[faiss_sys::FaissIDSelector_H]) -> Result<()>;
+    fn remove_ids(&mut self, sel: &IdSelector) -> Result<(i64)>;
 }
 
 /// Sub-trait for native implementations of a Faiss index.

@@ -4,7 +4,7 @@ use faiss_sys::*;
 /// Abstraction over IDSelectorRange and IDSelectorBatch
 #[derive(Debug)]
 pub struct IdSelector {
-    inner: *mut FaissIDSelector,
+    pub inner: *mut FaissIDSelector,
 }
 
 impl IdSelector {
