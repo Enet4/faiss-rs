@@ -360,7 +360,6 @@ mod tests {
         let mut index = index_factory(4, "Flat", MetricType::L2).unwrap();
         let mut id_index = IdMap::new(index).unwrap();
         let some_data = &[2.3_f32, 0.0, -1., 1., 1., 1., 1., 4.5, 2.3, 7.6, 1., 2.2];
-        println!("{}", some_data.len());
 
         let ids = &[4, 8, 12];
 
@@ -370,7 +369,6 @@ mod tests {
         let id_sel = IdSelector::batch(&[4, 12]).ok().unwrap();
 
         id_index.remove_ids(&id_sel).unwrap();
-        println!("{}", id_index.ntotal());
         assert_eq!(id_index.ntotal(), 1);
     }
 }

@@ -2,6 +2,7 @@
 use error::Result;
 use faiss_sys::*;
 use index::Idx;
+use std::os::raw::c_long;
 use std::ptr;
 
 /// Abstraction over IDSelectorRange and IDSelectorBatch
@@ -22,10 +23,10 @@ impl IdSelector {
 
     /// Create new batch selector
     pub fn batch(indices: &[Idx]) -> Result<Self> {
-        let n = indices.len() as i64;
+        let n = indices.len() as c_long;
         let mut p_sel = ptr::null_mut();
         unsafe {
-            faiss_try!(faiss_IDSelectorBatch_new(&mut p_sel, n, &indices[0]));
+            faiss_try!(faiss_IDSelectorBatch_new(&mut p_sel, n, indices.as_ptr()));
         };
         Ok(IdSelector { inner: p_sel as *mut _})
     }
