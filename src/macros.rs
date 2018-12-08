@@ -114,7 +114,7 @@ macro_rules! impl_native_index {
                     let mut n_removed = 0;
                     faiss_try!(faiss_Index_remove_ids(
                         self.inner_ptr(),
-                        sel.inner,
+                        sel.inner_ptr(),
                         &mut n_removed
                     ));
                     Ok(n_removed)

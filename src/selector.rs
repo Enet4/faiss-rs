@@ -4,7 +4,7 @@ use faiss_sys::*;
 /// Abstraction over IDSelectorRange and IDSelectorBatch
 #[derive(Debug)]
 pub struct IdSelector {
-    pub inner: *mut FaissIDSelector,
+    inner: *mut FaissIDSelector,
 }
 
 impl IdSelector {
@@ -21,4 +21,10 @@ impl IdSelector {
         let _ = faiss_IDSelectorBatch_new(&mut &mut sel, n, indices);
         IdSelector { inner: &mut sel }
     }
+
+    /// Return the inner pointer
+    pub fn inner_ptr(&self) -> *mut FaissIDSelector {
+        self.inner
+    }
+    
 }
