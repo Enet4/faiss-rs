@@ -369,7 +369,7 @@ mod tests {
         index.add(some_data).unwrap();
         assert_eq!(index.ntotal(), 6);
 
-        let id_sel = IdSelector::batch(1, &6);
+        let id_sel = IdSelector::batch(&[6]).ok().unwrap();
 
         index.remove_ids(&id_sel).unwrap();
         assert_eq!(index.ntotal(), 0);
