@@ -359,19 +359,18 @@ mod tests {
     fn index_remove_ids() {
         let mut index = index_factory(4, "Flat", MetricType::L2).unwrap();
         let mut id_index = IdMap::new(index).unwrap();
-        let some_data = &[
-            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
-            0., 1., 1., 0., 0., -1.,
-        ];
+        let some_data = &[2.3_f32, 0.0, -1., 1., 1., 1., 1., 4.5, 2.3, 7.6, 1., 2.2];
+        println!("{}", some_data.len());
 
-        let id = [42];
+        let ids = &[4, 8, 12];
 
-        index.add(some_data).unwrap();
-        assert_eq!(index.ntotal(), 6);
+        id_index.add_with_ids(some_data, ids).unwrap();
+        assert_eq!(id_index.ntotal(), 3);
 
-        let id_sel = IdSelector::batch(&[6]).ok().unwrap();
+        let id_sel = IdSelector::batch(&[4, 12]).ok().unwrap();
 
-        index.remove_ids(&id_sel).unwrap();
-        assert_eq!(index.ntotal(), 0);
+        id_index.remove_ids(&id_sel).unwrap();
+        println!("{}", id_index.ntotal());
+        assert_eq!(id_index.ntotal(), 1);
     }
 }
