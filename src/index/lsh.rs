@@ -187,13 +187,17 @@ mod tests {
 
         let my_query = [0.; D as usize];
         let result = index.search(&my_query, 3).unwrap();
-        assert_eq!(result.labels, vec![2, 3, 0]);
+        assert_eq!(result.labels.len(), 3);
+        assert!(result.labels.iter().all(|x| *x != -1));
+        assert_eq!(result.distances.len(), 3);
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = [100.; D as usize];
         // flat index can be used behind an immutable ref
         let result = (&index).search(&my_query, 3).unwrap();
-        assert_eq!(result.labels, vec![4, 0, 3]);
+        assert_eq!(result.labels.len(), 3);
+        assert!(result.labels.iter().all(|x| *x != -1));
+        assert_eq!(result.distances.len(), 3);
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         index.reset().unwrap();
@@ -216,12 +220,14 @@ mod tests {
 
         let my_query = [0.; D as usize];
         let result = index.assign(&my_query, 3).unwrap();
-        assert_eq!(result.labels, vec![2, 3, 0]);
+        assert_eq!(result.labels.len(), 3);
+        assert!(result.labels.iter().all(|x| *x != -1));
 
         let my_query = [100.; D as usize];
         // flat index can be used behind an immutable ref
         let result = (&index).assign(&my_query, 3).unwrap();
-        assert_eq!(result.labels, vec![4, 0, 3]);
+        assert_eq!(result.labels.len(), 3);
+        assert!(result.labels.iter().all(|x| *x != -1));
 
         index.reset().unwrap();
         assert_eq!(index.ntotal(), 0);
