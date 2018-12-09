@@ -4,6 +4,7 @@ use super::{AssignSearchResult, ConcurrentIndex, CpuIndex, FromInnerPtr, Idx, In
             NativeIndex, RangeSearchResult, SearchResult};
 use error::{Error, Result};
 use faiss_sys::*;
+use selector::IdSelector;
 use std::mem;
 use std::ptr;
 

@@ -12,6 +12,7 @@
 
 use error::{Error, Result};
 use metric::MetricType;
+use selector::IdSelector;
 use std::ffi::CString;
 use std::os::raw::c_uint;
 use std::ptr;
@@ -36,7 +37,7 @@ pub type Idx = idx_t;
 /// Although all methods appear to be available for all index implementations,
 /// some methods may not be supported. For instance, a [`FlatIndex`] stores
 /// vectors sequentially, and so does not support `add_with_ids` nor
-/// `remove_with_ids`. Users are advised to read the Faiss wiki pages in order
+/// `remove_ids`. Users are advised to read the Faiss wiki pages in order
 /// to understand which index algorithms support which operations.
 /// 
 /// [`FlatIndex`]: flat/struct.FlatIndex.html
@@ -79,6 +80,9 @@ pub trait Index {
 
     /// Clear the entire index.
     fn reset(&mut self) -> Result<()>;
+
+    /// Remove data vectors represented by IDs.
+    fn remove_ids(&mut self, sel: &IdSelector) -> Result<i64>;
 }
 
 /// Sub-trait for native implementations of a Faiss index.

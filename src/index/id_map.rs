@@ -59,6 +59,7 @@ use index::{
     AssignSearchResult, ConcurrentIndex, CpuIndex, FromInnerPtr, Idx, Index, NativeIndex, RangeSearchResult,
     SearchResult,
 };
+use selector::IdSelector;
 
 use std::marker::PhantomData;
 use std::mem;
@@ -251,6 +252,18 @@ impl<I> Index for IdMap<I> {
             Ok(())
         }
     }
+
+    fn remove_ids(&mut self, sel: &IdSelector) -> Result<(i64)> {
+        unsafe {
+            let mut n_removed = 0;
+            faiss_try!(faiss_Index_remove_ids(
+                self.inner_ptr(),
+                sel.inner_ptr(),
+                &mut n_removed
+            ));
+            Ok(n_removed)
+        }
+    }
 }
 
 impl<I> ConcurrentIndex for IdMap<I>
@@ -308,6 +321,7 @@ where
 mod tests {
     use super::IdMap;
     use index::{index_factory, Index};
+    use selector::IdSelector;
     use MetricType;
 
     #[test]
@@ -339,5 +353,22 @@ mod tests {
         let result = index.search(&my_query, 5).unwrap();
         assert_eq!(result.labels, vec![9, 6, 3, 12, 15, 12, 15, 3, 6, 9]);
         assert!(result.distances.iter().all(|x| *x > 0.));
+    }
+
+    #[test]
+    fn index_remove_ids() {
+        let mut index = index_factory(4, "Flat", MetricType::L2).unwrap();
+        let mut id_index = IdMap::new(index).unwrap();
+        let some_data = &[2.3_f32, 0.0, -1., 1., 1., 1., 1., 4.5, 2.3, 7.6, 1., 2.2];
+
+        let ids = &[4, 8, 12];
+
+        id_index.add_with_ids(some_data, ids).unwrap();
+        assert_eq!(id_index.ntotal(), 3);
+
+        let id_sel = IdSelector::batch(&[4, 12]).ok().unwrap();
+
+        id_index.remove_ids(&id_sel).unwrap();
+        assert_eq!(id_index.ntotal(), 1);
     }
 }
