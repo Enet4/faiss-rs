@@ -33,13 +33,13 @@ pub type Idx = idx_t;
 /// Interface for a Faiss index. Most methods in this trait match the ones in
 /// the native library, whereas some others serve as getters to the index'
 /// parameters.
-/// 
+///
 /// Although all methods appear to be available for all index implementations,
 /// some methods may not be supported. For instance, a [`FlatIndex`] stores
 /// vectors sequentially, and so does not support `add_with_ids` nor
 /// `remove_ids`. Users are advised to read the Faiss wiki pages in order
 /// to understand which index algorithms support which operations.
-/// 
+///
 /// [`FlatIndex`]: flat/struct.FlatIndex.html
 pub trait Index {
     /// Whether the Index does not require training, or if training is done already
@@ -280,7 +280,8 @@ where
 {
     unsafe {
         let metric = metric as c_uint;
-        let description = CString::new(description.as_ref()).map_err(|_| Error::IndexDescription)?;
+        let description =
+            CString::new(description.as_ref()).map_err(|_| Error::IndexDescription)?;
         let mut index_ptr = ::std::ptr::null_mut();
         faiss_try!(faiss_index_factory(
             &mut index_ptr,

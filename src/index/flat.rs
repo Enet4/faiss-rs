@@ -111,7 +111,7 @@ impl NativeIndex for FlatIndexImpl {
 impl FromInnerPtr for FlatIndexImpl {
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self {
         FlatIndexImpl {
-            inner: inner_ptr as *mut FaissIndexFlat
+            inner: inner_ptr as *mut FaissIndexFlat,
         }
     }
 }
@@ -170,8 +170,8 @@ impl ConcurrentIndex for FlatIndexImpl {
 
 #[cfg(test)]
 mod tests {
-    use index::{Index, ConcurrentIndex, FromInnerPtr, NativeIndex, index_factory};
     use super::FlatIndexImpl;
+    use index::{index_factory, ConcurrentIndex, FromInnerPtr, Index, NativeIndex};
     use metric::MetricType;
 
     const D: u32 = 8;
@@ -295,7 +295,6 @@ mod tests {
         assert!(distances.iter().all(|x| *x > 0.));
     }
 
-
     #[test]
     fn index_transition() {
         let index = {
@@ -304,8 +303,8 @@ mod tests {
             assert_eq!(index.ntotal(), 0);
             let some_data = &[
                 7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 4.,
-                -4., -8., 1., 1., 2., 4., -1., 8., 8., 10., -10., -10., 10., -10., 10., 16., 16., 32.,
-                25., 20., 20., 40., 15.,
+                -4., -8., 1., 1., 2., 4., -1., 8., 8., 10., -10., -10., 10., -10., 10., 16., 16.,
+                32., 25., 20., 20., 40., 15.,
             ];
             index.add(some_data).unwrap();
             assert_eq!(index.ntotal(), 5);

@@ -42,18 +42,10 @@ pub struct GpuIndexImpl<'gpu, I> {
     phantom: PhantomData<(&'gpu (), I)>,
 }
 
-impl<'g, I> GpuIndex for GpuIndexImpl<'g, I>
-where
-    I: NativeIndex,
-{
-}
+impl<'g, I> GpuIndex for GpuIndexImpl<'g, I> where I: NativeIndex {}
 
 // `GpuIndexImpl` is deliberately not `Sync`!
-unsafe impl<'g, I> Send for GpuIndexImpl<'g, I>
-where
-    I: Send,
-{
-}
+unsafe impl<'g, I> Send for GpuIndexImpl<'g, I> where I: Send {}
 
 impl<'g, I> Drop for GpuIndexImpl<'g, I> {
     fn drop(&mut self) {
@@ -69,9 +61,9 @@ where
 {
     /// Build a GPU in from the given CPU native index.
     /// Users will indirectly use this through [`to_gpu`] or [`into_gpu`].
-    /// 
+    ///
     /// # Error
-    /// 
+    ///
     /// The operation fails if the index does not provide GPU support.
     ///
     /// [`to_gpu`]: ../struct.IndexImpl.html#method.to_gpu
@@ -100,9 +92,9 @@ where
 
 impl IndexImpl {
     /// Build a GPU index from the given CPU native index.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// The operation fails if the index type does not provide GPU support.
     pub fn to_gpu<'gpu, G: 'gpu>(
         &self,
@@ -117,9 +109,9 @@ impl IndexImpl {
 
     /// Build a GPU index from the given CPU native index. The index residing
     /// in CPU memory is discarded in the process.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// The operation fails if the index does not provide GPU support.
     pub fn into_gpu<'gpu, G: 'gpu>(
         self,

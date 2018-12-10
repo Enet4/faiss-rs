@@ -35,7 +35,7 @@
 //! `IdMap` also works for GPU backed indexes, but the index map will reside
 //! in CPU memory. Once an index map is made, moving an index to/from the GPU
 //! is not possible.
-//! 
+//!
 //! ```
 //! # #[cfg(feature = "gpu")]
 //! # use faiss::{GpuResources, StandardGpuResources, Index, FlatIndex, IdMap};
@@ -51,13 +51,13 @@
 //! # #[cfg(feature = "gpu")]
 //! # run().unwrap()
 //! ```
-//! 
+//!
 
 use error::Result;
 use faiss_sys::*;
 use index::{
-    AssignSearchResult, ConcurrentIndex, CpuIndex, FromInnerPtr, Idx, Index, NativeIndex, RangeSearchResult,
-    SearchResult,
+    AssignSearchResult, ConcurrentIndex, CpuIndex, FromInnerPtr, Idx, Index, NativeIndex,
+    RangeSearchResult, SearchResult,
 };
 use selector::IdSelector;
 
@@ -104,7 +104,7 @@ where
         unsafe {
             let index_inner = index.inner_ptr();
             let mut inner_ptr = ptr::null_mut();
-            faiss_try!(faiss_IndexIDMap_new(&mut inner_ptr,index_inner));
+            faiss_try!(faiss_IndexIDMap_new(&mut inner_ptr, index_inner));
             // let IDMap take ownership of the index
             faiss_IndexIDMap_set_own_fields(inner_ptr, 1);
             mem::forget(index);
@@ -128,9 +128,9 @@ where
     }
 
     /// Obtain the raw pointer to the internal index.
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// While this method is safe, note that the returned index pointer is
     /// already owned by this ID map. Therefore, it is undefined behaviour to
     /// create a high-level index value from this pointer without first

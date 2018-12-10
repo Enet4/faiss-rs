@@ -74,7 +74,7 @@
 //! # #[cfg(feature = "gpu")]
 //! # run().unwrap()
 //! ```
-//! 
+//!
 //! Unless otherwise indicated, vectors are added and retrieved from the
 //! library under the form of contiguous column-first slices of `f32` elements.
 //!
@@ -98,11 +98,11 @@ pub mod selector;
 #[cfg(feature = "gpu")]
 pub mod gpu;
 
-pub use index::{index_factory, Index, ConcurrentIndex};
 pub use index::flat::FlatIndex;
-pub use index::lsh::LshIndex;
 pub use index::id_map::IdMap;
 pub use index::io::{read_index, write_index};
+pub use index::lsh::LshIndex;
+pub use index::{index_factory, ConcurrentIndex, Index};
 pub use metric::MetricType;
 
 #[cfg(feature = "gpu")]

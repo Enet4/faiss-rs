@@ -18,7 +18,9 @@ impl IdSelector {
         unsafe {
             faiss_try!(faiss_IDSelectorRange_new(&mut p_sel, min, max));
         };
-        Ok(IdSelector { inner: p_sel as *mut _})
+        Ok(IdSelector {
+            inner: p_sel as *mut _,
+        })
     }
 
     /// Create new batch selector
@@ -28,14 +30,15 @@ impl IdSelector {
         unsafe {
             faiss_try!(faiss_IDSelectorBatch_new(&mut p_sel, n, indices.as_ptr()));
         };
-        Ok(IdSelector { inner: p_sel as *mut _})
+        Ok(IdSelector {
+            inner: p_sel as *mut _,
+        })
     }
 
     /// Return the inner pointer
     pub fn inner_ptr(&self) -> *mut FaissIDSelector {
         self.inner
     }
-    
 }
 
 impl Drop for IdSelector {

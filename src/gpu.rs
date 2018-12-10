@@ -1,7 +1,7 @@
 //! Contents for GPU support
 
-use faiss_sys::*;
 use error::Result;
+use faiss_sys::*;
 use std::ptr;
 
 /// Common interface for GPU resources used by Faiss.
@@ -27,15 +27,15 @@ pub trait GpuResources {
 }
 
 /// Standard GPU resources descriptor.
-/// 
+///
 /// # Examples
-/// 
+///
 /// GPU resources are meant to be passed to an index implementation's
 /// [`into_gpu`] or [`to_gpu`] methods.
-/// 
+///
 /// [`to_gpu`]: ../index/struct.IndexImpl.html#method.to_gpu
 /// [`into_gpu`]: ../index/struct.IndexImpl.html#method.into_gpu
-/// 
+///
 /// ```
 /// # fn run() -> Result<(), Box<::std::error::Error>> {
 /// use faiss::{StandardGpuResources, MetricType};
@@ -51,13 +51,13 @@ pub trait GpuResources {
 ///
 /// Since GPU implementations are not thread-safe, attempting to use the GPU
 /// resources from another thread is not allowed.
-/// 
+///
 /// ```compile_fail
 /// use faiss::{GpuResources, StandardGpuResources};
 /// use faiss::index::flat::FlatIndex;
 /// use std::sync::Arc;
 /// use std::thread;
-/// 
+///
 /// # fn run() -> Result<(), Box<::std::error::Error>> {
 /// let gpu = Arc::new(StandardGpuResources::new()?);
 /// let gpu_rc = gpu.clone();
@@ -70,13 +70,13 @@ pub trait GpuResources {
 /// # }
 /// # run().unwrap();
 /// ```
-/// 
+///
 /// Other than that, indexes can share the same GPU resources, so long as
 /// neither of them cross any thread boundaries.
-/// 
+///
 /// ```
 /// use faiss::{GpuResources, StandardGpuResources, MetricType, index_factory};
-/// 
+///
 /// # fn run() -> Result<(), Box<::std::error::Error>> {
 /// let mut gpu = StandardGpuResources::new()?;
 /// let index1 = index_factory(64, "Flat", MetricType::L2)?
@@ -87,7 +87,7 @@ pub trait GpuResources {
 /// # }
 /// # run().unwrap();
 /// ```
-/// 
+///
 #[derive(Debug)]
 pub struct StandardGpuResources {
     inner: *mut FaissGpuResources,
@@ -129,8 +129,7 @@ impl GpuResources for StandardGpuResources {
     fn set_temp_memory_fraction(&mut self, fraction: f32) -> Result<()> {
         unsafe {
             faiss_try!(faiss_StandardGpuResources_setTempMemoryFraction(
-                self.inner,
-                fraction
+                self.inner, fraction
             ));
             Ok(())
         }
@@ -143,7 +142,6 @@ impl GpuResources for StandardGpuResources {
         }
     }
 }
-
 
 impl<'g> GpuResources for &'g mut StandardGpuResources {
     fn inner_ptr(&self) -> *mut FaissGpuResources {

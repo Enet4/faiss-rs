@@ -283,7 +283,7 @@ impl Clustering {
 
 /// Plain data structure for the outcome of the simple k-means clustering
 /// function (see [`kmeans_clustering`]).
-/// 
+///
 /// [`kmeans_clustering`]: fn.kmeans_clustering.html
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct KMeansResult {

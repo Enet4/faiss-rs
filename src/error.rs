@@ -1,10 +1,10 @@
 //! Error handling module
 
-use std::fmt;
+use faiss_sys::*;
 use std::error::Error as StdError;
 use std::ffi::CStr;
+use std::fmt;
 use std::os::raw::c_int;
-use faiss_sys::*;
 
 /// Type alias for results of functions in this crate.
 pub type Result<T> = ::std::result::Result<T, Error>;
@@ -14,7 +14,7 @@ pub type Result<T> = ::std::result::Result<T, Error>;
 pub enum Error {
     /// The error came from a native Faiss exception.
     Native(NativeError),
-    /// Invalid index type cast. 
+    /// Invalid index type cast.
     BadCast,
     /// Invalid index description.
     IndexDescription,
