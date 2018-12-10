@@ -1,6 +1,5 @@
 //! Interface and implementation to Flat index type.
 
-use faiss_sys::*;
 use super::*;
 
 use error::{Error, Result};
