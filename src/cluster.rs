@@ -64,19 +64,19 @@ impl ClusteringParameters {
     }
 
     pub fn set_niter(&mut self, niter: u32) {
-        self.inner.niter = (niter & 0x7FFFFFFF) as i32;
+        self.inner.niter = (niter & 0x7FFF_FFFF) as i32;
     }
 
     pub fn set_nredo(&mut self, nredo: u32) {
-        self.inner.nredo = (nredo & 0x7FFFFFFF) as i32;
+        self.inner.nredo = (nredo & 0x7FFF_FFFF) as i32;
     }
 
     pub fn set_min_points_per_centroid(&mut self, min_points_per_centroid: u32) {
-        self.inner.min_points_per_centroid = (min_points_per_centroid & 0x7FFFFFFF) as i32;
+        self.inner.min_points_per_centroid = (min_points_per_centroid & 0x7FFF_FFFF) as i32;
     }
 
     pub fn set_max_points_per_centroid(&mut self, max_points_per_centroid: u32) {
-        self.inner.max_points_per_centroid = (max_points_per_centroid & 0x7FFFFFFF) as i32;
+        self.inner.max_points_per_centroid = (max_points_per_centroid & 0x7FFF_FFFF) as i32;
     }
 
     pub fn set_frozen_centroids(&mut self, frozen_centroids: bool) {

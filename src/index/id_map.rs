@@ -357,7 +357,7 @@ mod tests {
 
     #[test]
     fn index_remove_ids() {
-        let mut index = index_factory(4, "Flat", MetricType::L2).unwrap();
+        let index = index_factory(4, "Flat", MetricType::L2).unwrap();
         let mut id_index = IdMap::new(index).unwrap();
         let some_data = &[2.3_f32, 0.0, -1., 1., 1., 1., 1., 4.5, 2.3, 7.6, 1., 2.2];
 

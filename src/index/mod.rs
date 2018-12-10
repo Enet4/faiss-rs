@@ -166,7 +166,7 @@ impl RangeSearchResult {
     /// result for query `i` is `labels[lims[i] .. lims[i+1]]`
     pub fn distance_and_labels(&self) -> (&[f32], &[Idx]) {
         let lims = self.lims();
-        let full_len = lims.last().map(|x| *x).unwrap_or(0);
+        let full_len = lims.last().cloned().unwrap_or(0);
         unsafe {
             let mut distances_ptr = ptr::null_mut();
             let mut labels_ptr = ptr::null_mut();
@@ -284,7 +284,7 @@ where
         let mut index_ptr = ::std::ptr::null_mut();
         faiss_try!(faiss_index_factory(
             &mut index_ptr,
-            (d & 0x7FFFFFFF) as i32,
+            (d & 0x7FFF_FFFF) as i32,
             description.as_ptr(),
             metric
         ));

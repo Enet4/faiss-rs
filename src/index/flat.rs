@@ -37,7 +37,7 @@ impl FlatIndexImpl {
             let mut inner = ptr::null_mut();
             faiss_try!(faiss_IndexFlat_new_with(
                 &mut inner,
-                (d & 0x7FFFFFFF) as idx_t,
+                (d & 0x7FFF_FFFF) as idx_t,
                 metric
             ));
             Ok(FlatIndexImpl { inner })
