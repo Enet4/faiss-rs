@@ -9,6 +9,7 @@ use error::Result;
 use faiss_sys::*;
 use gpu::GpuResources;
 use metric::MetricType;
+use selector::IdSelector;
 use std::marker::PhantomData;
 use std::ptr;
 
@@ -256,6 +257,18 @@ where
         unsafe {
             faiss_try!(faiss_Index_reset(self.inner));
             Ok(())
+        }
+    }
+
+    fn remove_ids(&mut self, sel: &IdSelector) -> Result<i64> {
+        unsafe {
+            let mut n_removed = 0;
+            faiss_try!(faiss_Index_remove_ids(
+                self.inner,
+                sel.inner_ptr(),
+                &mut n_removed
+            ));
+            Ok(n_removed)
         }
     }
 }
