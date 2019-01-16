@@ -14,6 +14,7 @@ use crate::error::{Error, Result};
 use crate::metric::MetricType;
 use crate::selector::IdSelector;
 use std::ffi::CString;
+use std::fmt::{self, Display, Formatter, Write};
 use std::os::raw::c_uint;
 use std::ptr;
 
@@ -27,8 +28,87 @@ pub mod lsh;
 #[cfg(feature = "gpu")]
 pub mod gpu;
 
-/// Primitive data type for identifying a vector in an index.
-pub type Idx = idx_t;
+/// Primitive data type for identifying a vector in an index (or lack thereof).
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone)]
+pub struct Idx(idx_t);
+
+impl Display for Idx {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self.get() {
+            None => f.write_char('x'),
+            Some(i) => i.fmt(f),
+        }
+    }
+}
+
+impl From<idx_t> for Idx {
+    fn from(x: idx_t) -> Self {
+        Idx(x)
+    }
+}
+
+impl Idx {
+    /// Create a vector identifier.
+    /// 
+    /// # Panic
+    /// 
+    /// Panics if the ID is too large (`>= 2^63`)
+    #[inline]
+    pub fn new(idx: u64) -> Self {
+        assert!(idx < 0x8000_0000_0000_0000, "too large index value provided to Idx::new");
+        let idx = idx as idx_t;
+        Idx(idx)
+    }
+
+    /// Create an identifier referring to no vector.
+    #[inline]
+    pub fn none() -> Self {
+        Idx(-1)
+    }
+
+
+    /// Check whether the vector identifier does not point to anything.
+    #[inline]
+    pub fn is_none(self) -> bool {
+        self.0 == -1
+    }
+
+    /// Check whether the vector identifier is not "none".
+    #[inline]
+    pub fn is_some(self) -> bool {
+        self.0 != -1
+    }
+
+    /// Retrieve the vector identifier as a primitive unsigned integer.
+    pub fn get(self) -> Option<u64> {
+        match self.0 {
+            -1 => None,
+            x => Some(x as u64),
+        }
+    }
+
+    /// Convert the vector identifier into a native `idx_t` value.
+    pub fn to_native(self) -> idx_t {
+        self.0
+    }
+}
+
+impl PartialEq<Idx> for Idx {
+    fn eq(&self, idx: &Idx) -> bool {
+        self.0 != -1 && idx.0 != -1 && self.0 == idx.0
+    } 
+}
+
+impl PartialOrd<Idx> for Idx {
+    fn partial_cmp(&self, idx: &Idx) -> Option<::std::cmp::Ordering> {
+        match (self.get(), idx.get()) {
+            (None, _) => None,
+            (_, None) => None,
+            (Some(a), Some(b)) => Some(a.cmp(&b)),
+        }
+    }
+}
 
 /// Interface for a Faiss index. Most methods in this trait match the ones in
 /// the native library, whereas some others serve as getters to the index'
@@ -172,7 +252,7 @@ impl RangeSearchResult {
             let mut labels_ptr = ptr::null_mut();
             faiss_RangeSearchResult_labels(self.inner, &mut labels_ptr, &mut distances_ptr);
             let distances = ::std::slice::from_raw_parts(distances_ptr, full_len);
-            let labels = ::std::slice::from_raw_parts(labels_ptr, full_len);
+            let labels = ::std::slice::from_raw_parts(labels_ptr as *const Idx, full_len);
             (distances, labels)
         }
     }
@@ -186,7 +266,7 @@ impl RangeSearchResult {
             let mut labels_ptr = ptr::null_mut();
             faiss_RangeSearchResult_labels(self.inner, &mut labels_ptr, &mut distances_ptr);
             let distances = ::std::slice::from_raw_parts_mut(distances_ptr, buf_size);
-            let labels = ::std::slice::from_raw_parts_mut(labels_ptr, buf_size);
+            let labels = ::std::slice::from_raw_parts_mut(labels_ptr as *mut Idx, buf_size);
             (distances, labels)
         }
     }
@@ -295,7 +375,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{index_factory, Index};
+    use super::{index_factory, Idx, Index};
     use crate::metric::MetricType;
 
     #[test]
@@ -389,19 +469,19 @@ mod tests {
 
         let my_query = [0.; 8];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4]);
+        assert_eq!(result.labels, vec![Idx(2), Idx(1), Idx(0), Idx(3), Idx(4)]);
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = [100.; 8];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
+        assert_eq!(result.labels, vec![Idx(3), Idx(4), Idx(0), Idx(1), Idx(2)]);
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = vec![
             0., 0., 0., 0., 0., 0., 0., 0., 100., 100., 100., 100., 100., 100., 100., 100.,
         ];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4, 3, 4, 0, 1, 2]);
+        assert_eq!(result.labels, vec![Idx(2), Idx(1), Idx(0), Idx(3), Idx(4), Idx(3), Idx(4), Idx(0), Idx(1), Idx(2)]);
         assert!(result.distances.iter().all(|x| *x > 0.));
     }
 
@@ -420,24 +500,26 @@ mod tests {
 
         let my_query = [0.; 8];
         let result = index.assign(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4]);
+        assert_eq!(result.labels, vec![Idx(2), Idx(1), Idx(0), Idx(3), Idx(4)]);
 
         let my_query = [0.; 32];
         let result = index.assign(&my_query, 5).unwrap();
         assert_eq!(
             result.labels,
             vec![2, 1, 0, 3, 4, 2, 1, 0, 3, 4, 2, 1, 0, 3, 4, 2, 1, 0, 3, 4]
+                .into_iter().map(Idx).collect::<Vec<_>>()
         );
 
         let my_query = [100.; 8];
         let result = index.assign(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
+        assert_eq!(result.labels, vec![3, 4, 0, 1, 2].into_iter().map(Idx).collect::<Vec<_>>());
 
         let my_query = vec![
             0., 0., 0., 0., 0., 0., 0., 0., 100., 100., 100., 100., 100., 100., 100., 100.,
         ];
         let result = index.assign(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4, 3, 4, 0, 1, 2]);
+        assert_eq!(result.labels, vec![2, 1, 0, 3, 4, 3, 4, 0, 1, 2]
+            .into_iter().map(Idx).collect::<Vec<_>>());
 
         index.reset().unwrap();
         assert_eq!(index.ntotal(), 0);
@@ -457,7 +539,7 @@ mod tests {
         let my_query = [0.; 8];
         let result = index.range_search(&my_query, 8.125).unwrap();
         let (distances, labels) = result.distance_and_labels();
-        assert!(labels == &[1, 2] || labels == &[2, 1]);
+        assert!(labels == &[Idx(1), Idx(2)] || labels == &[Idx(2), Idx(1)]);
         assert!(distances.iter().all(|x| *x > 0.));
     }
 }

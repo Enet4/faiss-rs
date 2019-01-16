@@ -80,7 +80,7 @@ impl FlatIndexImpl {
                 x.as_ptr(),
                 k as idx_t,
                 distances.as_mut_ptr(),
-                labels.as_ptr()
+                labels.as_ptr() as *const _
             ));
             Ok(distances)
         }
@@ -130,12 +130,12 @@ impl ConcurrentIndex for FlatIndexImpl {
     fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
         unsafe {
             let nq = query.len() / self.d() as usize;
-            let mut out_labels = vec![0 as Idx; k * nq];
+            let mut out_labels = vec![Idx::none(); k * nq];
             faiss_try!(faiss_Index_assign(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
-                out_labels.as_mut_ptr(),
+                out_labels.as_mut_ptr() as *mut _,
                 k as i64
             ));
             Ok(AssignSearchResult { labels: out_labels })
@@ -145,14 +145,14 @@ impl ConcurrentIndex for FlatIndexImpl {
         unsafe {
             let nq = query.len() / self.d() as usize;
             let mut distances = vec![0_f32; k * nq];
-            let mut labels = vec![0 as Idx; k * nq];
+            let mut labels = vec![Idx::none(); k * nq];
             faiss_try!(faiss_Index_search(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
                 k as idx_t,
                 distances.as_mut_ptr(),
-                labels.as_mut_ptr()
+                labels.as_mut_ptr() as *mut _
             ));
             Ok(SearchResult { distances, labels })
         }
@@ -177,7 +177,7 @@ impl ConcurrentIndex for FlatIndexImpl {
 #[cfg(test)]
 mod tests {
     use super::FlatIndexImpl;
-    use crate::index::{index_factory, ConcurrentIndex, FromInnerPtr, Index, NativeIndex};
+    use crate::index::{index_factory, ConcurrentIndex, FromInnerPtr, Idx, Index, NativeIndex};
     use crate::metric::MetricType;
 
     const D: u32 = 8;
@@ -242,13 +242,25 @@ mod tests {
 
         let my_query = [0.; D as usize];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4]);
+        assert_eq!(
+            result.labels,
+            vec![2, 1, 0, 3, 4]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = [100.; D as usize];
         // flat index can be used behind an immutable ref
         let result = (&index).search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
+        assert_eq!(
+            result.labels,
+            vec![3, 4, 0, 1, 2]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         index.reset().unwrap();
@@ -270,12 +282,24 @@ mod tests {
 
         let my_query = [0.; D as usize];
         let result = index.assign(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4]);
+        assert_eq!(
+            result.labels,
+            vec![2, 1, 0, 3, 4]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
 
         let my_query = [100.; D as usize];
         // flat index can be used behind an immutable ref
         let result = (&index).assign(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
+        assert_eq!(
+            result.labels,
+            vec![3, 4, 0, 1, 2]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
 
         index.reset().unwrap();
         assert_eq!(index.ntotal(), 0);
@@ -297,7 +321,7 @@ mod tests {
         let my_query = [0.; D as usize];
         let result = (&index).range_search(&my_query, 8.125).unwrap();
         let (distances, labels) = result.distance_and_labels();
-        assert!(labels == &[1, 2] || labels == &[2, 1]);
+        assert!(labels == &[Idx::new(1), Idx::new(2)] || labels == &[Idx::new(2), Idx::new(1)]);
         assert!(distances.iter().all(|x| *x > 0.));
     }
 

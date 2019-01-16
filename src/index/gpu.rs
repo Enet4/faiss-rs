@@ -183,7 +183,7 @@ where
                 self.inner,
                 n as i64,
                 x.as_ptr(),
-                xids.as_ptr()
+                xids.as_ptr() as *const _
             ));
             Ok(())
         }
@@ -200,12 +200,12 @@ where
     fn assign(&mut self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
         unsafe {
             let nq = query.len() / self.d() as usize;
-            let mut out_labels = vec![0 as Idx; k * nq];
+            let mut out_labels = vec![Idx::none(); k * nq];
             faiss_try!(faiss_Index_assign(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
-                out_labels.as_mut_ptr(),
+                out_labels.as_mut_ptr() as *mut _,
                 k as i64
             ));
             Ok(AssignSearchResult { labels: out_labels })
@@ -216,14 +216,14 @@ where
         unsafe {
             let nq = query.len() / self.d() as usize;
             let mut distances = vec![0_f32; k * nq];
-            let mut labels = vec![0 as Idx; k * nq];
+            let mut labels = vec![Idx::none(); k * nq];
             faiss_try!(faiss_Index_search(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
                 k as idx_t,
                 distances.as_mut_ptr(),
-                labels.as_mut_ptr()
+                labels.as_mut_ptr() as *mut _
             ));
             Ok(SearchResult { distances, labels })
         }
@@ -306,7 +306,7 @@ impl FlatIndexImpl {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{index_factory, CpuIndex, Index};
+    use super::super::{index_factory, CpuIndex, Idx, Index};
     use super::GpuIndex;
     use crate::gpu::{GpuResources, StandardGpuResources};
     use crate::index::flat::FlatIndex;
@@ -359,12 +359,12 @@ mod tests {
 
         let my_query = [0.; 8];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4]);
+        assert_eq!(result.labels, vec![2, 1, 0, 3, 4].into_iter().map(Idx::new).collect::<Vec<_>>());
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = [100.; 8];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
+        assert_eq!(result.labels, vec![3, 4, 0, 1, 2].into_iter().map(Idx::new).collect::<Vec<_>>());
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         // now back to the CPU
@@ -372,12 +372,12 @@ mod tests {
 
         let my_query = [0.; 8];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4]);
+        assert_eq!(result.labels, vec![2, 1, 0, 3, 4].into_iter().map(Idx::new).collect::<Vec<_>>());
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = [100.; 8];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
+        assert_eq!(result.labels, vec![3, 4, 0, 1, 2].into_iter().map(Idx::new).collect::<Vec<_>>());
         assert!(result.distances.iter().all(|x| *x > 0.));
     }
 
@@ -397,7 +397,7 @@ mod tests {
 
         let my_query = [0.; 8];
         let result = index_cpu.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4]);
+        assert_eq!(result.labels, vec![2, 1, 0, 3, 4].into_iter().map(Idx::new).collect::<Vec<_>>());
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         index_gpu.add(some_data).unwrap();
@@ -405,12 +405,12 @@ mod tests {
 
         let my_query = [0.; 8];
         let result = index_gpu.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4]);
+        assert_eq!(result.labels, vec![2, 1, 0, 3, 4].into_iter().map(Idx::new).collect::<Vec<_>>());
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = [100.; 8];
         let result = index_cpu.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
+        assert_eq!(result.labels, vec![3, 4, 0, 1, 2].into_iter().map(Idx::new).collect::<Vec<_>>());
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         // add more data to CPU index, see it in effect
@@ -422,7 +422,7 @@ mod tests {
 
         let my_query = [0.; 8];
         let result = index_cpu.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 5, 3]);
+        assert_eq!(result.labels, vec![2, 1, 0, 5, 3].into_iter().map(Idx::new).collect::<Vec<_>>());
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         drop(index_cpu);
@@ -430,7 +430,7 @@ mod tests {
 
         let my_query = [100.; 8];
         let result = index_gpu.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![3, 4, 0, 1, 2]);
+        assert_eq!(result.labels, vec![3, 4, 0, 1, 2].into_iter().map(Idx::new).collect::<Vec<_>>());
         assert!(result.distances.iter().all(|x| *x > 0.));
     }
 }

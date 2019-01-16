@@ -44,7 +44,7 @@ macro_rules! impl_native_index {
                         self.inner_ptr(),
                         n as i64,
                         x.as_ptr(),
-                        xids.as_ptr()
+                        xids.as_ptr() as *const _
                     ));
                     Ok(())
                 }
@@ -59,12 +59,12 @@ macro_rules! impl_native_index {
             fn assign(&mut self, query: &[f32], k: usize) -> Result<crate::index::AssignSearchResult> {
                 unsafe {
                     let nq = query.len() / self.d() as usize;
-                    let mut out_labels = vec![0 as crate::index::Idx; k * nq];
+                    let mut out_labels = vec![Idx::none(); k * nq];
                     faiss_try!(faiss_Index_assign(
                         self.inner_ptr(),
                         nq as idx_t,
                         query.as_ptr(),
-                        out_labels.as_mut_ptr(),
+                        out_labels.as_mut_ptr() as *mut _,
                         k as i64
                     ));
                     Ok(crate::index::AssignSearchResult { labels: out_labels })
@@ -74,14 +74,14 @@ macro_rules! impl_native_index {
                 unsafe {
                     let nq = query.len() / self.d() as usize;
                     let mut distances = vec![0_f32; k * nq];
-                    let mut labels = vec![0 as crate::index::Idx; k * nq];
+                    let mut labels = vec![Idx::none(); k * nq];
                     faiss_try!(faiss_Index_search(
                         self.inner_ptr(),
                         nq as idx_t,
                         query.as_ptr(),
                         k as idx_t,
                         distances.as_mut_ptr(),
-                        labels.as_mut_ptr()
+                        labels.as_mut_ptr() as *mut _
                     ));
                     Ok(crate::index::SearchResult { distances, labels })
                 }

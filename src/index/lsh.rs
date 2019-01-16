@@ -120,12 +120,12 @@ impl ConcurrentIndex for LshIndex {
     fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
         unsafe {
             let nq = query.len() / self.d() as usize;
-            let mut out_labels = vec![0 as Idx; k * nq];
+            let mut out_labels = vec![Idx::none(); k * nq];
             faiss_try!(faiss_Index_assign(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
-                out_labels.as_mut_ptr(),
+                out_labels.as_mut_ptr() as *mut _,
                 k as i64
             ));
             Ok(AssignSearchResult { labels: out_labels })
@@ -135,14 +135,14 @@ impl ConcurrentIndex for LshIndex {
         unsafe {
             let nq = query.len() / self.d() as usize;
             let mut distances = vec![0_f32; k * nq];
-            let mut labels = vec![0 as Idx; k * nq];
+            let mut labels = vec![Idx::none(); k * nq];
             faiss_try!(faiss_Index_search(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
                 k as idx_t,
                 distances.as_mut_ptr(),
-                labels.as_mut_ptr()
+                labels.as_mut_ptr() as *mut _
             ));
             Ok(SearchResult { distances, labels })
         }
@@ -168,7 +168,7 @@ impl ConcurrentIndex for LshIndex {
 mod tests {
     use super::LshIndex;
     use crate::error::Result;
-    use crate::index::{index_factory, ConcurrentIndex, FromInnerPtr, Index, NativeIndex};
+    use crate::index::{index_factory, ConcurrentIndex, FromInnerPtr, Idx, Index, NativeIndex};
     use crate::metric::MetricType;
 
     const D: u32 = 8;
@@ -197,7 +197,7 @@ mod tests {
         let my_query = [0.; D as usize];
         let result = index.search(&my_query, 3).unwrap();
         assert_eq!(result.labels.len(), 3);
-        assert!(result.labels.iter().all(|x| *x != -1));
+        assert!(result.labels.into_iter().all(Idx::is_some));
         assert_eq!(result.distances.len(), 3);
         assert!(result.distances.iter().all(|x| *x > 0.));
 
@@ -205,7 +205,7 @@ mod tests {
         // flat index can be used behind an immutable ref
         let result = (&index).search(&my_query, 3).unwrap();
         assert_eq!(result.labels.len(), 3);
-        assert!(result.labels.iter().all(|x| *x != -1));
+        assert!(result.labels.into_iter().all(Idx::is_some));
         assert_eq!(result.distances.len(), 3);
         assert!(result.distances.iter().all(|x| *x > 0.));
 
@@ -230,13 +230,13 @@ mod tests {
         let my_query = [0.; D as usize];
         let result = index.assign(&my_query, 3).unwrap();
         assert_eq!(result.labels.len(), 3);
-        assert!(result.labels.iter().all(|x| *x != -1));
+        assert!(result.labels.into_iter().all(Idx::is_some));
 
         let my_query = [100.; D as usize];
         // flat index can be used behind an immutable ref
         let result = (&index).assign(&my_query, 3).unwrap();
         assert_eq!(result.labels.len(), 3);
-        assert!(result.labels.iter().all(|x| *x != -1));
+        assert!(result.labels.into_iter().all(Idx::is_some));
 
         index.reset().unwrap();
         assert_eq!(index.ntotal(), 0);

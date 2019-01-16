@@ -19,13 +19,13 @@
 //! A flat index does not support arbitrary ID mapping, but `IdMap` solves this:
 //!
 //! ```
-//! use faiss::{IdMap, Index, FlatIndex};
+//! use faiss::{IdMap, Idx, Index, FlatIndex};
 //! # fn run() -> Result<(), Box<dyn std::error::Error>>  {
 //! let mut index = FlatIndex::new_l2(4)?;
-//! assert!(index.add_with_ids(&[0., 1., 0., 1.], &[5]).is_err());
+//! assert!(index.add_with_ids(&[0., 1., 0., 1.], &[Idx::new(5)]).is_err());
 //!
 //! let mut index = IdMap::new(index)?;
-//! index.add_with_ids(&[0., 1., 0., 1.], &[5])?;
+//! index.add_with_ids(&[0., 1., 0., 1.], &[Idx::new(5)])?;
 //! assert_eq!(index.ntotal(), 1);
 //! # Ok(())
 //! # }
@@ -124,7 +124,7 @@ where
             let mut id_ptr = ptr::null_mut();
             let mut psize = 0;
             faiss_IndexIDMap_id_map(self.inner, &mut id_ptr, &mut psize);
-            ::std::slice::from_raw_parts(id_ptr, psize)
+            ::std::slice::from_raw_parts(id_ptr as *const _, psize)
         }
     }
 
@@ -189,7 +189,7 @@ impl<I> Index for IdMap<I> {
                 self.inner_ptr(),
                 n as i64,
                 x.as_ptr(),
-                xids.as_ptr()
+                xids.as_ptr() as *const _
             ));
             Ok(())
         }
@@ -204,12 +204,12 @@ impl<I> Index for IdMap<I> {
     fn assign(&mut self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
         unsafe {
             let nq = query.len() / self.d() as usize;
-            let mut out_labels = vec![0 as Idx; k * nq];
+            let mut out_labels = vec![Idx::none(); k * nq];
             faiss_try!(faiss_Index_assign(
                 self.inner_ptr(),
                 nq as idx_t,
                 query.as_ptr(),
-                out_labels.as_mut_ptr(),
+                out_labels.as_mut_ptr() as *mut _,
                 k as i64
             ));
             Ok(AssignSearchResult { labels: out_labels })
@@ -219,14 +219,14 @@ impl<I> Index for IdMap<I> {
         unsafe {
             let nq = query.len() / self.d() as usize;
             let mut distances = vec![0_f32; k * nq];
-            let mut labels = vec![0 as Idx; k * nq];
+            let mut labels = vec![Idx::none(); k * nq];
             faiss_try!(faiss_Index_search(
                 self.inner_ptr(),
                 nq as idx_t,
                 query.as_ptr(),
                 k as idx_t,
                 distances.as_mut_ptr(),
-                labels.as_mut_ptr()
+                labels.as_mut_ptr() as *mut _
             ));
             Ok(SearchResult { distances, labels })
         }
@@ -274,12 +274,12 @@ where
     fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
         unsafe {
             let nq = query.len() / self.d() as usize;
-            let mut out_labels = vec![0 as Idx; k * nq];
+            let mut out_labels = vec![Idx::none(); k * nq];
             faiss_try!(faiss_Index_assign(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
-                out_labels.as_mut_ptr(),
+                out_labels.as_mut_ptr() as *mut _,
                 k as i64
             ));
             Ok(AssignSearchResult { labels: out_labels })
@@ -289,14 +289,14 @@ where
         unsafe {
             let nq = query.len() / self.d() as usize;
             let mut distances = vec![0_f32; k * nq];
-            let mut labels = vec![0 as Idx; k * nq];
+            let mut labels = vec![Idx::none(); k * nq];
             faiss_try!(faiss_Index_search(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
                 k as idx_t,
                 distances.as_mut_ptr(),
-                labels.as_mut_ptr()
+                labels.as_mut_ptr() as *mut _
             ));
             Ok(SearchResult { distances, labels })
         }
@@ -321,7 +321,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::IdMap;
-    use crate::index::{index_factory, Index};
+    use crate::index::{index_factory, Idx, Index};
     use crate::selector::IdSelector;
     use crate::MetricType;
 
@@ -333,26 +333,50 @@ mod tests {
             0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
             100., 105., -100., 100., 100., 105.,
         ];
-        let some_ids = &[3, 6, 9, 12, 15];
+        let some_ids = &[
+            Idx::new(3),
+            Idx::new(6),
+            Idx::new(9),
+            Idx::new(12),
+            Idx::new(15),
+        ];
         let mut index = IdMap::new(index).unwrap();
         index.add_with_ids(some_data, some_ids).unwrap();
         assert_eq!(index.ntotal(), 5);
 
         let my_query = [0.; 8];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![9, 6, 3, 12, 15]);
+        assert_eq!(
+            result.labels,
+            vec![9, 6, 3, 12, 15]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = [100.; 8];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![12, 15, 3, 6, 9]);
+        assert_eq!(
+            result.labels,
+            vec![12, 15, 3, 6, 9]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = vec![
             0., 0., 0., 0., 0., 0., 0., 0., 100., 100., 100., 100., 100., 100., 100., 100.,
         ];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![9, 6, 3, 12, 15, 12, 15, 3, 6, 9]);
+        assert_eq!(
+            result.labels,
+            vec![9, 6, 3, 12, 15, 12, 15, 3, 6, 9]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
     }
 
@@ -362,12 +386,14 @@ mod tests {
         let mut id_index = IdMap::new(index).unwrap();
         let some_data = &[2.3_f32, 0.0, -1., 1., 1., 1., 1., 4.5, 2.3, 7.6, 1., 2.2];
 
-        let ids = &[4, 8, 12];
-
-        id_index.add_with_ids(some_data, ids).unwrap();
+        id_index
+            .add_with_ids(some_data, &[Idx::new(4), Idx::new(8), Idx::new(12)])
+            .unwrap();
         assert_eq!(id_index.ntotal(), 3);
 
-        let id_sel = IdSelector::batch(&[4, 12]).ok().unwrap();
+        let id_sel = IdSelector::batch(&[Idx::new(4), Idx::new(12)])
+            .ok()
+            .unwrap();
 
         id_index.remove_ids(&id_sel).unwrap();
         assert_eq!(id_index.ntotal(), 1);
