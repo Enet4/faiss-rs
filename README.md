@@ -2,6 +2,7 @@
 
 [![faiss at crates.io](https://img.shields.io/crates/v/faiss.svg)](https://crates.io/crates/faiss)
 [![Build Status](https://travis-ci.org/Enet4/faiss-rs.svg?branch=master)](https://travis-ci.org/Enet4/faiss-rs)
+![Minimum Rust Version Stable](https://img.shields.io/badge/Minimum%20Rust%20Version-stable-green.svg)
 [![dependency status](https://deps.rs/repo/github/Enet4/faiss-rs/status.svg)](https://deps.rs/repo/github/Enet4/faiss-rs)
 
 This project provides Rust bindings to [Faiss](https://github.com/facebookresearch/faiss),
