@@ -1,8 +1,6 @@
-
-# Copyright (c) 2015-present, Facebook, Inc.
-# All rights reserved.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# This file is licensed under the BSD+Patents license found in the
+# This file is licensed under the MIT license found in the
 # LICENSE file in the root directory of the following source tree:
 # https://github.com/facebookresearch/faiss
 

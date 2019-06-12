@@ -6,7 +6,7 @@ if ! which bindgen > /dev/null; then
 fi
 
 repo_url=https://github.com/Enet4/faiss.git
-repo_rev=b0032b6248b6ac64a6d81541a4a06c49545dba65
+repo_rev=2bfbead8f1f29030c11797d161b0b9dec6c2d8a3
 cuda_root=/opt/cuda
 
 git clone $repo_url faiss
@@ -22,7 +22,7 @@ for header in $headers; do
     echo "#include \""$header"\"" >> c_api.h;
 done
 
-cmd="bindgen --link faiss_c $bindgen_opt c_api.h -o src/bindings.rs"
+cmd="bindgen --rust-target 1.33 $bindgen_opt c_api.h -o src/bindings.rs"
 echo ${cmd}
 ${cmd}
 
@@ -31,7 +31,7 @@ for header in $headers; do
     echo "#include \""$header"\"" >> c_api.h;
 done
 
-cmd="bindgen --link gpufaiss_c $bindgen_opt c_api.h -o src/bindings_gpu.rs -- -Ifaiss/c_api -I$cuda_root/include"
+cmd="bindgen --rust-target 1.33 $bindgen_opt c_api.h -o src/bindings_gpu.rs -- -Ifaiss/c_api -I$cuda_root/include"
 echo ${cmd}
 ${cmd}
 
