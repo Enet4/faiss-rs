@@ -97,7 +97,13 @@ impl_native_index_clone!(LshIndex);
 
 impl IndexImpl {
     /// Attempt a dynamic cast of an index to the LSH index type.
+    #[deprecated(since = "0.7.0", note = "Non-idiomatic name, prefer `into_lsh` instead")]
     pub fn as_lsh(self) -> Result<LshIndex> {
+        self.into_lsh()
+    }
+
+    /// Attempt a dynamic cast of an index to the LSH index type.
+    pub fn into_lsh(self) -> Result<LshIndex> {
         unsafe {
             let new_inner = faiss_IndexLSH_cast(self.inner_ptr());
             if new_inner.is_null() {
@@ -170,7 +176,7 @@ mod tests {
     #[test]
     fn index_from_cast() {
         let index = index_factory(8, "Flat", MetricType::L2).unwrap();
-        let r: Result<LshIndex> = index.as_lsh();
+        let r: Result<LshIndex> = index.into_lsh();
         assert!(r.is_err());
     }
 

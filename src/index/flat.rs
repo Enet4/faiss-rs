@@ -89,7 +89,13 @@ impl FlatIndexImpl {
 
 impl IndexImpl {
     /// Attempt a dynamic cast of an index to the flat index type.
+    #[deprecated(since = "0.7.0", note = "Non-idiomatic name, prefer `into_flat` instead")]
     pub fn as_flat(self) -> Result<FlatIndexImpl> {
+        self.into_flat()
+    }
+
+    /// Attempt a dynamic cast of an index to the flat index type.
+    pub fn into_flat(self) -> Result<FlatIndexImpl> {
         unsafe {
             let new_inner = faiss_IndexFlat_cast(self.inner_ptr());
             if new_inner.is_null() {
@@ -188,7 +194,7 @@ mod tests {
         index.add(some_data).unwrap();
         assert_eq!(index.ntotal(), 5);
 
-        let index: FlatIndexImpl = index.as_flat().unwrap();
+        let index: FlatIndexImpl = index.into_flat().unwrap();
         assert_eq!(index.is_trained(), true);
         assert_eq!(index.ntotal(), 5);
         let xb = index.xb();
