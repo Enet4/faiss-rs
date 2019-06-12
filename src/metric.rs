@@ -11,8 +11,8 @@ pub enum MetricType {
 
 impl MetricType {
     /// Obtain the native code which identifies this metric type.
-    pub fn code(&self) -> u32 {
-        *self as u32
+    pub fn code(self) -> u32 {
+        self as u32
     }
 
     /// Obtain a metric type value from the native code.
