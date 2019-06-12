@@ -2,7 +2,7 @@
 
 use super::*;
 
-use error::{Error, Result};
+use crate::error::{Error, Result};
 use std::mem;
 use std::ptr;
 
@@ -171,8 +171,8 @@ impl ConcurrentIndex for FlatIndexImpl {
 #[cfg(test)]
 mod tests {
     use super::FlatIndexImpl;
-    use index::{index_factory, ConcurrentIndex, FromInnerPtr, Index, NativeIndex};
-    use metric::MetricType;
+    use crate::index::{index_factory, ConcurrentIndex, FromInnerPtr, Index, NativeIndex};
+    use crate::metric::MetricType;
 
     const D: u32 = 8;
 

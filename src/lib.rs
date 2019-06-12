@@ -84,8 +84,6 @@
 //!
 #![doc(html_root_url = "https://docs.rs/faiss/0.6.0")]
 
-extern crate faiss_sys;
-
 #[macro_use]
 mod macros;
 

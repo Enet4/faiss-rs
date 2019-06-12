@@ -1,6 +1,6 @@
 //! Contents for GPU support
 
-use error::Result;
+use crate::error::Result;
 use faiss_sys::*;
 use std::ptr;
 
@@ -37,7 +37,7 @@ pub trait GpuResources {
 /// [`into_gpu`]: ../index/struct.IndexImpl.html#method.into_gpu
 ///
 /// ```
-/// # fn run() -> Result<(), Box<::std::error::Error>> {
+/// # fn run() -> Result<(), Box<dyn std::error::Error>> {
 /// use faiss::{StandardGpuResources, MetricType};
 /// use faiss::index::flat::FlatIndex;
 ///
@@ -58,7 +58,7 @@ pub trait GpuResources {
 /// use std::sync::Arc;
 /// use std::thread;
 ///
-/// # fn run() -> Result<(), Box<::std::error::Error>> {
+/// # fn run() -> Result<(), Box<dyn std::error::Error>> {
 /// let gpu = Arc::new(StandardGpuResources::new()?);
 /// let gpu_rc = gpu.clone();
 /// thread::spawn(move || {
@@ -77,7 +77,7 @@ pub trait GpuResources {
 /// ```
 /// use faiss::{GpuResources, StandardGpuResources, MetricType, index_factory};
 ///
-/// # fn run() -> Result<(), Box<::std::error::Error>> {
+/// # fn run() -> Result<(), Box<dyn std::error::Error>> {
 /// let mut gpu = StandardGpuResources::new()?;
 /// let index1 = index_factory(64, "Flat", MetricType::L2)?
 ///     .into_gpu(&gpu, 0)?;

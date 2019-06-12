@@ -1,7 +1,7 @@
 //! Abstract Faiss ID selector
-use error::Result;
+use crate::error::Result;
+use crate::index::Idx;
 use faiss_sys::*;
-use index::Idx;
 use std::os::raw::c_long;
 use std::ptr;
 

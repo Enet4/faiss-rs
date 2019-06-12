@@ -1,8 +1,8 @@
 //! Vector clustering interface and implementation.
 
-use error::Result;
+use crate::error::Result;
+use crate::index::NativeIndex;
 use faiss_sys::*;
-use index::NativeIndex;
 use std::os::raw::c_int;
 use std::{mem, ptr};
 
@@ -323,8 +323,8 @@ pub fn kmeans_clustering(d: u32, k: u32, x: &[f32]) -> Result<KMeansResult> {
 #[cfg(test)]
 mod tests {
     use super::{kmeans_clustering, Clustering, ClusteringParameters};
-    use index::index_factory;
-    use MetricType;
+    use crate::index::index_factory;
+    use crate::MetricType;
 
     #[test]
     fn test_clustering() {
@@ -382,9 +382,9 @@ pub mod gpu {
     #[cfg(test)]
     mod tests {
         use super::super::{Clustering, ClusteringParameters};
-        use gpu::StandardGpuResources;
-        use index::index_factory;
-        use MetricType;
+        use crate::gpu::StandardGpuResources;
+        use crate::index::index_factory;
+        use crate::MetricType;
 
         #[test]
         fn test_clustering() {

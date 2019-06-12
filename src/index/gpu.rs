@@ -5,11 +5,11 @@ use super::{
     AssignSearchResult, CpuIndex, FromInnerPtr, Idx, Index, IndexImpl, NativeIndex,
     RangeSearchResult, SearchResult,
 };
-use error::Result;
+use crate::error::Result;
+use crate::gpu::GpuResources;
+use crate::metric::MetricType;
+use crate::selector::IdSelector;
 use faiss_sys::*;
-use gpu::GpuResources;
-use metric::MetricType;
-use selector::IdSelector;
 use std::marker::PhantomData;
 use std::ptr;
 
@@ -308,9 +308,9 @@ impl FlatIndexImpl {
 mod tests {
     use super::super::{index_factory, CpuIndex, Index};
     use super::GpuIndex;
-    use gpu::{GpuResources, StandardGpuResources};
-    use index::flat::FlatIndex;
-    use metric::MetricType;
+    use crate::gpu::{GpuResources, StandardGpuResources};
+    use crate::index::flat::FlatIndex;
+    use crate::metric::MetricType;
 
     fn is_in_gpu<I: GpuIndex>(_: &I) {}
     fn is_in_cpu<I: CpuIndex>(_: &I) {}

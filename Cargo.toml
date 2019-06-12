@@ -8,6 +8,7 @@ repository = "https://github.com/Enet4/faiss-rs"
 categories = ["algorithms", "science"]
 keywords = ["cbir", "clustering", "index", "similarity"]
 readme = "README.md"
+edition = "2018"
 
 [features]
 gpu = ["faiss-sys/gpu"]

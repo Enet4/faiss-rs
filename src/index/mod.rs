@@ -10,9 +10,9 @@
 //! [`Index`]: trait.Index.html
 //! [`index_factory`]: fn.index_factory.html
 
-use error::{Error, Result};
-use metric::MetricType;
-use selector::IdSelector;
+use crate::error::{Error, Result};
+use crate::metric::MetricType;
+use crate::selector::IdSelector;
 use std::ffi::CString;
 use std::os::raw::c_uint;
 use std::ptr;
@@ -296,7 +296,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::{index_factory, Index};
-    use metric::MetricType;
+    use crate::metric::MetricType;
 
     #[test]
     fn index_factory_flat() {

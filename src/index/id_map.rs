@@ -20,7 +20,7 @@
 //!
 //! ```
 //! use faiss::{IdMap, Index, FlatIndex};
-//! # fn run() -> Result<(), Box<::std::error::Error>>  {
+//! # fn run() -> Result<(), Box<dyn std::error::Error>>  {
 //! let mut index = FlatIndex::new_l2(4)?;
 //! assert!(index.add_with_ids(&[0., 1., 0., 1.], &[5]).is_err());
 //!
@@ -53,13 +53,14 @@
 //! ```
 //!
 
-use error::Result;
-use faiss_sys::*;
-use index::{
+use crate::error::Result;
+use crate::index::{
     AssignSearchResult, ConcurrentIndex, CpuIndex, FromInnerPtr, Idx, Index, NativeIndex,
     RangeSearchResult, SearchResult,
 };
-use selector::IdSelector;
+use crate::selector::IdSelector;
+use crate::MetricType;
+use faiss_sys::*;
 
 use std::marker::PhantomData;
 use std::mem;
@@ -166,9 +167,9 @@ impl<I> Index for IdMap<I> {
         unsafe { faiss_Index_d(self.inner_ptr()) as u32 }
     }
 
-    fn metric_type(&self) -> ::metric::MetricType {
+    fn metric_type(&self) -> MetricType {
         unsafe {
-            ::metric::MetricType::from_code(faiss_Index_metric_type(self.inner_ptr()) as u32)
+            MetricType::from_code(faiss_Index_metric_type(self.inner_ptr()) as u32)
                 .unwrap()
         }
     }
@@ -181,7 +182,7 @@ impl<I> Index for IdMap<I> {
         }
     }
 
-    fn add_with_ids(&mut self, x: &[f32], xids: &[::index::Idx]) -> Result<()> {
+    fn add_with_ids(&mut self, x: &[f32], xids: &[Idx]) -> Result<()> {
         unsafe {
             let n = x.len() / self.d() as usize;
             faiss_try!(faiss_Index_add_with_ids(
@@ -200,10 +201,10 @@ impl<I> Index for IdMap<I> {
             Ok(())
         }
     }
-    fn assign(&mut self, query: &[f32], k: usize) -> Result<::index::AssignSearchResult> {
+    fn assign(&mut self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
         unsafe {
             let nq = query.len() / self.d() as usize;
-            let mut out_labels = vec![0 as ::index::Idx; k * nq];
+            let mut out_labels = vec![0 as Idx; k * nq];
             faiss_try!(faiss_Index_assign(
                 self.inner_ptr(),
                 nq as idx_t,
@@ -211,14 +212,14 @@ impl<I> Index for IdMap<I> {
                 out_labels.as_mut_ptr(),
                 k as i64
             ));
-            Ok(::index::AssignSearchResult { labels: out_labels })
+            Ok(AssignSearchResult { labels: out_labels })
         }
     }
-    fn search(&mut self, query: &[f32], k: usize) -> Result<::index::SearchResult> {
+    fn search(&mut self, query: &[f32], k: usize) -> Result<SearchResult> {
         unsafe {
             let nq = query.len() / self.d() as usize;
             let mut distances = vec![0_f32; k * nq];
-            let mut labels = vec![0 as ::index::Idx; k * nq];
+            let mut labels = vec![0 as Idx; k * nq];
             faiss_try!(faiss_Index_search(
                 self.inner_ptr(),
                 nq as idx_t,
@@ -227,10 +228,10 @@ impl<I> Index for IdMap<I> {
                 distances.as_mut_ptr(),
                 labels.as_mut_ptr()
             ));
-            Ok(::index::SearchResult { distances, labels })
+            Ok(SearchResult { distances, labels })
         }
     }
-    fn range_search(&mut self, query: &[f32], radius: f32) -> Result<::index::RangeSearchResult> {
+    fn range_search(&mut self, query: &[f32], radius: f32) -> Result<RangeSearchResult> {
         unsafe {
             let nq = (query.len() / self.d() as usize) as idx_t;
             let mut p_res: *mut FaissRangeSearchResult = ::std::ptr::null_mut();
@@ -242,7 +243,7 @@ impl<I> Index for IdMap<I> {
                 radius,
                 p_res
             ));
-            Ok(::index::RangeSearchResult { inner: p_res })
+            Ok(RangeSearchResult { inner: p_res })
         }
     }
 
@@ -320,9 +321,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::IdMap;
-    use index::{index_factory, Index};
-    use selector::IdSelector;
-    use MetricType;
+    use crate::index::{index_factory, Index};
+    use crate::selector::IdSelector;
+    use crate::MetricType;
 
     #[test]
     fn flat_index_search_ids() {

@@ -1,8 +1,8 @@
 //! Index I/O functions
 
-use error::{Error, Result};
+use crate::error::{Error, Result};
+use crate::index::{CpuIndex, FromInnerPtr, IndexImpl, NativeIndex};
 use faiss_sys::*;
-use index::{CpuIndex, FromInnerPtr, IndexImpl, NativeIndex};
 use std::ffi::CString;
 use std::ptr;
 
@@ -49,8 +49,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use index::flat::FlatIndex;
-    use index::Index;
+    use crate::index::flat::FlatIndex;
+    use crate::index::Index;
     const D: u32 = 8;
 
     #[test]

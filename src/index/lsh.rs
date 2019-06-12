@@ -4,9 +4,9 @@ use super::{
     AssignSearchResult, ConcurrentIndex, CpuIndex, FromInnerPtr, Idx, Index, IndexImpl,
     NativeIndex, RangeSearchResult, SearchResult,
 };
-use error::{Error, Result};
+use crate::error::{Error, Result};
+use crate::selector::IdSelector;
 use faiss_sys::*;
-use selector::IdSelector;
 use std::mem;
 use std::ptr;
 
@@ -161,9 +161,9 @@ impl ConcurrentIndex for LshIndex {
 #[cfg(test)]
 mod tests {
     use super::LshIndex;
-    use error::Result;
-    use index::{index_factory, ConcurrentIndex, FromInnerPtr, Index, NativeIndex};
-    use metric::MetricType;
+    use crate::error::Result;
+    use crate::index::{index_factory, ConcurrentIndex, FromInnerPtr, Index, NativeIndex};
+    use crate::metric::MetricType;
 
     const D: u32 = 8;
 
