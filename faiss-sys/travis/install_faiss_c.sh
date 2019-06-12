@@ -7,7 +7,7 @@ cd faiss
 git checkout -q $repo_rev
 
 # Build
-./configure
+./configure --without-cuda
 
 make libfaiss.a
 cd c_api
