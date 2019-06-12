@@ -82,7 +82,7 @@
 //! the [Faiss wiki](https://github.com/facebookresearch/faiss/wiki)
 //! for additional guidance.
 //!
-#![doc(html_root_url = "https://docs.rs/faiss/0.6.0")]
+#![doc(html_root_url = "https://docs.rs/faiss/0.7.0")]
 
 #[macro_use]
 mod macros;

@@ -89,7 +89,7 @@ impl FlatIndexImpl {
 
 impl IndexImpl {
     /// Attempt a dynamic cast of an index to the flat index type.
-    #[deprecated(since = "0.7.0", note = "Non-idiomatic name, prefer `into_flat` instead")]
+    #[deprecated(since = "0.8.0", note = "Non-idiomatic name, prefer `into_flat` instead")]
     pub fn as_flat(self) -> Result<FlatIndexImpl> {
         self.into_flat()
     }
