@@ -17,10 +17,6 @@ pub trait GpuResources {
     /// all devices as temporary memory
     fn set_temp_memory(&mut self, size: usize) -> Result<()>;
 
-    /// Specify that we wish to use a certain fraction of memory on
-    /// all devices as temporary memory
-    fn set_temp_memory_fraction(&mut self, fraction: f32) -> Result<()>;
-
     /// Set amount of pinned memory to allocate, for async GPU <-> CPU
     /// transfers
     fn set_pinned_memory(&mut self, size: usize) -> Result<()>;
@@ -126,15 +122,6 @@ impl GpuResources for StandardGpuResources {
         }
     }
 
-    fn set_temp_memory_fraction(&mut self, fraction: f32) -> Result<()> {
-        unsafe {
-            faiss_try!(faiss_StandardGpuResources_setTempMemoryFraction(
-                self.inner, fraction
-            ));
-            Ok(())
-        }
-    }
-
     fn set_pinned_memory(&mut self, size: usize) -> Result<()> {
         unsafe {
             faiss_try!(faiss_StandardGpuResources_setPinnedMemory(self.inner, size));
@@ -154,10 +141,6 @@ impl<'g> GpuResources for &'g mut StandardGpuResources {
 
     fn set_temp_memory(&mut self, size: usize) -> Result<()> {
         (**self).set_temp_memory(size)
-    }
-
-    fn set_temp_memory_fraction(&mut self, fraction: f32) -> Result<()> {
-        (**self).set_temp_memory_fraction(fraction)
     }
 
     fn set_pinned_memory(&mut self, size: usize) -> Result<()> {
