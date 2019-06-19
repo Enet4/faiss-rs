@@ -29,6 +29,9 @@ pub mod lsh;
 pub mod gpu;
 
 /// Primitive data type for identifying a vector in an index (or lack thereof).
+/// 
+/// Depending on the kind of index, it may be possible for vectors to share the
+/// same ID.
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone)]
 pub struct Idx(idx_t);
@@ -94,12 +97,16 @@ impl Idx {
     }
 }
 
+/// This comparison is not entirely reflexive: it returns always false if at
+/// least one of the values is a `none`.
 impl PartialEq<Idx> for Idx {
     fn eq(&self, idx: &Idx) -> bool {
         self.0 != -1 && idx.0 != -1 && self.0 == idx.0
     } 
 }
 
+/// This comparison is not entirely reflexive: it returns always false if at
+/// least one of the values is a `none`.
 impl PartialOrd<Idx> for Idx {
     fn partial_cmp(&self, idx: &Idx) -> Option<::std::cmp::Ordering> {
         match (self.get(), idx.get()) {
