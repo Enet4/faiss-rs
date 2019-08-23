@@ -11,6 +11,9 @@ categories = ["external-ffi-bindings", "algorithms"]
 [features]
 gpu = []
 
+[badges.maintenance]
+status = "passively-maintained"
+
 [badges.travis-ci]
 branch = "master"
 repository = "Enet4/faiss-rs"

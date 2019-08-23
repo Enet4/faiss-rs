@@ -13,6 +13,9 @@ edition = "2018"
 [features]
 gpu = ["faiss-sys/gpu"]
 
+[badges.maintenance]
+status = "passively-maintained"
+
 [badges.travis-ci]
 branch = "master"
 repository = "Enet4/faiss-rs"
