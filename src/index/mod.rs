@@ -29,7 +29,7 @@ pub mod lsh;
 pub mod gpu;
 
 /// Primitive data type for identifying a vector in an index (or lack thereof).
-/// 
+///
 /// Depending on the kind of index, it may be possible for vectors to share the
 /// same ID.
 #[repr(transparent)]
@@ -53,13 +53,16 @@ impl From<idx_t> for Idx {
 
 impl Idx {
     /// Create a vector identifier.
-    /// 
+    ///
     /// # Panic
-    /// 
+    ///
     /// Panics if the ID is too large (`>= 2^63`)
     #[inline]
     pub fn new(idx: u64) -> Self {
-        assert!(idx < 0x8000_0000_0000_0000, "too large index value provided to Idx::new");
+        assert!(
+            idx < 0x8000_0000_0000_0000,
+            "too large index value provided to Idx::new"
+        );
         let idx = idx as idx_t;
         Idx(idx)
     }
@@ -69,7 +72,6 @@ impl Idx {
     pub fn none() -> Self {
         Idx(-1)
     }
-
 
     /// Check whether the vector identifier does not point to anything.
     #[inline]
@@ -97,18 +99,18 @@ impl Idx {
     }
 }
 
-/// This comparison is not entirely reflexive: it returns always false if at
+/// This comparison is not entirely reflexive: it returns always `false` if at
 /// least one of the values is a `none`.
 impl PartialEq<Idx> for Idx {
     fn eq(&self, idx: &Idx) -> bool {
         self.0 != -1 && idx.0 != -1 && self.0 == idx.0
-    } 
+    }
 }
 
-/// This comparison is not entirely reflexive: it returns always false if at
+/// This comparison is not entirely reflexive: it returns always `None` if at
 /// least one of the values is a `none`.
 impl PartialOrd<Idx> for Idx {
-    fn partial_cmp(&self, idx: &Idx) -> Option<::std::cmp::Ordering> {
+    fn partial_cmp(&self, idx: &Idx) -> Option<std::cmp::Ordering> {
         match (self.get(), idx.get()) {
             (None, _) => None,
             (_, None) => None,
@@ -488,7 +490,21 @@ mod tests {
             0., 0., 0., 0., 0., 0., 0., 0., 100., 100., 100., 100., 100., 100., 100., 100.,
         ];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![Idx(2), Idx(1), Idx(0), Idx(3), Idx(4), Idx(3), Idx(4), Idx(0), Idx(1), Idx(2)]);
+        assert_eq!(
+            result.labels,
+            vec![
+                Idx(2),
+                Idx(1),
+                Idx(0),
+                Idx(3),
+                Idx(4),
+                Idx(3),
+                Idx(4),
+                Idx(0),
+                Idx(1),
+                Idx(2)
+            ]
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
     }
 
@@ -514,19 +530,29 @@ mod tests {
         assert_eq!(
             result.labels,
             vec![2, 1, 0, 3, 4, 2, 1, 0, 3, 4, 2, 1, 0, 3, 4, 2, 1, 0, 3, 4]
-                .into_iter().map(Idx).collect::<Vec<_>>()
+                .into_iter()
+                .map(Idx)
+                .collect::<Vec<_>>()
         );
 
         let my_query = [100.; 8];
         let result = index.assign(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![3, 4, 0, 1, 2].into_iter().map(Idx).collect::<Vec<_>>());
+        assert_eq!(
+            result.labels,
+            vec![3, 4, 0, 1, 2].into_iter().map(Idx).collect::<Vec<_>>()
+        );
 
         let my_query = vec![
             0., 0., 0., 0., 0., 0., 0., 0., 100., 100., 100., 100., 100., 100., 100., 100.,
         ];
         let result = index.assign(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4, 3, 4, 0, 1, 2]
-            .into_iter().map(Idx).collect::<Vec<_>>());
+        assert_eq!(
+            result.labels,
+            vec![2, 1, 0, 3, 4, 3, 4, 0, 1, 2]
+                .into_iter()
+                .map(Idx)
+                .collect::<Vec<_>>()
+        );
 
         index.reset().unwrap();
         assert_eq!(index.ntotal(), 0);
