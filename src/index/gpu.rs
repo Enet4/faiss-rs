@@ -359,12 +359,24 @@ mod tests {
 
         let my_query = [0.; 8];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4].into_iter().map(Idx::new).collect::<Vec<_>>());
+        assert_eq!(
+            result.labels,
+            vec![2, 1, 0, 3, 4]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = [100.; 8];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![3, 4, 0, 1, 2].into_iter().map(Idx::new).collect::<Vec<_>>());
+        assert_eq!(
+            result.labels,
+            vec![3, 4, 0, 1, 2]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         // now back to the CPU
@@ -372,12 +384,24 @@ mod tests {
 
         let my_query = [0.; 8];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4].into_iter().map(Idx::new).collect::<Vec<_>>());
+        assert_eq!(
+            result.labels,
+            vec![2, 1, 0, 3, 4]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = [100.; 8];
         let result = index.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![3, 4, 0, 1, 2].into_iter().map(Idx::new).collect::<Vec<_>>());
+        assert_eq!(
+            result.labels,
+            vec![3, 4, 0, 1, 2]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
     }
 
@@ -397,7 +421,13 @@ mod tests {
 
         let my_query = [0.; 8];
         let result = index_cpu.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4].into_iter().map(Idx::new).collect::<Vec<_>>());
+        assert_eq!(
+            result.labels,
+            vec![2, 1, 0, 3, 4]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         index_gpu.add(some_data).unwrap();
@@ -405,12 +435,24 @@ mod tests {
 
         let my_query = [0.; 8];
         let result = index_gpu.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 3, 4].into_iter().map(Idx::new).collect::<Vec<_>>());
+        assert_eq!(
+            result.labels,
+            vec![2, 1, 0, 3, 4]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         let my_query = [100.; 8];
         let result = index_cpu.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![3, 4, 0, 1, 2].into_iter().map(Idx::new).collect::<Vec<_>>());
+        assert_eq!(
+            result.labels,
+            vec![3, 4, 0, 1, 2]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         // add more data to CPU index, see it in effect
@@ -422,7 +464,13 @@ mod tests {
 
         let my_query = [0.; 8];
         let result = index_cpu.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![2, 1, 0, 5, 3].into_iter().map(Idx::new).collect::<Vec<_>>());
+        assert_eq!(
+            result.labels,
+            vec![2, 1, 0, 5, 3]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
 
         drop(index_cpu);
@@ -430,7 +478,13 @@ mod tests {
 
         let my_query = [100.; 8];
         let result = index_gpu.search(&my_query, 5).unwrap();
-        assert_eq!(result.labels, vec![3, 4, 0, 1, 2].into_iter().map(Idx::new).collect::<Vec<_>>());
+        assert_eq!(
+            result.labels,
+            vec![3, 4, 0, 1, 2]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
         assert!(result.distances.iter().all(|x| *x > 0.));
     }
 }

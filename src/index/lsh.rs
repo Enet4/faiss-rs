@@ -97,7 +97,10 @@ impl_native_index_clone!(LshIndex);
 
 impl IndexImpl {
     /// Attempt a dynamic cast of an index to the LSH index type.
-    #[deprecated(since = "0.8.0", note = "Non-idiomatic name, prefer `into_lsh` instead")]
+    #[deprecated(
+        since = "0.8.0",
+        note = "Non-idiomatic name, prefer `into_lsh` instead"
+    )]
     pub fn as_lsh(self) -> Result<LshIndex> {
         self.into_lsh()
     }

@@ -168,10 +168,7 @@ impl<I> Index for IdMap<I> {
     }
 
     fn metric_type(&self) -> MetricType {
-        unsafe {
-            MetricType::from_code(faiss_Index_metric_type(self.inner_ptr()) as u32)
-                .unwrap()
-        }
+        unsafe { MetricType::from_code(faiss_Index_metric_type(self.inner_ptr()) as u32).unwrap() }
     }
 
     fn add(&mut self, x: &[f32]) -> Result<()> {

@@ -25,7 +25,10 @@ macro_rules! impl_native_index {
 
             fn metric_type(&self) -> crate::metric::MetricType {
                 unsafe {
-                    crate::metric::MetricType::from_code(faiss_Index_metric_type(self.inner_ptr()) as u32).unwrap()
+                    crate::metric::MetricType::from_code(
+                        faiss_Index_metric_type(self.inner_ptr()) as u32
+                    )
+                    .unwrap()
                 }
             }
 
@@ -56,7 +59,11 @@ macro_rules! impl_native_index {
                     Ok(())
                 }
             }
-            fn assign(&mut self, query: &[f32], k: usize) -> Result<crate::index::AssignSearchResult> {
+            fn assign(
+                &mut self,
+                query: &[f32],
+                k: usize,
+            ) -> Result<crate::index::AssignSearchResult> {
                 unsafe {
                     let nq = query.len() / self.d() as usize;
                     let mut out_labels = vec![Idx::none(); k * nq];
@@ -86,7 +93,11 @@ macro_rules! impl_native_index {
                     Ok(crate::index::SearchResult { distances, labels })
                 }
             }
-            fn range_search(&mut self, query: &[f32], radius: f32) -> Result<crate::index::RangeSearchResult> {
+            fn range_search(
+                &mut self,
+                query: &[f32],
+                radius: f32,
+            ) -> Result<crate::index::RangeSearchResult> {
                 unsafe {
                     let nq = (query.len() / self.d() as usize) as idx_t;
                     let mut p_res: *mut FaissRangeSearchResult = ::std::ptr::null_mut();
