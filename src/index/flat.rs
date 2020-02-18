@@ -139,7 +139,7 @@ impl ConcurrentIndex for FlatIndexImpl {
                 nq as idx_t,
                 query.as_ptr(),
                 out_labels.as_mut_ptr() as *mut _,
-                k as i64
+                k as crate::arch::faiss_usize
             ));
             Ok(AssignSearchResult { labels: out_labels })
         }

@@ -171,7 +171,7 @@ where
     fn add(&mut self, x: &[f32]) -> Result<()> {
         unsafe {
             let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_add(self.inner, n as i64, x.as_ptr()));
+            faiss_try!(faiss_Index_add(self.inner, n as crate::arch::faiss_usize, x.as_ptr()));
             Ok(())
         }
     }
@@ -181,7 +181,7 @@ where
             let n = x.len() / self.d() as usize;
             faiss_try!(faiss_Index_add_with_ids(
                 self.inner,
-                n as i64,
+                n as crate::arch::faiss_usize,
                 x.as_ptr(),
                 xids.as_ptr() as *const _
             ));
@@ -192,7 +192,7 @@ where
     fn train(&mut self, x: &[f32]) -> Result<()> {
         unsafe {
             let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_train(self.inner, n as i64, x.as_ptr()));
+            faiss_try!(faiss_Index_train(self.inner, n as crate::arch::faiss_usize, x.as_ptr()));
             Ok(())
         }
     }
@@ -206,7 +206,7 @@ where
                 nq as idx_t,
                 query.as_ptr(),
                 out_labels.as_mut_ptr() as *mut _,
-                k as i64
+                k as crate::arch::faiss_usize
             ));
             Ok(AssignSearchResult { labels: out_labels })
         }
@@ -252,7 +252,7 @@ where
         }
     }
 
-    fn remove_ids(&mut self, sel: &IdSelector) -> Result<i64> {
+    fn remove_ids(&mut self, sel: &IdSelector) -> Result<crate::arch::faiss_usize> {
         unsafe {
             let mut n_removed = 0;
             faiss_try!(faiss_Index_remove_ids(

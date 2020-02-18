@@ -35,7 +35,7 @@ macro_rules! impl_native_index {
             fn add(&mut self, x: &[f32]) -> Result<()> {
                 unsafe {
                     let n = x.len() / self.d() as usize;
-                    faiss_try!(faiss_Index_add(self.inner_ptr(), n as i64, x.as_ptr()));
+                    faiss_try!(faiss_Index_add(self.inner_ptr(), n as crate::arch::faiss_usize, x.as_ptr()));
                     Ok(())
                 }
             }
@@ -45,7 +45,7 @@ macro_rules! impl_native_index {
                     let n = x.len() / self.d() as usize;
                     faiss_try!(faiss_Index_add_with_ids(
                         self.inner_ptr(),
-                        n as i64,
+                        n as crate::arch::faiss_usize,
                         x.as_ptr(),
                         xids.as_ptr() as *const _
                     ));
@@ -55,7 +55,7 @@ macro_rules! impl_native_index {
             fn train(&mut self, x: &[f32]) -> Result<()> {
                 unsafe {
                     let n = x.len() / self.d() as usize;
-                    faiss_try!(faiss_Index_train(self.inner_ptr(), n as i64, x.as_ptr()));
+                    faiss_try!(faiss_Index_train(self.inner_ptr(), n as crate::arch::faiss_usize, x.as_ptr()));
                     Ok(())
                 }
             }
@@ -72,7 +72,7 @@ macro_rules! impl_native_index {
                         nq as idx_t,
                         query.as_ptr(),
                         out_labels.as_mut_ptr() as *mut _,
-                        k as i64
+                        k as crate::arch::faiss_usize
                     ));
                     Ok(crate::index::AssignSearchResult { labels: out_labels })
                 }
@@ -120,7 +120,7 @@ macro_rules! impl_native_index {
                 }
             }
 
-            fn remove_ids(&mut self, sel: &IdSelector) -> Result<i64> {
+            fn remove_ids(&mut self, sel: &IdSelector) -> Result<crate::arch::faiss_usize> {
                 unsafe {
                     let mut n_removed = 0;
                     faiss_try!(faiss_Index_remove_ids(

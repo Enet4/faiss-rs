@@ -91,6 +91,7 @@ pub mod cluster;
 pub mod error;
 pub mod index;
 pub mod metric;
+pub mod arch;
 pub mod selector;
 
 #[cfg(feature = "gpu")]

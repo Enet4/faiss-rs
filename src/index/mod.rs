@@ -171,7 +171,7 @@ pub trait Index {
     fn reset(&mut self) -> Result<()>;
 
     /// Remove data vectors represented by IDs.
-    fn remove_ids(&mut self, sel: &IdSelector) -> Result<i64>;
+    fn remove_ids(&mut self, sel: &IdSelector) -> Result<crate::arch::faiss_usize>;
 }
 
 /// Sub-trait for native implementations of a Faiss index.
