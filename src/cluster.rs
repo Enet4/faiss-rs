@@ -200,27 +200,27 @@ impl Clustering {
     }
 
     /**
-     * Retrieve the objective values achieved from the clustering process.
+     * Retrieve the stats achieved from the clustering process.
      * Returns as many values as the number of iterations made.
      */
-    pub fn objectives(&self) -> Result<&[f32]> {
+    pub fn iteration_stats(&self) -> Result<&[FaissClusteringIterationStats]> {
         unsafe {
             let mut data = ptr::null_mut();
             let mut size = 0;
-            faiss_Clustering_obj(self.inner, &mut data, &mut size);
+            faiss_Clustering_iteration_stats(self.inner, &mut data, &mut size);
             Ok(::std::slice::from_raw_parts(data, size))
         }
     }
 
     /**
-     * Retrieve the objective values (sum of distances reported by index).
+     * Retrieve the stats.
      * Returns as many values as the number of iterations made.
      */
-    pub fn objectives_mut(&mut self) -> Result<&mut [f32]> {
+    pub fn iteration_stats_mut(&mut self) -> Result<&mut [FaissClusteringIterationStats]> {
         unsafe {
             let mut data = ptr::null_mut();
             let mut size = 0;
-            faiss_Clustering_obj(self.inner, &mut data, &mut size);
+            faiss_Clustering_iteration_stats(self.inner, &mut data, &mut size);
             Ok(::std::slice::from_raw_parts_mut(data, size))
         }
     }
@@ -355,8 +355,8 @@ mod tests {
             assert_eq!(c.len(), D as usize);
         }
 
-        let objectives = clustering.objectives().unwrap();
-        assert_eq!(objectives.len(), NITER as usize);
+        let stats = clustering.iteration_stats().unwrap();
+        assert_eq!(stats.len(), NITER as usize);
     }
 
     #[test]
@@ -418,10 +418,8 @@ pub mod gpu {
             for c in centroids {
                 assert_eq!(c.len(), D as usize);
             }
-
             let objectives = clustering.objectives().unwrap();
             assert_eq!(objectives.len(), NITER as usize);
         }
-
     }
 }
