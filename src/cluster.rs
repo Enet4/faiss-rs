@@ -100,6 +100,55 @@ impl ClusteringParameters {
     }
 }
 
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ClusteringIterationStats {
+    _unused: [u8; 0],
+}
+
+impl ClusteringIterationStats {
+    /// objective values (sum of distances reported by index)
+    pub fn obj(&self) -> f32 {
+        unsafe {
+            faiss_ClusteringIterationStats_obj(
+                self as *const ClusteringIterationStats as *const FaissClusteringIterationStats,
+            )
+        }
+    }
+    /// seconds for iteration
+    pub fn time(&self) -> f64 {
+        unsafe {
+            faiss_ClusteringIterationStats_time(
+                self as *const ClusteringIterationStats as *const FaissClusteringIterationStats,
+            )
+        }
+    }
+    /// seconds for just search
+    pub fn time_search(&self) -> f64 {
+        unsafe {
+            faiss_ClusteringIterationStats_time_search(
+                self as *const ClusteringIterationStats as *const FaissClusteringIterationStats,
+            )
+        }
+    }
+    /// imbalance factor of iteration
+    pub fn imbalance_factor(&self) -> f64 {
+        unsafe {
+            faiss_ClusteringIterationStats_imbalance_factor(
+                self as *const ClusteringIterationStats as *const FaissClusteringIterationStats,
+            )
+        }
+    }
+    /// number of cluster splits
+    pub fn nsplit(&self) -> i32 {
+        unsafe {
+            faiss_ClusteringIterationStats_nsplit(
+                self as *const ClusteringIterationStats as *const FaissClusteringIterationStats,
+            )
+        }
+    }
+}
+
 /// The clustering algorithm.
 pub struct Clustering {
     inner: *mut FaissClustering,
@@ -203,12 +252,12 @@ impl Clustering {
      * Retrieve the stats achieved from the clustering process.
      * Returns as many values as the number of iterations made.
      */
-    pub fn iteration_stats(&self) -> Result<&[FaissClusteringIterationStats]> {
+    pub fn iteration_stats(&self) -> &[ClusteringIterationStats] {
         unsafe {
             let mut data = ptr::null_mut();
             let mut size = 0;
             faiss_Clustering_iteration_stats(self.inner, &mut data, &mut size);
-            Ok(::std::slice::from_raw_parts(data, size))
+            ::std::slice::from_raw_parts(data as *mut ClusteringIterationStats, size)
         }
     }
 
@@ -216,12 +265,12 @@ impl Clustering {
      * Retrieve the stats.
      * Returns as many values as the number of iterations made.
      */
-    pub fn iteration_stats_mut(&mut self) -> Result<&mut [FaissClusteringIterationStats]> {
+    pub fn iteration_stats_mut(&mut self) -> &mut [ClusteringIterationStats] {
         unsafe {
             let mut data = ptr::null_mut();
             let mut size = 0;
             faiss_Clustering_iteration_stats(self.inner, &mut data, &mut size);
-            Ok(::std::slice::from_raw_parts_mut(data, size))
+            ::std::slice::from_raw_parts_mut(data as *mut ClusteringIterationStats, size)
         }
     }
 
@@ -355,7 +404,7 @@ mod tests {
             assert_eq!(c.len(), D as usize);
         }
 
-        let stats = clustering.iteration_stats().unwrap();
+        let stats = clustering.iteration_stats();
         assert_eq!(stats.len(), NITER as usize);
     }
 
@@ -418,8 +467,9 @@ pub mod gpu {
             for c in centroids {
                 assert_eq!(c.len(), D as usize);
             }
-            let objectives = clustering.objectives().unwrap();
-            assert_eq!(objectives.len(), NITER as usize);
+
+            let stats = clustering.iteration_stats();
+            assert_eq!(stats.len(), NITER as usize);
         }
     }
 }
