@@ -2,7 +2,6 @@
 use crate::error::Result;
 use crate::index::Idx;
 use faiss_sys::*;
-use std::os::raw::c_long;
 use std::ptr;
 
 /// Abstraction over IDSelectorRange and IDSelectorBatch
@@ -29,7 +28,7 @@ impl IdSelector {
 
     /// Create new batch selector
     pub fn batch(indices: &[Idx]) -> Result<Self> {
-        let n = indices.len() as c_long;
+        let n = indices.len();
         let mut p_sel = ptr::null_mut();
         unsafe {
             faiss_try!(faiss_IDSelectorBatch_new(

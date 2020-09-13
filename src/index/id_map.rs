@@ -251,7 +251,7 @@ impl<I> Index for IdMap<I> {
         }
     }
 
-    fn remove_ids(&mut self, sel: &IdSelector) -> Result<(i64)> {
+    fn remove_ids(&mut self, sel: &IdSelector) -> Result<usize> {
         unsafe {
             let mut n_removed = 0;
             faiss_try!(faiss_Index_remove_ids(

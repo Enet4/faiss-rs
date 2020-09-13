@@ -6,7 +6,7 @@ if ! which bindgen > /dev/null; then
 fi
 
 repo_url=https://github.com/Enet4/faiss.git
-repo_rev=2bfbead8f1f29030c11797d161b0b9dec6c2d8a3
+repo_rev=2ac91ad79d9b82800804e073b13a64223cdd6727
 cuda_root=/opt/cuda
 
 git clone $repo_url faiss
@@ -14,9 +14,9 @@ cd faiss
 git checkout -q $repo_rev
 cd ..
 
-bindgen_opt='--whitelist-function faiss_.* --whitelist-type idx_t|Faiss.* --opaque-type FILE'
+bindgen_opt='--size_t-is-usize --whitelist-function faiss_.* --whitelist-type idx_t|Faiss.* --opaque-type FILE'
 
-headers=`ls faiss/c_api/*_c.h`
+headers=`ls faiss/c_api/*_c.h faiss/c_api/impl/*_c.h`
 echo '// Auto-generated, do not edit!' > c_api.h
 for header in $headers; do
     echo "#include \""$header"\"" >> c_api.h;
