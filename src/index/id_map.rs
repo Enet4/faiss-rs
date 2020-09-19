@@ -59,7 +59,7 @@ use crate::index::{
     RangeSearchResult, SearchResult,
 };
 use crate::selector::IdSelector;
-use crate::MetricType;
+use crate::{faiss_try, MetricType};
 use faiss_sys::*;
 
 use std::marker::PhantomData;
@@ -105,7 +105,7 @@ where
         unsafe {
             let index_inner = index.inner_ptr();
             let mut inner_ptr = ptr::null_mut();
-            faiss_try!(faiss_IndexIDMap_new(&mut inner_ptr, index_inner));
+            faiss_try(faiss_IndexIDMap_new(&mut inner_ptr, index_inner))?;
             // let IDMap take ownership of the index
             faiss_IndexIDMap_set_own_fields(inner_ptr, 1);
             mem::forget(index);
@@ -174,7 +174,7 @@ impl<I> Index for IdMap<I> {
     fn add(&mut self, x: &[f32]) -> Result<()> {
         unsafe {
             let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_add(self.inner_ptr(), n as i64, x.as_ptr()));
+            faiss_try(faiss_Index_add(self.inner_ptr(), n as i64, x.as_ptr()))?;
             Ok(())
         }
     }
@@ -182,19 +182,19 @@ impl<I> Index for IdMap<I> {
     fn add_with_ids(&mut self, x: &[f32], xids: &[Idx]) -> Result<()> {
         unsafe {
             let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_add_with_ids(
+            faiss_try(faiss_Index_add_with_ids(
                 self.inner_ptr(),
                 n as i64,
                 x.as_ptr(),
-                xids.as_ptr() as *const _
-            ));
+                xids.as_ptr() as *const _,
+            ))?;
             Ok(())
         }
     }
     fn train(&mut self, x: &[f32]) -> Result<()> {
         unsafe {
             let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_train(self.inner_ptr(), n as i64, x.as_ptr()));
+            faiss_try(faiss_Index_train(self.inner_ptr(), n as i64, x.as_ptr()))?;
             Ok(())
         }
     }
@@ -202,13 +202,13 @@ impl<I> Index for IdMap<I> {
         unsafe {
             let nq = query.len() / self.d() as usize;
             let mut out_labels = vec![Idx::none(); k * nq];
-            faiss_try!(faiss_Index_assign(
+            faiss_try(faiss_Index_assign(
                 self.inner_ptr(),
                 nq as idx_t,
                 query.as_ptr(),
                 out_labels.as_mut_ptr() as *mut _,
-                k as i64
-            ));
+                k as i64,
+            ))?;
             Ok(AssignSearchResult { labels: out_labels })
         }
     }
@@ -217,14 +217,14 @@ impl<I> Index for IdMap<I> {
             let nq = query.len() / self.d() as usize;
             let mut distances = vec![0_f32; k * nq];
             let mut labels = vec![Idx::none(); k * nq];
-            faiss_try!(faiss_Index_search(
+            faiss_try(faiss_Index_search(
                 self.inner_ptr(),
                 nq as idx_t,
                 query.as_ptr(),
                 k as idx_t,
                 distances.as_mut_ptr(),
-                labels.as_mut_ptr() as *mut _
-            ));
+                labels.as_mut_ptr() as *mut _,
+            ))?;
             Ok(SearchResult { distances, labels })
         }
     }
@@ -232,21 +232,21 @@ impl<I> Index for IdMap<I> {
         unsafe {
             let nq = (query.len() / self.d() as usize) as idx_t;
             let mut p_res: *mut FaissRangeSearchResult = ::std::ptr::null_mut();
-            faiss_try!(faiss_RangeSearchResult_new(&mut p_res, nq));
-            faiss_try!(faiss_Index_range_search(
+            faiss_try(faiss_RangeSearchResult_new(&mut p_res, nq))?;
+            faiss_try(faiss_Index_range_search(
                 self.inner_ptr(),
                 nq,
                 query.as_ptr(),
                 radius,
-                p_res
-            ));
+                p_res,
+            ))?;
             Ok(RangeSearchResult { inner: p_res })
         }
     }
 
     fn reset(&mut self) -> Result<()> {
         unsafe {
-            faiss_try!(faiss_Index_reset(self.inner_ptr()));
+            faiss_try(faiss_Index_reset(self.inner_ptr()))?;
             Ok(())
         }
     }
@@ -254,11 +254,11 @@ impl<I> Index for IdMap<I> {
     fn remove_ids(&mut self, sel: &IdSelector) -> Result<usize> {
         unsafe {
             let mut n_removed = 0;
-            faiss_try!(faiss_Index_remove_ids(
+            faiss_try(faiss_Index_remove_ids(
                 self.inner_ptr(),
                 sel.inner_ptr(),
-                &mut n_removed
-            ));
+                &mut n_removed,
+            ))?;
             Ok(n_removed)
         }
     }
@@ -272,13 +272,13 @@ where
         unsafe {
             let nq = query.len() / self.d() as usize;
             let mut out_labels = vec![Idx::none(); k * nq];
-            faiss_try!(faiss_Index_assign(
+            faiss_try(faiss_Index_assign(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
                 out_labels.as_mut_ptr() as *mut _,
-                k as i64
-            ));
+                k as i64,
+            ))?;
             Ok(AssignSearchResult { labels: out_labels })
         }
     }
@@ -287,14 +287,14 @@ where
             let nq = query.len() / self.d() as usize;
             let mut distances = vec![0_f32; k * nq];
             let mut labels = vec![Idx::none(); k * nq];
-            faiss_try!(faiss_Index_search(
+            faiss_try(faiss_Index_search(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
                 k as idx_t,
                 distances.as_mut_ptr(),
-                labels.as_mut_ptr() as *mut _
-            ));
+                labels.as_mut_ptr() as *mut _,
+            ))?;
             Ok(SearchResult { distances, labels })
         }
     }
@@ -302,14 +302,14 @@ where
         unsafe {
             let nq = (query.len() / self.d() as usize) as idx_t;
             let mut p_res: *mut FaissRangeSearchResult = ptr::null_mut();
-            faiss_try!(faiss_RangeSearchResult_new(&mut p_res, nq));
-            faiss_try!(faiss_Index_range_search(
+            faiss_try(faiss_RangeSearchResult_new(&mut p_res, nq))?;
+            faiss_try(faiss_Index_range_search(
                 self.inner,
                 nq,
                 query.as_ptr(),
                 radius,
-                p_res
-            ));
+                p_res,
+            ))?;
             Ok(RangeSearchResult { inner: p_res })
         }
     }

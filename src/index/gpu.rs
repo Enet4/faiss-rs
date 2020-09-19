@@ -6,6 +6,7 @@ use super::{
     RangeSearchResult, SearchResult,
 };
 use crate::error::Result;
+use crate::faiss_try;
 use crate::gpu::GpuResources;
 use crate::metric::MetricType;
 use crate::selector::IdSelector;
@@ -76,12 +77,12 @@ where
     {
         unsafe {
             let mut gpuindex_ptr = ptr::null_mut();
-            faiss_try!(faiss_index_cpu_to_gpu(
+            faiss_try(faiss_index_cpu_to_gpu(
                 gpu_res.inner_ptr(),
                 device,
                 index.inner_ptr(),
-                &mut gpuindex_ptr
-            ));
+                &mut gpuindex_ptr,
+            ))?;
             Ok(GpuIndexImpl {
                 inner: gpuindex_ptr,
                 phantom: PhantomData,
@@ -135,7 +136,7 @@ where
     pub fn to_cpu(&self) -> Result<I> {
         unsafe {
             let mut cpuindex_ptr = ptr::null_mut();
-            faiss_try!(faiss_index_gpu_to_cpu(self.inner, &mut cpuindex_ptr));
+            faiss_try(faiss_index_gpu_to_cpu(self.inner, &mut cpuindex_ptr))?;
             Ok(I::from_inner_ptr(cpuindex_ptr))
         }
     }
@@ -171,7 +172,7 @@ where
     fn add(&mut self, x: &[f32]) -> Result<()> {
         unsafe {
             let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_add(self.inner, n as i64, x.as_ptr()));
+            faiss_try(faiss_Index_add(self.inner, n as i64, x.as_ptr()))?;
             Ok(())
         }
     }
@@ -179,12 +180,12 @@ where
     fn add_with_ids(&mut self, x: &[f32], xids: &[Idx]) -> Result<()> {
         unsafe {
             let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_add_with_ids(
+            faiss_try(faiss_Index_add_with_ids(
                 self.inner,
                 n as i64,
                 x.as_ptr(),
-                xids.as_ptr() as *const _
-            ));
+                xids.as_ptr() as *const _,
+            ))?;
             Ok(())
         }
     }
@@ -192,7 +193,7 @@ where
     fn train(&mut self, x: &[f32]) -> Result<()> {
         unsafe {
             let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Index_train(self.inner, n as i64, x.as_ptr()));
+            faiss_try(faiss_Index_train(self.inner, n as i64, x.as_ptr()))?;
             Ok(())
         }
     }
@@ -201,13 +202,13 @@ where
         unsafe {
             let nq = query.len() / self.d() as usize;
             let mut out_labels = vec![Idx::none(); k * nq];
-            faiss_try!(faiss_Index_assign(
+            faiss_try(faiss_Index_assign(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
                 out_labels.as_mut_ptr() as *mut _,
-                k as i64
-            ));
+                k as i64,
+            ))?;
             Ok(AssignSearchResult { labels: out_labels })
         }
     }
@@ -217,14 +218,14 @@ where
             let nq = query.len() / self.d() as usize;
             let mut distances = vec![0_f32; k * nq];
             let mut labels = vec![Idx::none(); k * nq];
-            faiss_try!(faiss_Index_search(
+            faiss_try(faiss_Index_search(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
                 k as idx_t,
                 distances.as_mut_ptr(),
-                labels.as_mut_ptr() as *mut _
-            ));
+                labels.as_mut_ptr() as *mut _,
+            ))?;
             Ok(SearchResult { distances, labels })
         }
     }
@@ -233,21 +234,21 @@ where
         unsafe {
             let nq = (query.len() / self.d() as usize) as idx_t;
             let mut p_res: *mut FaissRangeSearchResult = ptr::null_mut();
-            faiss_try!(faiss_RangeSearchResult_new(&mut p_res, nq));
-            faiss_try!(faiss_Index_range_search(
+            faiss_try(faiss_RangeSearchResult_new(&mut p_res, nq))?;
+            faiss_try(faiss_Index_range_search(
                 self.inner,
                 nq,
                 query.as_ptr(),
                 radius,
-                p_res
-            ));
+                p_res,
+            ))?;
             Ok(RangeSearchResult { inner: p_res })
         }
     }
 
     fn reset(&mut self) -> Result<()> {
         unsafe {
-            faiss_try!(faiss_Index_reset(self.inner));
+            faiss_try(faiss_Index_reset(self.inner))?;
             Ok(())
         }
     }
@@ -255,11 +256,11 @@ where
     fn remove_ids(&mut self, sel: &IdSelector) -> Result<usize> {
         unsafe {
             let mut n_removed = 0;
-            faiss_try!(faiss_Index_remove_ids(
+            faiss_try(faiss_Index_remove_ids(
                 self.inner,
                 sel.inner_ptr(),
-                &mut n_removed
-            ));
+                &mut n_removed,
+            ))?;
             Ok(n_removed)
         }
     }

@@ -3,6 +3,7 @@
 use super::*;
 
 use crate::error::{Error, Result};
+use crate::faiss_try;
 use std::mem;
 use std::ptr;
 
@@ -34,11 +35,11 @@ impl FlatIndexImpl {
         unsafe {
             let metric = metric as c_uint;
             let mut inner = ptr::null_mut();
-            faiss_try!(faiss_IndexFlat_new_with(
+            faiss_try(faiss_IndexFlat_new_with(
                 &mut inner,
                 (d & 0x7FFF_FFFF) as idx_t,
-                metric
-            ));
+                metric,
+            ))?;
             Ok(FlatIndexImpl { inner })
         }
     }
@@ -74,14 +75,14 @@ impl FlatIndexImpl {
             let n = x.len() / self.d() as usize;
             let k = labels.len() / n;
             let mut distances = vec![0.; n * k];
-            faiss_try!(faiss_IndexFlat_compute_distance_subset(
+            faiss_try(faiss_IndexFlat_compute_distance_subset(
                 self.inner,
                 n as idx_t,
                 x.as_ptr(),
                 k as idx_t,
                 distances.as_mut_ptr(),
-                labels.as_ptr() as *const _
-            ));
+                labels.as_ptr() as *const _,
+            ))?;
             Ok(distances)
         }
     }
@@ -134,13 +135,13 @@ impl ConcurrentIndex for FlatIndexImpl {
         unsafe {
             let nq = query.len() / self.d() as usize;
             let mut out_labels = vec![Idx::none(); k * nq];
-            faiss_try!(faiss_Index_assign(
+            faiss_try(faiss_Index_assign(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
                 out_labels.as_mut_ptr() as *mut _,
-                k as i64
-            ));
+                k as i64,
+            ))?;
             Ok(AssignSearchResult { labels: out_labels })
         }
     }
@@ -149,14 +150,14 @@ impl ConcurrentIndex for FlatIndexImpl {
             let nq = query.len() / self.d() as usize;
             let mut distances = vec![0_f32; k * nq];
             let mut labels = vec![Idx::none(); k * nq];
-            faiss_try!(faiss_Index_search(
+            faiss_try(faiss_Index_search(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
                 k as idx_t,
                 distances.as_mut_ptr(),
-                labels.as_mut_ptr() as *mut _
-            ));
+                labels.as_mut_ptr() as *mut _,
+            ))?;
             Ok(SearchResult { distances, labels })
         }
     }
@@ -164,14 +165,14 @@ impl ConcurrentIndex for FlatIndexImpl {
         unsafe {
             let nq = (query.len() / self.d() as usize) as idx_t;
             let mut p_res: *mut FaissRangeSearchResult = ptr::null_mut();
-            faiss_try!(faiss_RangeSearchResult_new(&mut p_res, nq));
-            faiss_try!(faiss_Index_range_search(
+            faiss_try(faiss_RangeSearchResult_new(&mut p_res, nq))?;
+            faiss_try(faiss_Index_range_search(
                 self.inner,
                 nq,
                 query.as_ptr(),
                 radius,
-                p_res
-            ));
+                p_res,
+            ))?;
             Ok(RangeSearchResult { inner: p_res })
         }
     }

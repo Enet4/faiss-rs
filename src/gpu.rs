@@ -1,6 +1,7 @@
 //! Contents for GPU support
 
 use crate::error::Result;
+use crate::faiss_try;
 use faiss_sys::*;
 use std::ptr;
 
@@ -97,7 +98,7 @@ impl StandardGpuResources {
     pub fn new() -> Result<Self> {
         unsafe {
             let mut ptr = ptr::null_mut();
-            faiss_try!(faiss_StandardGpuResources_new(&mut ptr));
+            faiss_try(faiss_StandardGpuResources_new(&mut ptr))?;
             Ok(StandardGpuResources { inner: ptr })
         }
     }
@@ -110,21 +111,21 @@ impl GpuResources for StandardGpuResources {
 
     fn no_temp_memory(&mut self) -> Result<()> {
         unsafe {
-            faiss_try!(faiss_StandardGpuResources_noTempMemory(self.inner));
+            faiss_try(faiss_StandardGpuResources_noTempMemory(self.inner))?;
             Ok(())
         }
     }
 
     fn set_temp_memory(&mut self, size: usize) -> Result<()> {
         unsafe {
-            faiss_try!(faiss_StandardGpuResources_setTempMemory(self.inner, size));
+            faiss_try(faiss_StandardGpuResources_setTempMemory(self.inner, size))?;
             Ok(())
         }
     }
 
     fn set_pinned_memory(&mut self, size: usize) -> Result<()> {
         unsafe {
-            faiss_try!(faiss_StandardGpuResources_setPinnedMemory(self.inner, size));
+            faiss_try(faiss_StandardGpuResources_setPinnedMemory(self.inner, size))?;
             Ok(())
         }
     }

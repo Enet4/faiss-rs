@@ -1,5 +1,6 @@
 //! Abstract Faiss ID selector
 use crate::error::Result;
+use crate::faiss_try;
 use crate::index::Idx;
 use faiss_sys::*;
 use std::ptr;
@@ -15,11 +16,11 @@ impl IdSelector {
     pub fn range(min: Idx, max: Idx) -> Result<Self> {
         let mut p_sel = ptr::null_mut();
         unsafe {
-            faiss_try!(faiss_IDSelectorRange_new(
+            faiss_try(faiss_IDSelectorRange_new(
                 &mut p_sel,
                 min.to_native(),
-                max.to_native()
-            ));
+                max.to_native(),
+            ))?;
         };
         Ok(IdSelector {
             inner: p_sel as *mut _,
@@ -31,11 +32,11 @@ impl IdSelector {
         let n = indices.len();
         let mut p_sel = ptr::null_mut();
         unsafe {
-            faiss_try!(faiss_IDSelectorBatch_new(
+            faiss_try(faiss_IDSelectorBatch_new(
                 &mut p_sel,
                 n,
-                indices.as_ptr() as *const _
-            ));
+                indices.as_ptr() as *const _,
+            ))?;
         };
         Ok(IdSelector {
             inner: p_sel as *mut _,
