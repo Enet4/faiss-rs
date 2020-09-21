@@ -11,6 +11,7 @@
 //! [`index_factory`]: fn.index_factory.html
 
 use crate::error::{Error, Result};
+use crate::faiss_try;
 use crate::metric::MetricType;
 use crate::selector::IdSelector;
 use std::ffi::CString;
@@ -372,12 +373,12 @@ where
         let description =
             CString::new(description.as_ref()).map_err(|_| Error::IndexDescription)?;
         let mut index_ptr = ::std::ptr::null_mut();
-        faiss_try!(faiss_index_factory(
+        faiss_try(faiss_index_factory(
             &mut index_ptr,
             (d & 0x7FFF_FFFF) as i32,
             description.as_ptr(),
-            metric
-        ));
+            metric,
+        ))?;
         Ok(IndexImpl { inner: index_ptr })
     }
 }

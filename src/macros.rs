@@ -1,12 +1,3 @@
-macro_rules! faiss_try {
-    ($e:expr) => {{
-        let c = $e;
-        if c != 0 {
-            return Err(crate::error::NativeError::from_last_error(c).into());
-        }
-    }};
-}
-
 /// A macro which provides a native index implementation to the given type.
 macro_rules! impl_native_index {
     ($t:ty) => {
@@ -35,7 +26,7 @@ macro_rules! impl_native_index {
             fn add(&mut self, x: &[f32]) -> Result<()> {
                 unsafe {
                     let n = x.len() / self.d() as usize;
-                    faiss_try!(faiss_Index_add(self.inner_ptr(), n as i64, x.as_ptr()));
+                    faiss_try(faiss_Index_add(self.inner_ptr(), n as i64, x.as_ptr()))?;
                     Ok(())
                 }
             }
@@ -43,19 +34,19 @@ macro_rules! impl_native_index {
             fn add_with_ids(&mut self, x: &[f32], xids: &[crate::index::Idx]) -> Result<()> {
                 unsafe {
                     let n = x.len() / self.d() as usize;
-                    faiss_try!(faiss_Index_add_with_ids(
+                    faiss_try(faiss_Index_add_with_ids(
                         self.inner_ptr(),
                         n as i64,
                         x.as_ptr(),
-                        xids.as_ptr() as *const _
-                    ));
+                        xids.as_ptr() as *const _,
+                    ))?;
                     Ok(())
                 }
             }
             fn train(&mut self, x: &[f32]) -> Result<()> {
                 unsafe {
                     let n = x.len() / self.d() as usize;
-                    faiss_try!(faiss_Index_train(self.inner_ptr(), n as i64, x.as_ptr()));
+                    faiss_try(faiss_Index_train(self.inner_ptr(), n as i64, x.as_ptr()))?;
                     Ok(())
                 }
             }
@@ -67,13 +58,13 @@ macro_rules! impl_native_index {
                 unsafe {
                     let nq = query.len() / self.d() as usize;
                     let mut out_labels = vec![Idx::none(); k * nq];
-                    faiss_try!(faiss_Index_assign(
+                    faiss_try(faiss_Index_assign(
                         self.inner_ptr(),
                         nq as idx_t,
                         query.as_ptr(),
                         out_labels.as_mut_ptr() as *mut _,
-                        k as i64
-                    ));
+                        k as i64,
+                    ))?;
                     Ok(crate::index::AssignSearchResult { labels: out_labels })
                 }
             }
@@ -82,14 +73,14 @@ macro_rules! impl_native_index {
                     let nq = query.len() / self.d() as usize;
                     let mut distances = vec![0_f32; k * nq];
                     let mut labels = vec![Idx::none(); k * nq];
-                    faiss_try!(faiss_Index_search(
+                    faiss_try(faiss_Index_search(
                         self.inner_ptr(),
                         nq as idx_t,
                         query.as_ptr(),
                         k as idx_t,
                         distances.as_mut_ptr(),
-                        labels.as_mut_ptr() as *mut _
-                    ));
+                        labels.as_mut_ptr() as *mut _,
+                    ))?;
                     Ok(crate::index::SearchResult { distances, labels })
                 }
             }
@@ -101,21 +92,21 @@ macro_rules! impl_native_index {
                 unsafe {
                     let nq = (query.len() / self.d() as usize) as idx_t;
                     let mut p_res: *mut FaissRangeSearchResult = ::std::ptr::null_mut();
-                    faiss_try!(faiss_RangeSearchResult_new(&mut p_res, nq));
-                    faiss_try!(faiss_Index_range_search(
+                    faiss_try(faiss_RangeSearchResult_new(&mut p_res, nq))?;
+                    faiss_try(faiss_Index_range_search(
                         self.inner_ptr(),
                         nq,
                         query.as_ptr(),
                         radius,
-                        p_res
-                    ));
+                        p_res,
+                    ))?;
                     Ok(crate::index::RangeSearchResult { inner: p_res })
                 }
             }
 
             fn reset(&mut self) -> Result<()> {
                 unsafe {
-                    faiss_try!(faiss_Index_reset(self.inner_ptr()));
+                    faiss_try(faiss_Index_reset(self.inner_ptr()))?;
                     Ok(())
                 }
             }
@@ -123,11 +114,11 @@ macro_rules! impl_native_index {
             fn remove_ids(&mut self, sel: &IdSelector) -> Result<usize> {
                 unsafe {
                     let mut n_removed = 0;
-                    faiss_try!(faiss_Index_remove_ids(
+                    faiss_try(faiss_Index_remove_ids(
                         self.inner_ptr(),
                         sel.inner_ptr(),
-                        &mut n_removed
-                    ));
+                        &mut n_removed,
+                    ))?;
                     Ok(n_removed)
                 }
             }
@@ -148,7 +139,7 @@ macro_rules! impl_native_index_clone {
             pub fn try_clone(&self) -> Result<Self> {
                 unsafe {
                     let mut new_index_ptr = ::std::ptr::null_mut();
-                    faiss_try!(faiss_clone_index(self.inner_ptr(), &mut new_index_ptr));
+                    faiss_try(faiss_clone_index(self.inner_ptr(), &mut new_index_ptr))?;
                     Ok(crate::index::FromInnerPtr::from_inner_ptr(new_index_ptr))
                 }
             }

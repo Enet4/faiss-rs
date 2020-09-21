@@ -5,6 +5,7 @@ use super::{
     NativeIndex, RangeSearchResult, SearchResult,
 };
 use crate::error::{Error, Result};
+use crate::faiss_try;
 use crate::selector::IdSelector;
 use faiss_sys::*;
 use std::mem;
@@ -45,11 +46,11 @@ impl LshIndex {
     pub fn new(d: u32, nbits: u32) -> Result<Self> {
         unsafe {
             let mut inner = ptr::null_mut();
-            faiss_try!(faiss_IndexLSH_new(
+            faiss_try(faiss_IndexLSH_new(
                 &mut inner,
                 d as idx_t,
                 nbits as ::std::os::raw::c_int,
-            ));
+            ))?;
             Ok(LshIndex { inner })
         }
     }
@@ -63,13 +64,13 @@ impl LshIndex {
     ) -> Result<Self> {
         unsafe {
             let mut inner = ptr::null_mut();
-            faiss_try!(faiss_IndexLSH_new_with_options(
+            faiss_try(faiss_IndexLSH_new_with_options(
                 &mut inner,
                 d as idx_t,
                 nbits as ::std::os::raw::c_int,
                 rotate_data as ::std::os::raw::c_int,
                 train_thresholds as ::std::os::raw::c_int,
-            ));
+            ))?;
             Ok(LshIndex { inner })
         }
     }
@@ -124,13 +125,13 @@ impl ConcurrentIndex for LshIndex {
         unsafe {
             let nq = query.len() / self.d() as usize;
             let mut out_labels = vec![Idx::none(); k * nq];
-            faiss_try!(faiss_Index_assign(
+            faiss_try(faiss_Index_assign(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
                 out_labels.as_mut_ptr() as *mut _,
-                k as i64
-            ));
+                k as i64,
+            ))?;
             Ok(AssignSearchResult { labels: out_labels })
         }
     }
@@ -139,14 +140,14 @@ impl ConcurrentIndex for LshIndex {
             let nq = query.len() / self.d() as usize;
             let mut distances = vec![0_f32; k * nq];
             let mut labels = vec![Idx::none(); k * nq];
-            faiss_try!(faiss_Index_search(
+            faiss_try(faiss_Index_search(
                 self.inner,
                 nq as idx_t,
                 query.as_ptr(),
                 k as idx_t,
                 distances.as_mut_ptr(),
-                labels.as_mut_ptr() as *mut _
-            ));
+                labels.as_mut_ptr() as *mut _,
+            ))?;
             Ok(SearchResult { distances, labels })
         }
     }
@@ -154,14 +155,14 @@ impl ConcurrentIndex for LshIndex {
         unsafe {
             let nq = (query.len() / self.d() as usize) as idx_t;
             let mut p_res: *mut FaissRangeSearchResult = ptr::null_mut();
-            faiss_try!(faiss_RangeSearchResult_new(&mut p_res, nq));
-            faiss_try!(faiss_Index_range_search(
+            faiss_try(faiss_RangeSearchResult_new(&mut p_res, nq))?;
+            faiss_try(faiss_Index_range_search(
                 self.inner,
                 nq,
                 query.as_ptr(),
                 radius,
-                p_res
-            ));
+                p_res,
+            ))?;
             Ok(RangeSearchResult { inner: p_res })
         }
     }

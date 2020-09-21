@@ -24,17 +24,21 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.write_str(self.description())
+        match self {
+            Error::Native(e) => write!(fmt, "Native faiss error: {}", e.msg),
+            Error::BadCast => fmt.write_str("Invalid index type cast"),
+            Error::IndexDescription => fmt.write_str("Invalid index description"),
+            Error::BadFilePath => fmt.write_str("Invalid file path"),
+        }
     }
 }
 
 impl StdError for Error {
-    fn description(&self) -> &str {
-        match *self {
-            Error::Native(ref e) => &e.msg,
-            Error::BadCast => "Invalid index type cast",
-            Error::IndexDescription => "Invalid index description",
-            Error::BadFilePath => "Invalid file path",
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        if let Error::Native(err) = self {
+            Some(err)
+        } else {
+            None
         }
     }
 }
@@ -70,7 +74,7 @@ impl NativeError {
     /// a operation which returned a non-zero error code.
     /// This function might panic if no operation was made
     /// or the last operation was successful.
-    pub fn from_last_error(code: c_int) -> Self {
+    pub(crate) fn from_last_error(code: c_int) -> Self {
         unsafe {
             let e: *const _ = faiss_get_last_error();
             assert!(!e.is_null());

@@ -107,3 +107,11 @@ pub use metric::MetricType;
 pub use gpu::{GpuResources, StandardGpuResources};
 #[cfg(feature = "gpu")]
 pub use index::gpu::GpuIndexImpl;
+
+pub(crate) fn faiss_try(code: std::os::raw::c_int) -> Result<(), crate::error::NativeError> {
+    if code != 0 {
+        Err(crate::error::NativeError::from_last_error(code))
+    } else {
+        Ok(())
+    }
+}

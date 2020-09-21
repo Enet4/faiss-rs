@@ -1,6 +1,7 @@
 //! Index I/O functions
 
 use crate::error::{Error, Result};
+use crate::faiss_try;
 use crate::index::{CpuIndex, FromInnerPtr, IndexImpl, NativeIndex};
 use faiss_sys::*;
 use std::ffi::CString;
@@ -22,7 +23,7 @@ where
         let f = file_name.as_ref();
         let f = CString::new(f).map_err(|_| Error::BadFilePath)?;
 
-        faiss_try!(faiss_write_index_fname(index.inner_ptr(), f.as_ptr()));
+        faiss_try(faiss_write_index_fname(index.inner_ptr(), f.as_ptr()))?;
         Ok(())
     }
 }
@@ -41,7 +42,7 @@ where
         let f = file_name.as_ref();
         let f = CString::new(f).map_err(|_| Error::BadFilePath)?;
         let mut inner = ptr::null_mut();
-        faiss_try!(faiss_read_index_fname(f.as_ptr(), 0, &mut inner));
+        faiss_try(faiss_read_index_fname(f.as_ptr(), 0, &mut inner))?;
         Ok(IndexImpl::from_inner_ptr(inner))
     }
 }

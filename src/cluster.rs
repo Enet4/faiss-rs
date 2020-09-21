@@ -1,6 +1,7 @@
 //! Vector clustering interface and implementation.
 
 use crate::error::Result;
+use crate::faiss_try;
 use crate::index::NativeIndex;
 use faiss_sys::*;
 use std::os::raw::c_int;
@@ -175,7 +176,7 @@ impl Clustering {
             let d = d as c_int;
             let k = k as c_int;
             let mut inner: *mut FaissClustering = ptr::null_mut();
-            faiss_try!(faiss_Clustering_new(&mut inner, d, k));
+            faiss_try(faiss_Clustering_new(&mut inner, d, k))?;
             Ok(Clustering { inner })
         }
     }
@@ -188,12 +189,12 @@ impl Clustering {
             let d = d as c_int;
             let k = k as c_int;
             let mut inner: *mut FaissClustering = ptr::null_mut();
-            faiss_try!(faiss_Clustering_new_with_params(
+            faiss_try(faiss_Clustering_new_with_params(
                 &mut inner,
                 d,
                 k,
-                &params.inner
-            ));
+                &params.inner,
+            ))?;
             Ok(Clustering { inner })
         }
     }
@@ -208,12 +209,12 @@ impl Clustering {
     {
         unsafe {
             let n = x.len() / self.d() as usize;
-            faiss_try!(faiss_Clustering_train(
+            faiss_try(faiss_Clustering_train(
                 self.inner,
                 n as idx_t,
                 x.as_ptr(),
-                index.inner_ptr()
-            ));
+                index.inner_ptr(),
+            ))?;
             Ok(())
         }
     }
@@ -357,14 +358,14 @@ pub fn kmeans_clustering(d: u32, k: u32, x: &[f32]) -> Result<KMeansResult> {
         let n = x.len() / d as usize;
         let mut centroids = vec![0_f32; (d * k) as usize];
         let mut q_error: f32 = 0.;
-        faiss_try!(faiss_kmeans_clustering(
+        faiss_try(faiss_kmeans_clustering(
             d as usize,
             n,
             k as usize,
             x.as_ptr(),
             centroids.as_mut_ptr(),
-            &mut q_error
-        ));
+            &mut q_error,
+        ))?;
         Ok(KMeansResult { centroids, q_error })
     }
 }
