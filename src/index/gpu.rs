@@ -107,19 +107,19 @@ where
         G: GpuResources,
     {
         if gpu_res.len() != devices.len() {
-            return Err(::error::Error::GpuResourcesMatch);
+            return Err(crate::error::Error::GpuResourcesMatch);
         }
 
         let res_ptr: Vec<*mut _> = gpu_res.into_iter().map(|r| r.inner_ptr()).collect();
         unsafe {
             let mut gpuindex_ptr = ptr::null_mut();
-            faiss_try!(faiss_index_cpu_to_gpu_multiple(
+            faiss_try(faiss_index_cpu_to_gpu_multiple(
                 res_ptr.as_slice().as_ptr(),
                 devices.as_ptr(),
                 devices.len(),
                 index.inner_ptr(),
                 &mut gpuindex_ptr
-            ));
+            ))?;
             Ok(GpuIndexImpl {
                 inner: gpuindex_ptr,
                 phantom: PhantomData,
