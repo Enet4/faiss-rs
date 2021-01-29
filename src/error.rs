@@ -34,6 +34,7 @@ impl fmt::Display for Error {
             Error::IndexDescription => fmt.write_str("Invalid index description"),
             Error::BadFilePath => fmt.write_str("Invalid file path"),
             Error::ParameterName => fmt.write_str("Invalid parameter name of index"),
+            Error::GpuResourcesMatch => fmt.write_str("Number of GPU resources and devices do not match"),
         }
     }
 }
