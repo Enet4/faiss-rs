@@ -3,7 +3,7 @@ use std::ptr;
 
 use super::*;
 
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::faiss_try;
 
 /// Uses a-priori knowledge on the Faiss indexes to extract tunable parameters.
@@ -23,19 +23,20 @@ impl ParameterSpace {
     }
 
     /// Set one of the parameters
-    pub fn set_index_parameter(
-        &self,
-        index: &mut IndexImpl,
-        name: &ffi::CStr,
-        value: f64,
-    ) -> Result<()> {
+    pub fn set_index_parameter<I, V>(&self, index: &I, name: &str, value: V) -> Result<()>
+    where
+        I: NativeIndex,
+        V: Into<f64>,
+    {
         unsafe {
+            let name_param = ffi::CString::new(name).map_err(|_| Error::ParameterName)?;
             let index_ptr = index.inner_ptr();
+            let v = value.into();
             faiss_try(faiss_ParameterSpace_set_index_parameter(
                 self.inner,
                 index_ptr,
-                name.as_ptr(),
-                value,
+                name_param.as_ptr(),
+                v,
             ))?;
 
             Ok(())
@@ -65,8 +66,6 @@ impl ParameterSpace {
 
 #[cfg(test)]
 mod tests {
-    use std::ffi;
-
     use super::*;
     use crate::index::index_factory;
     use crate::metric::MetricType;
@@ -76,7 +75,7 @@ mod tests {
         let mut index = index_factory(64, "IVF8,Flat", MetricType::L2).unwrap();
 
         let ps = ParameterSpace::new().unwrap();
-        let name = ffi::CString::new("nprobe").expect("CString::new failed");
+        let name = "nprobe";
 
         ps.set_index_parameter(&mut index, &name, 5.0).unwrap();
 
