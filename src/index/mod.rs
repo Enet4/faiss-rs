@@ -21,6 +21,7 @@ use std::ptr;
 
 use faiss_sys::*;
 
+pub mod autotune;
 pub mod flat;
 pub mod id_map;
 pub mod io;
