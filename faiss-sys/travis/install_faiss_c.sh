@@ -1,21 +1,17 @@
 #!/bin/sh
 repo_url=https://github.com/Enet4/faiss.git
-repo_rev=2ac91ad79d9b82800804e073b13a64223cdd6727
+repo_rev=c_api_head
 
-git clone $repo_url faiss
-cd faiss
-git checkout -q $repo_rev
+git clone $repo_url faiss --branch $repo_rev --depth 1
 
 # Build
-./configure --without-cuda
+cmake . -DFAISS_ENABLE_C_API=ON -DBUILD_SHARED_LIBS=ON
 
-make libfaiss.a
-cd c_api
-make libfaiss_c.so
+make faiss_c
 mkdir -p $HOME/.faiss_c
-cp libfaiss_c.so $HOME/.faiss_c/
+cp c_api/libfaiss_c.so $HOME/.faiss_c/
 
-echo libfaiss_c.so installed in $HOME/.faiss_c/
+echo "libfaiss_c.so installed in $HOME/.faiss_c/"
 
 cd ..
 

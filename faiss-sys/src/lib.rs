@@ -79,8 +79,9 @@ mod tests {
     fn clustering() {
         const D: usize = 8;
         unsafe {
-            let mut params: FaissClusteringParameters = mem::uninitialized();
-            faiss_ClusteringParameters_init(&mut params);
+            let mut params = mem::MaybeUninit::<FaissClusteringParameters>::uninit();
+            faiss_ClusteringParameters_init(params.as_mut_ptr());
+            let mut params = params.assume_init();
             assert_eq!(params.verbose, 0);
             assert_eq!(params.spherical, 0);
             assert_eq!(params.frozen_centroids, 0);
