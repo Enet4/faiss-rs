@@ -56,13 +56,14 @@ impl ParameterSpace {
     }
 }
 
-// impl Drop for ParameterSpace {
-//     fn drop(&mut self) {
-//         unsafe {
-//             faiss_ParameterSpace_free(self.inner);
-//         }
-//     }
-// } // TODO: only version >= 1.6.4
+/// Supports only version >= 1.6.4
+impl Drop for ParameterSpace {
+    fn drop(&mut self) {
+        unsafe {
+            faiss_ParameterSpace_free(self.inner);
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
