@@ -104,7 +104,7 @@ where
     where
         I: NativeIndex,
         I: CpuIndex,
-        G: GpuResources,
+        G: GpuResourcesProvider,
     {
         if gpu_res.len() != devices.len() {
             return Err(crate::error::Error::GpuResourcesMatch);
@@ -175,7 +175,7 @@ impl IndexImpl {
         devices: &[i32],
     ) -> Result<GpuIndexImpl<'gpu, IndexImpl>>
     where
-        G: GpuResources,
+        G: GpuResourcesProvider,
     {
         GpuIndexImpl::from_cpu_multiple(&self, gpu_res, devices)
     }
@@ -193,7 +193,7 @@ impl IndexImpl {
         devices: &[i32],
     ) -> Result<GpuIndexImpl<'gpu, IndexImpl>>
     where
-        G: GpuResources,
+        G: GpuResourcesProvider,
     {
         self.to_gpu_multiple(gpu_res, devices)
         // let the CPU index drop naturally
@@ -389,7 +389,7 @@ impl FlatIndexImpl {
         devices: &[i32],
     ) -> Result<GpuIndexImpl<'gpu, FlatIndexImpl>>
     where
-        G: GpuResources,
+        G: GpuResourcesProvider,
     {
         GpuIndexImpl::from_cpu_multiple(&self, gpu_res, devices)
     }
@@ -407,7 +407,7 @@ impl FlatIndexImpl {
         devices: &[i32],
     ) -> Result<GpuIndexImpl<'gpu, FlatIndexImpl>>
     where
-        G: GpuResources,
+        G: GpuResourcesProvider,
     {
         self.to_gpu_multiple(gpu_res, devices)
         // let the CPU index drop naturally
