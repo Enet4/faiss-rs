@@ -23,6 +23,12 @@ pub trait GpuResources {
     fn set_pinned_memory(&mut self, size: usize) -> Result<()>;
 }
 
+/// Common interface for a GPU resource provider.
+pub trait GpuResourcesProvider {
+    /// Obtain a raw pointer to the native GPU resource provider object.
+    fn inner_ptr(&self) -> *mut FaissGpuResourcesProvider;
+}
+
 /// Standard GPU resources descriptor.
 ///
 /// # Examples
@@ -101,6 +107,12 @@ impl StandardGpuResources {
             faiss_try(faiss_StandardGpuResources_new(&mut ptr))?;
             Ok(StandardGpuResources { inner: ptr })
         }
+    }
+}
+
+impl GpuResourcesProvider for StandardGpuResources {
+    fn inner_ptr(&self) -> *mut FaissGpuResourcesProvider {
+        self.inner as *mut _
     }
 }
 

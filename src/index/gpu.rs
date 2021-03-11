@@ -7,7 +7,7 @@ use super::{
 };
 use crate::error::Result;
 use crate::faiss_try;
-use crate::gpu::GpuResources;
+use crate::gpu::GpuResourcesProvider;
 use crate::metric::MetricType;
 use crate::selector::IdSelector;
 use faiss_sys::*;
@@ -73,7 +73,7 @@ where
     where
         I: NativeIndex,
         I: CpuIndex,
-        G: GpuResources,
+        G: GpuResourcesProvider,
     {
         unsafe {
             let mut gpuindex_ptr = ptr::null_mut();
@@ -103,7 +103,7 @@ impl IndexImpl {
         device: i32,
     ) -> Result<GpuIndexImpl<'gpu, IndexImpl>>
     where
-        G: GpuResources,
+        G: GpuResourcesProvider,
     {
         GpuIndexImpl::from_cpu(&self, gpu_res, device)
     }
@@ -120,7 +120,7 @@ impl IndexImpl {
         device: i32,
     ) -> Result<GpuIndexImpl<'gpu, IndexImpl>>
     where
-        G: GpuResources,
+        G: GpuResourcesProvider,
     {
         self.to_gpu(gpu_res, device)
         // let the CPU index drop naturally
@@ -285,12 +285,12 @@ impl FlatIndexImpl {
         device: i32,
     ) -> Result<GpuIndexImpl<'gpu, FlatIndexImpl>>
     where
-        G: GpuResources,
+        G: GpuResourcesProvider,
     {
         GpuIndexImpl::from_cpu(self, gpu_res, device)
     }
 
-    /// Build a GPU in from the given CPU native index, discarding the
+    /// Build a GPU index from the given CPU native index, discarding the
     /// CPU-backed index. The operation fails if the index does not
     /// provide GPU support.
     pub fn into_gpu<'gpu, G>(
@@ -299,7 +299,7 @@ impl FlatIndexImpl {
         device: i32,
     ) -> Result<GpuIndexImpl<'gpu, FlatIndexImpl>>
     where
-        G: GpuResources,
+        G: GpuResourcesProvider,
     {
         self.to_gpu(gpu_res, device)
     }
