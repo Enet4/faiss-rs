@@ -694,12 +694,7 @@ extern "C" {
         index: *mut FaissIndexFlat1D,
     ) -> ::std::os::raw::c_int;
 }
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct FaissIndexIVFFlat_H {
-    _unused: [u8; 0],
-}
-pub type FaissIndexIVFFlat = FaissIndexIVFFlat_H;
+pub type FaissIndexIVFFlat = FaissIndex_H;
 extern "C" {
     pub fn faiss_IndexIVFFlat_free(obj: *mut FaissIndexIVFFlat);
 }

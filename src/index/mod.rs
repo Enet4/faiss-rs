@@ -24,6 +24,7 @@ use faiss_sys::*;
 pub mod flat;
 pub mod id_map;
 pub mod io;
+pub mod ivf_flat;
 pub mod lsh;
 
 #[cfg(feature = "gpu")]
