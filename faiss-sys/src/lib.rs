@@ -15,10 +15,10 @@ pub use bindings::*;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ffi::CString;
     use std::mem;
     use std::os::raw::c_char;
     use std::ptr;
-    use std::ffi::CString;
 
     #[test]
     fn getting_last_error() {
