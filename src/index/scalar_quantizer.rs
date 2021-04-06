@@ -2,10 +2,10 @@
 
 use super::*;
 
-use crate::error::{Result};
+use crate::error::Result;
 use crate::faiss_try;
-use std::ptr;
 use std::mem;
+use std::ptr;
 
 /// Alias for the native implementation of a scalar quantizer index.
 pub type ScalarQuantizerIndex = ScalarQuantizerIndexImpl;
@@ -38,13 +38,13 @@ impl QuantizerType {
     /// Obtain a quantizer type value from the native code.
     pub fn from_code(v: u32) -> Option<Self> {
         match v {
-           0 => Some(QuantizerType::QT_8bit),
-           1 => Some(QuantizerType::QT_4bit),
-           2 => Some(QuantizerType::QT_8bit_uniform),
-           3 => Some(QuantizerType::QT_4bit_uniform),
-           4 => Some(QuantizerType::QT_fp16),
-           5 => Some(QuantizerType::QT_8bit_direct),
-           6 => Some(QuantizerType::QT_6bit),
+            0 => Some(QuantizerType::QT_8bit),
+            1 => Some(QuantizerType::QT_4bit),
+            2 => Some(QuantizerType::QT_8bit_uniform),
+            3 => Some(QuantizerType::QT_4bit_uniform),
+            4 => Some(QuantizerType::QT_fp16),
+            5 => Some(QuantizerType::QT_8bit_direct),
+            6 => Some(QuantizerType::QT_6bit),
             _ => None,
         }
     }
@@ -106,7 +106,6 @@ impl_native_index!(ScalarQuantizerIndexImpl);
 impl_native_index_clone!(ScalarQuantizerIndexImpl);
 
 impl IndexImpl {
-
     /// Attempt a dynamic cast of an index to the Scalar Quantizer index type.
     pub fn into_scalar_quantizer(self) -> Result<ScalarQuantizerIndexImpl> {
         unsafe {
@@ -171,15 +170,16 @@ impl ConcurrentIndex for ScalarQuantizerIndexImpl {
 
 #[cfg(test)]
 mod tests {
-    use super::{ScalarQuantizerIndexImpl, QuantizerType};
-    use crate::index::{ConcurrentIndex, Idx, Index};
+    use super::{QuantizerType, ScalarQuantizerIndexImpl};
+    use crate::index::{index_factory, ConcurrentIndex, Idx, Index};
     use crate::metric::MetricType;
 
     const D: u32 = 8;
 
     #[test]
     fn sq_index_search() {
-        let mut index = ScalarQuantizerIndexImpl::new(D, QuantizerType::QT_fp16, MetricType::L2).unwrap();
+        let mut index =
+            ScalarQuantizerIndexImpl::new(D, QuantizerType::QT_fp16, MetricType::L2).unwrap();
         assert_eq!(index.d(), D);
         assert_eq!(index.ntotal(), 0);
         let some_data = &[
@@ -215,5 +215,22 @@ mod tests {
 
         index.reset().unwrap();
         assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn sq_index_from_cast() {
+        let mut index = index_factory(8, "SQfp16", MetricType::L2).unwrap();
+        assert_eq!(index.is_trained(), true); // fp16 index does not need training
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
+        ];
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        let index: ScalarQuantizerIndexImpl = index.into_scalar_quantizer().unwrap();
+        assert_eq!(index.is_trained(), true);
+        assert_eq!(index.ntotal(), 5);
     }
 }
