@@ -5,6 +5,7 @@ use super::*;
 use crate::error::{Result};
 use crate::faiss_try;
 use std::ptr;
+use std::mem;
 
 /// Alias for the native implementation of a scalar quantizer index.
 pub type ScalarQuantizerIndex = ScalarQuantizerIndexImpl;
@@ -103,6 +104,22 @@ impl FromInnerPtr for ScalarQuantizerIndexImpl {
 impl_native_index!(ScalarQuantizerIndexImpl);
 
 impl_native_index_clone!(ScalarQuantizerIndexImpl);
+
+impl IndexImpl {
+
+    /// Attempt a dynamic cast of an index to the Scalar Quantizer index type.
+    pub fn into_scalar_quantizer(self) -> Result<ScalarQuantizerIndexImpl> {
+        unsafe {
+            let new_inner = faiss_IndexScalarQuantizer_cast(self.inner_ptr());
+            if new_inner.is_null() {
+                Err(Error::BadCast)
+            } else {
+                mem::forget(self);
+                Ok(ScalarQuantizerIndexImpl { inner: new_inner })
+            }
+        }
+    }
+}
 
 impl ConcurrentIndex for ScalarQuantizerIndexImpl {
     fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
