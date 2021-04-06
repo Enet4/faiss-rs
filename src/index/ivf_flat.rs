@@ -125,12 +125,28 @@ impl ConcurrentIndex for IVFFlatIndexImpl {
     }
 }
 
+impl IndexImpl {
+    /// Attempt a dynamic cast of an index to the IVF flat index type.
+    pub fn into_ivf_flat(self) -> Result<IVFFlatIndexImpl> {
+        unsafe {
+            let new_inner = faiss_IndexIVFFlat_cast(self.inner_ptr());
+            if new_inner.is_null() {
+                Err(Error::BadCast)
+            } else {
+                mem::forget(self);
+                Ok(IVFFlatIndexImpl { inner: new_inner })
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
-    use super::IVFFlatIndex;
+    use super::IVFFlatIndexImpl;
     use crate::index::flat::FlatIndexImpl;
-    use crate::index::{ConcurrentIndex, Idx, Index};
+    use crate::index::{index_factory, ConcurrentIndex, Idx, Index};
+    use crate::MetricType;
 
     const D: u32 = 8;
 
@@ -138,7 +154,7 @@ mod tests {
     // #[ignore]
     fn index_search() {
         let q = FlatIndexImpl::new_l2(D).unwrap();
-        let mut index = IVFFlatIndex::new_l2(q, D, 1).unwrap();
+        let mut index = IVFFlatIndexImpl::new_l2(q, D, 1).unwrap();
         assert_eq!(index.d(), D);
         assert_eq!(index.ntotal(), 0);
         let some_data = &[
@@ -172,7 +188,7 @@ mod tests {
     #[test]
     fn index_assign() {
         let q = FlatIndexImpl::new_l2(D).unwrap();
-        let mut index = IVFFlatIndex::new_l2(q, D, 1).unwrap();
+        let mut index = IVFFlatIndexImpl::new_l2(q, D, 1).unwrap();
         assert_eq!(index.d(), D);
         assert_eq!(index.ntotal(), 0);
         let some_data = &[
@@ -197,5 +213,22 @@ mod tests {
 
         index.reset().unwrap();
         assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn ivf_flat_index_from_cast() {
+        let mut index = index_factory(8, "IVF1,Flat", MetricType::L2).unwrap();
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
+        ];
+        index.train(some_data).unwrap();
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        let index: IVFFlatIndexImpl = index.into_ivf_flat().unwrap();
+        assert_eq!(index.is_trained(), true);
+        assert_eq!(index.ntotal(), 5);
     }
 }
