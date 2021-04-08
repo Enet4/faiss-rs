@@ -20,6 +20,8 @@ pub enum Error {
     IndexDescription,
     /// Invalid file path.
     BadFilePath,
+    /// Invalid parameter name of index.
+    ParameterName,
 }
 
 impl fmt::Display for Error {
@@ -29,6 +31,7 @@ impl fmt::Display for Error {
             Error::BadCast => fmt.write_str("Invalid index type cast"),
             Error::IndexDescription => fmt.write_str("Invalid index description"),
             Error::BadFilePath => fmt.write_str("Invalid file path"),
+            Error::ParameterName => fmt.write_str("Invalid parameter name of index"),
         }
     }
 }
