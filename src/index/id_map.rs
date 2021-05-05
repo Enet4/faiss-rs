@@ -262,6 +262,17 @@ impl<I> Index for IdMap<I> {
             Ok(n_removed)
         }
     }
+
+    fn verbose(&self) -> bool {
+        unsafe { c_int_as_bool(faiss_Index_verbose(self.inner_ptr())) }
+    }
+
+    fn set_verbose(&mut self, value: bool) {
+        unsafe {
+            let val_ = bool_as_c_int(value);
+            faiss_Index_set_verbose(self.inner_ptr(), val_);
+        }
+    }
 }
 
 impl<I> ConcurrentIndex for IdMap<I>

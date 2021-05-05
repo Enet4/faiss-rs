@@ -206,6 +206,16 @@ mod tests {
     }
 
     #[test]
+    fn index_verbose() {
+        let mut index = FlatIndexImpl::new_l2(D).unwrap();
+        assert_eq!(index.is_trained(), true); // Flat index does not need training
+        index.set_verbose(true);
+        assert_eq!(index.verbose(), true);
+        index.set_verbose(false);
+        assert_eq!(index.verbose(), false);
+    }
+
+    #[test]
     fn index_clone() {
         let mut index = FlatIndexImpl::new_l2(D).unwrap();
         assert_eq!(index.is_trained(), true); // Flat index does not need training

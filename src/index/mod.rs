@@ -175,6 +175,12 @@ pub trait Index {
 
     /// Remove data vectors represented by IDs.
     fn remove_ids(&mut self, sel: &IdSelector) -> Result<usize>;
+
+    /// Index verbosity level
+    fn verbose(&self) -> bool;
+
+    /// Set Index verbosity level
+    fn set_verbose(&mut self, value: bool);
 }
 
 /// Sub-trait for native implementations of a Faiss index.
