@@ -120,58 +120,259 @@ impl IndexImpl {
     }
 }
 
-impl ConcurrentIndex for ScalarQuantizerIndexImpl {
-    fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
+impl_concurrent_index!(ScalarQuantizerIndexImpl);
+
+/// Alias for the native implementation of a IVF scalar quantizer index.
+pub type IVFScalarQuantizerIndex = IVFScalarQuantizerIndexImpl;
+
+/// Native implementation of a scalar quantizer index.
+#[derive(Debug)]
+pub struct IVFScalarQuantizerIndexImpl {
+    inner: *mut FaissIndexIVFScalarQuantizer,
+}
+
+unsafe impl Send for IVFScalarQuantizerIndexImpl {}
+unsafe impl Sync for IVFScalarQuantizerIndexImpl {}
+
+impl CpuIndex for IVFScalarQuantizerIndexImpl {}
+
+impl Drop for IVFScalarQuantizerIndexImpl {
+    fn drop(&mut self) {
         unsafe {
-            let nq = query.len() / self.d() as usize;
-            let mut out_labels = vec![Idx::none(); k * nq];
-            faiss_try(faiss_Index_assign(
-                self.inner,
-                nq as idx_t,
-                query.as_ptr(),
-                out_labels.as_mut_ptr() as *mut _,
-                k as i64,
-            ))?;
-            Ok(AssignSearchResult { labels: out_labels })
-        }
-    }
-    fn search(&self, query: &[f32], k: usize) -> Result<SearchResult> {
-        unsafe {
-            let nq = query.len() / self.d() as usize;
-            let mut distances = vec![0_f32; k * nq];
-            let mut labels = vec![Idx::none(); k * nq];
-            faiss_try(faiss_Index_search(
-                self.inner,
-                nq as idx_t,
-                query.as_ptr(),
-                k as idx_t,
-                distances.as_mut_ptr(),
-                labels.as_mut_ptr() as *mut _,
-            ))?;
-            Ok(SearchResult { distances, labels })
-        }
-    }
-    fn range_search(&self, query: &[f32], radius: f32) -> Result<RangeSearchResult> {
-        unsafe {
-            let nq = (query.len() / self.d() as usize) as idx_t;
-            let mut p_res: *mut FaissRangeSearchResult = ptr::null_mut();
-            faiss_try(faiss_RangeSearchResult_new(&mut p_res, nq))?;
-            faiss_try(faiss_Index_range_search(
-                self.inner,
-                nq,
-                query.as_ptr(),
-                radius,
-                p_res,
-            ))?;
-            Ok(RangeSearchResult { inner: p_res })
+            faiss_IndexIVFScalarQuantizer_free(self.inner);
         }
     }
 }
 
+impl IVFScalarQuantizerIndexImpl {
+    /// Create a new IVF scalar quantizer index with metric.
+    pub fn new_with_metric_by_ref<Q: NativeIndex>(
+        quantizer: &Q,
+        d: u32,
+        qt: QuantizerType,
+        nlist: u32,
+        metric: MetricType,
+        encode_residual: Option<bool>,
+    ) -> Result<Self> {
+        IVFScalarQuantizerIndexImpl::new_helper(
+            quantizer,
+            d,
+            qt,
+            nlist,
+            metric,
+            encode_residual,
+            false,
+        )
+    }
+
+    /// Create a new IVF scalar quantizer index with metric.
+    /// The index owns the quantizer.
+    pub fn new_with_metric<Q: NativeIndex>(
+        quantizer: Q,
+        d: u32,
+        qt: QuantizerType,
+        nlist: u32,
+        metric: MetricType,
+        encode_residual: Option<bool>,
+    ) -> Result<Self> {
+        let result = IVFScalarQuantizerIndexImpl::new_helper(
+            &quantizer,
+            d,
+            qt,
+            nlist,
+            metric,
+            encode_residual,
+            true,
+        );
+        std::mem::forget(quantizer);
+
+        result
+    }
+
+    /// Create a new IVF scalar quantizer index with L2 metric.
+    /// The index owns the quantizer.
+    pub fn new_l2<Q: NativeIndex>(
+        quantizer: Q,
+        d: u32,
+        qt: QuantizerType,
+        nlist: u32,
+    ) -> Result<Self> {
+        let result = IVFScalarQuantizerIndexImpl::new_helper(
+            &quantizer,
+            d,
+            qt,
+            nlist,
+            MetricType::L2,
+            None,
+            true,
+        );
+        std::mem::forget(quantizer);
+
+        result
+    }
+
+    /// Create a new IVF scalar quantizer index with IP metric.
+    /// The index owns the quantizer.
+    pub fn new_ip<Q: NativeIndex>(
+        quantizer: Q,
+        d: u32,
+        qt: QuantizerType,
+        nlist: u32,
+    ) -> Result<Self> {
+        let result = IVFScalarQuantizerIndexImpl::new_helper(
+            &quantizer,
+            d,
+            qt,
+            nlist,
+            MetricType::InnerProduct,
+            None,
+            true,
+        );
+        std::mem::forget(quantizer);
+
+        result
+    }
+
+    /// Create a new IVF scalar quantizer index with L2 metric.
+    pub fn new_l2_by_ref<Q: NativeIndex>(
+        quantizer: &Q,
+        d: u32,
+        qt: QuantizerType,
+        nlist: u32,
+    ) -> Result<Self> {
+        IVFScalarQuantizerIndexImpl::new_helper(
+            quantizer,
+            d,
+            qt,
+            nlist,
+            MetricType::L2,
+            None,
+            false,
+        )
+    }
+
+    /// Create a new IVF scalar quantizer index with IP metric.
+    pub fn new_ip_by_ref<Q: NativeIndex>(
+        quantizer: &Q,
+        d: u32,
+        qt: QuantizerType,
+        nlist: u32,
+    ) -> Result<Self> {
+        IVFScalarQuantizerIndexImpl::new_helper(
+            quantizer,
+            d,
+            qt,
+            nlist,
+            MetricType::InnerProduct,
+            None,
+            false,
+        )
+    }
+
+    fn new_helper<Q: NativeIndex>(
+        quantizer: &Q,
+        d: u32,
+        qt: QuantizerType,
+        nlist: u32,
+        metric: MetricType,
+        encode_residual: Option<bool>,
+        own_fields: bool,
+    ) -> Result<Self> {
+        unsafe {
+            let metric_ = metric as c_uint;
+            let qt_ = qt as c_uint;
+            let mut inner = ptr::null_mut();
+            let quantizer_ = quantizer.inner_ptr();
+            let encode_residual_ = if encode_residual.unwrap_or(true) {
+                1
+            } else {
+                0
+            };
+            faiss_try(faiss_IndexIVFScalarQuantizer_new_with_metric(
+                &mut inner,
+                quantizer_,
+                d as usize,
+                nlist as usize,
+                qt_,
+                metric_,
+                encode_residual_,
+            ))?;
+
+            let own_fields_ = if own_fields { 1 } else { 0 };
+            faiss_IndexIVFScalarQuantizer_set_own_fields(inner, own_fields_);
+            Ok(IVFScalarQuantizerIndexImpl { inner })
+        }
+    }
+
+    /// Get number of possible key values
+    pub fn nlist(&self) -> usize {
+        unsafe { faiss_IndexIVFScalarQuantizer_nlist(self.inner_ptr()) }
+    }
+
+    /// Get number of probes at query time
+    pub fn nprobe(&self) -> usize {
+        unsafe { faiss_IndexIVFScalarQuantizer_nprobe(self.inner_ptr()) }
+    }
+
+    /// Set number of probes at query time
+    pub fn set_nprobe(&mut self, value: u32) {
+        unsafe {
+            faiss_IndexIVFScalarQuantizer_set_nprobe(self.inner_ptr(), value as usize);
+        }
+    }
+
+    pub fn train_residual(&mut self, x: &[f32]) -> Result<()> {
+        unsafe {
+            let n = x.len() / self.d() as usize;
+            faiss_try(faiss_IndexIVFScalarQuantizer_train_residual(
+                self.inner_ptr(),
+                n as i64,
+                x.as_ptr(),
+            ))?;
+            Ok(())
+        }
+    }
+}
+
+impl NativeIndex for IVFScalarQuantizerIndexImpl {
+    fn inner_ptr(&self) -> *mut FaissIndex {
+        self.inner
+    }
+}
+
+impl FromInnerPtr for IVFScalarQuantizerIndexImpl {
+    unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self {
+        IVFScalarQuantizerIndexImpl {
+            inner: inner_ptr as *mut FaissIndexIVFScalarQuantizer,
+        }
+    }
+}
+
+impl_native_index!(IVFScalarQuantizerIndexImpl);
+
+impl_native_index_clone!(IVFScalarQuantizerIndexImpl);
+
+impl IndexImpl {
+    /// Attempt a dynamic cast of an index to the IVF Scalar Quantizer index type.
+    pub fn into_ivf_scalar_quantizer(self) -> Result<IVFScalarQuantizerIndexImpl> {
+        unsafe {
+            let new_inner = faiss_IndexIVFScalarQuantizer_cast(self.inner_ptr());
+            if new_inner.is_null() {
+                Err(Error::BadCast)
+            } else {
+                mem::forget(self);
+                Ok(IVFScalarQuantizerIndexImpl { inner: new_inner })
+            }
+        }
+    }
+}
+
+impl_concurrent_index!(IVFScalarQuantizerIndexImpl);
+
 #[cfg(test)]
 mod tests {
-    use super::{QuantizerType, ScalarQuantizerIndexImpl};
-    use crate::index::{index_factory, ConcurrentIndex, Idx, Index};
+    use super::{IVFScalarQuantizerIndexImpl, QuantizerType, ScalarQuantizerIndexImpl};
+    use crate::index::{flat, index_factory, ConcurrentIndex, Idx, Index};
     use crate::metric::MetricType;
 
     const D: u32 = 8;
@@ -218,6 +419,122 @@ mod tests {
     }
 
     #[test]
+    fn ivf_sq_index_nlist() {
+        let quantizer = flat::FlatIndex::new_l2(D).unwrap();
+        let index =
+            IVFScalarQuantizerIndexImpl::new_l2_by_ref(&quantizer, D, QuantizerType::QT_fp16, 1)
+                .unwrap();
+        assert_eq!(index.d(), D);
+        assert_eq!(index.ntotal(), 0);
+        assert_eq!(index.nlist(), 1);
+    }
+
+    #[test]
+    fn ivf_sq_index_nprobe() {
+        let quantizer = flat::FlatIndex::new_l2(D).unwrap();
+        let mut index =
+            IVFScalarQuantizerIndexImpl::new_l2_by_ref(&quantizer, D, QuantizerType::QT_fp16, 1)
+                .unwrap();
+        assert_eq!(index.d(), D);
+        assert_eq!(index.ntotal(), 0);
+        assert_eq!(index.nlist(), 1);
+
+        index.set_nprobe(10);
+        assert_eq!(index.nprobe(), 10);
+    }
+
+    #[test]
+    fn ivf_sq_index_search() {
+        let quantizer = flat::FlatIndex::new_l2(D).unwrap();
+        let mut index =
+            IVFScalarQuantizerIndexImpl::new_l2_by_ref(&quantizer, D, QuantizerType::QT_fp16, 1)
+                .unwrap();
+        assert_eq!(index.d(), D);
+        assert_eq!(index.ntotal(), 0);
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
+        ];
+        if !index.is_trained() {
+            index.train(some_data).unwrap();
+        }
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        let my_query = [0.; D as usize];
+        let result = index.search(&my_query, 5).unwrap();
+        assert_eq!(
+            result.labels,
+            vec![2, 1, 0, 3, 4]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
+        assert!(result.distances.iter().all(|x| *x > 0.));
+
+        let my_query = [100.; D as usize];
+        // index can be used behind an immutable ref
+        let result = (&index).search(&my_query, 5).unwrap();
+        assert_eq!(
+            result.labels,
+            vec![3, 4, 0, 1, 2]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
+        assert!(result.distances.iter().all(|x| *x > 0.));
+
+        index.reset().unwrap();
+        assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn ivf_sq_index_own_search() {
+        let quantizer = flat::FlatIndex::new_l2(D).unwrap();
+        let mut index =
+            IVFScalarQuantizerIndexImpl::new_l2(quantizer, D, QuantizerType::QT_fp16, 1).unwrap();
+        assert_eq!(index.d(), D);
+        assert_eq!(index.ntotal(), 0);
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
+        ];
+        if !index.is_trained() {
+            index.train(some_data).unwrap();
+        }
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        let my_query = [0.; D as usize];
+        let result = index.search(&my_query, 5).unwrap();
+        assert_eq!(
+            result.labels,
+            vec![2, 1, 0, 3, 4]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
+        assert!(result.distances.iter().all(|x| *x > 0.));
+
+        let my_query = [100.; D as usize];
+        // index can be used behind an immutable ref
+        let result = (&index).search(&my_query, 5).unwrap();
+        assert_eq!(
+            result.labels,
+            vec![3, 4, 0, 1, 2]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
+        assert!(result.distances.iter().all(|x| *x > 0.));
+
+        index.reset().unwrap();
+        assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
     fn sq_index_from_cast() {
         let mut index = index_factory(8, "SQfp16", MetricType::L2).unwrap();
         assert_eq!(index.is_trained(), true); // fp16 index does not need training
@@ -230,6 +547,25 @@ mod tests {
         assert_eq!(index.ntotal(), 5);
 
         let index: ScalarQuantizerIndexImpl = index.into_scalar_quantizer().unwrap();
+        assert_eq!(index.is_trained(), true);
+        assert_eq!(index.ntotal(), 5);
+    }
+
+    #[test]
+    fn ivf_sq_index_from_cast() {
+        let mut index = index_factory(8, "IVF1,SQfp16", MetricType::L2).unwrap();
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
+        ];
+        if !index.is_trained() {
+            index.train(some_data).unwrap();
+        }
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        let index: IVFScalarQuantizerIndexImpl = index.into_ivf_scalar_quantizer().unwrap();
         assert_eq!(index.is_trained(), true);
         assert_eq!(index.ntotal(), 5);
     }
