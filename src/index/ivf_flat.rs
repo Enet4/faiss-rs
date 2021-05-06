@@ -31,11 +31,21 @@ impl Drop for IVFFlatIndexImpl {
 
 impl IVFFlatIndexImpl {
     /// Create a new IVF flat index.
-    pub fn new(
+    pub fn new_by_ref(
         quantizer: &flat::FlatIndex,
         d: u32,
         nlist: u32,
         metric: MetricType,
+    ) -> Result<Self> {
+        IVFFlatIndexImpl::new_helper(quantizer, d, nlist, metric, false)
+    }
+
+    fn new_helper(
+        quantizer: &flat::FlatIndex,
+        d: u32,
+        nlist: u32,
+        metric: MetricType,
+        own_fields: bool,
     ) -> Result<Self> {
         unsafe {
             let metric = metric as c_uint;
@@ -47,19 +57,51 @@ impl IVFFlatIndexImpl {
                 nlist as usize,
                 metric,
             ))?;
+            let own_fields_ = if own_fields { 1 } else { 0 };
+            faiss_IndexIVFFlat_set_own_fields(inner, own_fields_);
 
             Ok(IVFFlatIndexImpl { inner })
         }
     }
 
+    /// Create a new IVF flat index.
+    // The index owns the quantizer.
+    pub fn new(quantizer: flat::FlatIndex, d: u32, nlist: u32, metric: MetricType) -> Result<Self> {
+        IVFFlatIndexImpl::new_helper(&quantizer, d, nlist, metric, true)
+    }
+
     /// Create a new IVF flat index with L2 as the metric type.
-    pub fn new_l2(quantizer: &flat::FlatIndex, d: u32, nlist: u32) -> Result<Self> {
+    pub fn new_l2_by_ref(quantizer: &flat::FlatIndex, d: u32, nlist: u32) -> Result<Self> {
+        IVFFlatIndexImpl::new_by_ref(quantizer, d, nlist, MetricType::L2)
+    }
+
+    /// Create a new IVF flat index with L2 as the metric type.
+    // The index owns the quantizer.
+    pub fn new_l2(quantizer: flat::FlatIndex, d: u32, nlist: u32) -> Result<Self> {
         IVFFlatIndexImpl::new(quantizer, d, nlist, MetricType::L2)
     }
 
     /// Create a new IVF flat index with IP (inner product) as the metric type.
-    pub fn new_ip(quantizer: &flat::FlatIndex, d: u32, nlist: u32) -> Result<Self> {
+    pub fn new_ip_by_ref(quantizer: &flat::FlatIndex, d: u32, nlist: u32) -> Result<Self> {
+        IVFFlatIndexImpl::new_by_ref(quantizer, d, nlist, MetricType::InnerProduct)
+    }
+
+    /// Create a new IVF flat index with IP (inner product) as the metric type.
+    // The index owns the quantizer.
+    pub fn new_ip(quantizer: flat::FlatIndex, d: u32, nlist: u32) -> Result<Self> {
         IVFFlatIndexImpl::new(quantizer, d, nlist, MetricType::InnerProduct)
+    }
+
+    /// Get number of probes at query time
+    pub fn nprobe(&self) -> u32 {
+        unsafe { faiss_IndexIVFFlat_nprobe(self.inner_ptr()) as u32 }
+    }
+
+    /// Set number of probes at query time
+    pub fn set_nprobe(&mut self, value: u32) {
+        unsafe {
+            faiss_IndexIVFFlat_set_nprobe(self.inner_ptr(), value as usize);
+        }
     }
 }
 
@@ -158,7 +200,7 @@ mod tests {
     // #[ignore]
     fn index_search() {
         let q = FlatIndexImpl::new_l2(D).unwrap();
-        let mut index = IVFFlatIndexImpl::new_l2(&q, D, 1).unwrap();
+        let mut index = IVFFlatIndexImpl::new_l2_by_ref(&q, D, 1).unwrap();
         assert_eq!(index.d(), D);
         assert_eq!(index.ntotal(), 0);
         let some_data = &[
@@ -192,7 +234,7 @@ mod tests {
     #[test]
     fn index_assign() {
         let q = FlatIndexImpl::new_l2(D).unwrap();
-        let mut index = IVFFlatIndexImpl::new_l2(&q, D, 1).unwrap();
+        let mut index = IVFFlatIndexImpl::new_l2_by_ref(&q, D, 1).unwrap();
         assert_eq!(index.d(), D);
         assert_eq!(index.ntotal(), 0);
         let some_data = &[

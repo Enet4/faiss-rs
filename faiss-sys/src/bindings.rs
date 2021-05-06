@@ -702,6 +702,21 @@ extern "C" {
     pub fn faiss_IndexIVFFlat_cast(arg1: *mut FaissIndex) -> *mut FaissIndexIVFFlat;
 }
 extern "C" {
+    pub fn faiss_IndexIVFFlat_nprobe(arg1: *const FaissIndexIVFFlat) -> usize;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_set_nprobe(arg1: *mut FaissIndexIVFFlat, arg2: usize);
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_own_fields(arg1: *const FaissIndexIVFFlat) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_set_own_fields(
+        arg1: *mut FaissIndexIVFFlat,
+        arg2: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
     #[doc = " Inverted file with stored vectors. Here the inverted file"]
     #[doc = " pre-selects the vectors to be searched, but they are not otherwise"]
     #[doc = " encoded, the code array just contains the raw float entries."]
@@ -762,6 +777,9 @@ extern "C" {
     pub fn faiss_IndexIVF_nprobe(arg1: *const FaissIndexIVF) -> usize;
 }
 extern "C" {
+    pub fn faiss_IndexIVF_set_nprobe(arg1: *mut FaissIndexIVF, arg2: usize);
+}
+extern "C" {
     pub fn faiss_IndexIVF_quantizer(arg1: *const FaissIndexIVF) -> *mut FaissIndex;
 }
 extern "C" {
@@ -771,6 +789,9 @@ extern "C" {
 }
 extern "C" {
     pub fn faiss_IndexIVF_own_fields(arg1: *const FaissIndexIVF) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVF_set_own_fields(arg1: *mut FaissIndexIVF, arg2: ::std::os::raw::c_int);
 }
 extern "C" {
     #[doc = " moves the entries from another dataset to self. On output,"]
