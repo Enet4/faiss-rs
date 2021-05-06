@@ -67,7 +67,10 @@ impl IVFFlatIndexImpl {
     /// Create a new IVF flat index.
     // The index owns the quantizer.
     pub fn new(quantizer: flat::FlatIndex, d: u32, nlist: u32, metric: MetricType) -> Result<Self> {
-        IVFFlatIndexImpl::new_helper(&quantizer, d, nlist, metric, true)
+        let result = IVFFlatIndexImpl::new_helper(&quantizer, d, nlist, metric, true);
+        std::mem::forget(quantizer);
+
+        result
     }
 
     /// Create a new IVF flat index with L2 as the metric type.
@@ -101,6 +104,45 @@ impl IVFFlatIndexImpl {
     pub fn set_nprobe(&mut self, value: u32) {
         unsafe {
             faiss_IndexIVFFlat_set_nprobe(self.inner_ptr(), value as usize);
+        }
+    }
+
+    /// Get number of possible key values
+    pub fn nlist(&self) -> u32 {
+        unsafe { faiss_IndexIVFFlat_nlist(self.inner_ptr()) as u32 }
+    }
+
+    /// Get train type
+    pub fn train_type(&self) -> Option<TrainType> {
+        unsafe {
+            let code = faiss_IndexIVFFlat_quantizer_trains_alone(self.inner_ptr());
+            TrainType::from_code(code)
+        }
+    }
+}
+
+/**
+ * = 0: use the quantizer as index in a kmeans training
+ * = 1: just pass on the training set to the train() of the quantizer
+ * = 2: kmeans training on a flat index + add the centroids to the quantizer
+ */
+#[derive(Debug, Clone)]
+pub enum TrainType {
+    /// use the quantizer as index in a kmeans training
+    QuantizerAsIndex,
+    /// just pass on the training set to the train() of the quantizer
+    QuantizerTrainsAlone,
+    /// kmeans training on a flat index + add the centroids to the quantizer
+    FlatIndexAndQuantizer,
+}
+
+impl TrainType {
+    pub(crate) fn from_code(code: i8) -> Option<Self> {
+        match code {
+            0 => Some(TrainType::QuantizerAsIndex),
+            1 => Some(TrainType::QuantizerTrainsAlone),
+            2 => Some(TrainType::FlatIndexAndQuantizer),
+            _ => None,
         }
     }
 }
@@ -201,6 +243,40 @@ mod tests {
     fn index_search() {
         let q = FlatIndexImpl::new_l2(D).unwrap();
         let mut index = IVFFlatIndexImpl::new_l2_by_ref(&q, D, 1).unwrap();
+        assert_eq!(index.d(), D);
+        assert_eq!(index.ntotal(), 0);
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 4.,
+            -4., -8., 1., 1., 2., 4., -1., 8., 8., 10., -10., -10., 10., -10., 10., 16., 16., 32.,
+            25., 20., 20., 40., 15.,
+        ];
+        index.train(some_data).unwrap();
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        let my_query = [0.; D as usize];
+        let result = index.search(&my_query, 3).unwrap();
+        assert_eq!(result.labels.len(), 3);
+        assert!(result.labels.into_iter().all(Idx::is_some));
+        assert_eq!(result.distances.len(), 3);
+        assert!(result.distances.iter().all(|x| *x > 0.));
+
+        let my_query = [100.; D as usize];
+        // flat index can be used behind an immutable ref
+        let result = (&index).search(&my_query, 3).unwrap();
+        assert_eq!(result.labels.len(), 3);
+        assert!(result.labels.into_iter().all(Idx::is_some));
+        assert_eq!(result.distances.len(), 3);
+        assert!(result.distances.iter().all(|x| *x > 0.));
+
+        index.reset().unwrap();
+        assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn index_search_own() {
+        let q = FlatIndexImpl::new_l2(D).unwrap();
+        let mut index = IVFFlatIndexImpl::new_l2(q, D, 1).unwrap();
         assert_eq!(index.d(), D);
         assert_eq!(index.ntotal(), 0);
         let some_data = &[

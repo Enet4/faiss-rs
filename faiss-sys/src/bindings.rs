@@ -705,7 +705,18 @@ extern "C" {
     pub fn faiss_IndexIVFFlat_nprobe(arg1: *const FaissIndexIVFFlat) -> usize;
 }
 extern "C" {
+    pub fn faiss_IndexIVFFlat_nlist(arg1: *const FaissIndexIVFFlat) -> usize;
+}
+extern "C" {
     pub fn faiss_IndexIVFFlat_set_nprobe(arg1: *mut FaissIndexIVFFlat, arg2: usize);
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_quantizer(arg1: *const FaissIndexIVFFlat) -> *mut FaissIndex;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_quantizer_trains_alone(
+        arg1: *const FaissIndexIVFFlat,
+    ) -> ::std::os::raw::c_char;
 }
 extern "C" {
     pub fn faiss_IndexIVFFlat_own_fields(arg1: *const FaissIndexIVFFlat) -> ::std::os::raw::c_int;
@@ -850,7 +861,7 @@ extern "C" {
     pub fn faiss_IndexIVF_get_list_size(index: *const FaissIndexIVF, list_no: usize) -> usize;
 }
 extern "C" {
-    #[doc = " intialize a direct map"]
+    #[doc = " initialize a direct map"]
     #[doc = ""]
     #[doc = " @param new_maintain_direct_map    if true, create a direct map,"]
     #[doc = "                                   else clear it"]
