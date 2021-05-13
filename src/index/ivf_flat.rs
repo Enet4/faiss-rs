@@ -57,9 +57,7 @@ impl IVFFlatIndexImpl {
                 nlist as usize,
                 metric,
             ))?;
-            let own_fields_ = if own_fields { 1 } else { 0 };
-            faiss_IndexIVFFlat_set_own_fields(inner, own_fields_);
-
+            faiss_IndexIVFFlat_set_own_fields(inner, own_fields as i32);
             Ok(IVFFlatIndexImpl { inner })
         }
     }
@@ -67,10 +65,10 @@ impl IVFFlatIndexImpl {
     /// Create a new IVF flat index.
     // The index owns the quantizer.
     pub fn new(quantizer: flat::FlatIndex, d: u32, nlist: u32, metric: MetricType) -> Result<Self> {
-        let result = IVFFlatIndexImpl::new_helper(&quantizer, d, nlist, metric, true);
+        let index = IVFFlatIndexImpl::new_helper(&quantizer, d, nlist, metric, true)?;
         std::mem::forget(quantizer);
 
-        result
+        Ok(index)
     }
 
     /// Create a new IVF flat index with L2 as the metric type.
