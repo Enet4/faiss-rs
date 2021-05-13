@@ -175,6 +175,17 @@ impl IVFScalarQuantizerIndexImpl {
         metric: MetricType,
         encode_residual: Option<bool>,
     ) -> Result<Self> {
+        IVFScalarQuantizerIndexImpl::new_owned(quantizer, d, qt, nlist, metric, encode_residual)
+    }
+
+    fn new_owned<Q: NativeIndex>(
+        quantizer: Q,
+        d: u32,
+        qt: QuantizerType,
+        nlist: u32,
+        metric: MetricType,
+        encode_residual: Option<bool>,
+    ) -> Result<Self> {
         let index = IVFScalarQuantizerIndexImpl::new_helper(
             &quantizer,
             d,
@@ -197,18 +208,7 @@ impl IVFScalarQuantizerIndexImpl {
         qt: QuantizerType,
         nlist: u32,
     ) -> Result<Self> {
-        let index = IVFScalarQuantizerIndexImpl::new_helper(
-            &quantizer,
-            d,
-            qt,
-            nlist,
-            MetricType::L2,
-            None,
-            true,
-        )?;
-        std::mem::forget(quantizer);
-
-        Ok(index)
+        IVFScalarQuantizerIndexImpl::new_owned(quantizer, d, qt, nlist, MetricType::L2, None)
     }
 
     /// Create a new IVF scalar quantizer index with IP metric.
@@ -219,18 +219,14 @@ impl IVFScalarQuantizerIndexImpl {
         qt: QuantizerType,
         nlist: u32,
     ) -> Result<Self> {
-        let index = IVFScalarQuantizerIndexImpl::new_helper(
-            &quantizer,
+        IVFScalarQuantizerIndexImpl::new_owned(
+            quantizer,
             d,
             qt,
             nlist,
             MetricType::InnerProduct,
             None,
-            true,
-        )?;
-        std::mem::forget(quantizer);
-
-        Ok(index)
+        )
     }
 
     /// Create a new IVF scalar quantizer index with L2 metric.
@@ -300,13 +296,13 @@ impl IVFScalarQuantizerIndexImpl {
     }
 
     /// Get number of possible key values
-    pub fn nlist(&self) -> usize {
-        unsafe { faiss_IndexIVFScalarQuantizer_nlist(self.inner_ptr()) }
+    pub fn nlist(&self) -> u32 {
+        unsafe { faiss_IndexIVFScalarQuantizer_nlist(self.inner_ptr()) as u32 }
     }
 
     /// Get number of probes at query time
-    pub fn nprobe(&self) -> usize {
-        unsafe { faiss_IndexIVFScalarQuantizer_nprobe(self.inner_ptr()) }
+    pub fn nprobe(&self) -> u32 {
+        unsafe { faiss_IndexIVFScalarQuantizer_nprobe(self.inner_ptr()) as u32 }
     }
 
     /// Set number of probes at query time
