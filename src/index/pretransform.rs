@@ -47,7 +47,7 @@ impl PreTransformIndexImpl {
         PreTransformIndexImpl::new_helper(lt, sub_index, false)
     }
 
-    pub fn new_helper<LT: NativeVectorTransform, I: NativeIndex>(
+    fn new_helper<LT: NativeVectorTransform, I: NativeIndex>(
         lt: &LT,
         sub_index: &I,
         own_fields: bool,
