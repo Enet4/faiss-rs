@@ -1,3 +1,43 @@
+/// A macro which provides a native linear_transform implementation to the given type.
+macro_rules! impl_native_linear_transform {
+    ($t:ty) => {
+        impl crate::vector_transform::LinearTransform for $t
+        where
+            Self: crate::vector_transform::NativeVectorTransform
+                + crate::vector_transform::VectorTransform,
+        {
+            fn transform_transpose(&self, y: &[f32]) -> Vec<f32> {
+                unsafe {
+                    let n = y.len() / self.d_in() as usize;
+                    let mut x = Vec::with_capacity(n * self.d_out() as usize);
+                    faiss_LinearTransform_transform_transpose(
+                        self.inner_ptr(),
+                        n as i64,
+                        y.as_ptr(),
+                        x.as_mut_ptr(),
+                    );
+
+                    x
+                }
+            }
+
+            fn set_is_orthonormal(&mut self) {
+                unsafe {
+                    faiss_LinearTransform_set_is_orthonormal(self.inner_ptr());
+                }
+            }
+
+            fn have_bias(&self) -> bool {
+                unsafe { faiss_LinearTransform_have_bias(self.inner_ptr()) != 0 }
+            }
+
+            fn is_orthonormal(&self) -> bool {
+                unsafe { faiss_LinearTransform_is_orthonormal(self.inner_ptr()) != 0 }
+            }
+        }
+    };
+}
+
 /// A macro which provides a native index implementation to the given type.
 macro_rules! impl_native_index {
     ($t:ty) => {
