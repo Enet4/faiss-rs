@@ -175,7 +175,7 @@ impl IVFScalarQuantizerIndexImpl {
         metric: MetricType,
         encode_residual: Option<bool>,
     ) -> Result<Self> {
-        let result = IVFScalarQuantizerIndexImpl::new_helper(
+        let index = IVFScalarQuantizerIndexImpl::new_helper(
             &quantizer,
             d,
             qt,
@@ -183,10 +183,10 @@ impl IVFScalarQuantizerIndexImpl {
             metric,
             encode_residual,
             true,
-        );
+        )?;
         std::mem::forget(quantizer);
 
-        result
+        Ok(index)
     }
 
     /// Create a new IVF scalar quantizer index with L2 metric.
@@ -197,7 +197,7 @@ impl IVFScalarQuantizerIndexImpl {
         qt: QuantizerType,
         nlist: u32,
     ) -> Result<Self> {
-        let result = IVFScalarQuantizerIndexImpl::new_helper(
+        let index = IVFScalarQuantizerIndexImpl::new_helper(
             &quantizer,
             d,
             qt,
@@ -205,10 +205,10 @@ impl IVFScalarQuantizerIndexImpl {
             MetricType::L2,
             None,
             true,
-        );
+        )?;
         std::mem::forget(quantizer);
 
-        result
+        Ok(index)
     }
 
     /// Create a new IVF scalar quantizer index with IP metric.
@@ -219,7 +219,7 @@ impl IVFScalarQuantizerIndexImpl {
         qt: QuantizerType,
         nlist: u32,
     ) -> Result<Self> {
-        let result = IVFScalarQuantizerIndexImpl::new_helper(
+        let index = IVFScalarQuantizerIndexImpl::new_helper(
             &quantizer,
             d,
             qt,
@@ -227,10 +227,10 @@ impl IVFScalarQuantizerIndexImpl {
             MetricType::InnerProduct,
             None,
             true,
-        );
+        )?;
         std::mem::forget(quantizer);
 
-        result
+        Ok(index)
     }
 
     /// Create a new IVF scalar quantizer index with L2 metric.
@@ -283,11 +283,7 @@ impl IVFScalarQuantizerIndexImpl {
             let qt_ = qt as c_uint;
             let mut inner = ptr::null_mut();
             let quantizer_ = quantizer.inner_ptr();
-            let encode_residual_ = if encode_residual.unwrap_or(true) {
-                1
-            } else {
-                0
-            };
+            let encode_residual_ = encode_residual.unwrap_or(true) as i32;
             faiss_try(faiss_IndexIVFScalarQuantizer_new_with_metric(
                 &mut inner,
                 quantizer_,
@@ -298,8 +294,7 @@ impl IVFScalarQuantizerIndexImpl {
                 encode_residual_,
             ))?;
 
-            let own_fields_ = if own_fields { 1 } else { 0 };
-            faiss_IndexIVFScalarQuantizer_set_own_fields(inner, own_fields_);
+            faiss_IndexIVFScalarQuantizer_set_own_fields(inner, own_fields as i32);
             Ok(IVFScalarQuantizerIndexImpl { inner })
         }
     }
