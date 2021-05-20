@@ -218,8 +218,16 @@ pub trait FromInnerPtr: NativeIndex {
     /// compatible with the target `NativeIndex` type according to the native
     /// class hierarchy. For example, creating an `IndexImpl` out of a pointer
     /// to `FaissIndexFlatL2` is valid, but creating a `FlatIndex` out of a
-    /// plain `FaissIndex` can cause undefined behaviour.
+    /// plain `FaissIndex` can cause undefined behavior.
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self;
+}
+
+/// Trait for Faiss index types which can be built from a pointer
+/// to a native implementation.
+pub trait TryFromInnerPtr: NativeIndex {
+    fn try_from_inner_ptr(inner_ptr: *mut FaissIndex) -> Result<Self>
+    where
+        Self: Sized;
 }
 
 /// The outcome of an index assign operation.
@@ -351,6 +359,19 @@ impl NativeIndex for IndexImpl {
 impl FromInnerPtr for IndexImpl {
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self {
         IndexImpl { inner: inner_ptr }
+    }
+}
+
+impl TryFromInnerPtr for IndexImpl {
+    fn try_from_inner_ptr(inner_ptr: *mut FaissIndex) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        if inner_ptr.is_null() {
+            Err(Error::BadCast)
+        } else {
+            Ok(IndexImpl { inner: inner_ptr })
+        }
     }
 }
 

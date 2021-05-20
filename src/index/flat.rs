@@ -126,6 +126,22 @@ impl FromInnerPtr for FlatIndexImpl {
     }
 }
 
+impl TryFromInnerPtr for FlatIndexImpl {
+    fn try_from_inner_ptr(inner_ptr: *mut FaissIndex) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        unsafe {
+            let new_inner = faiss_IndexFlat_cast(inner_ptr);
+            if new_inner.is_null() {
+                Err(Error::BadCast)
+            } else {
+                Ok(FlatIndexImpl { inner: new_inner })
+            }
+        }
+    }
+}
+
 impl_native_index!(FlatIndex);
 
 impl_native_index_clone!(FlatIndex);

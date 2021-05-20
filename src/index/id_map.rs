@@ -53,9 +53,9 @@
 //! ```
 //!
 
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::index::{
-    AssignSearchResult, ConcurrentIndex, CpuIndex, FromInnerPtr, Idx, Index, NativeIndex,
+    self, AssignSearchResult, ConcurrentIndex, CpuIndex, FromInnerPtr, Idx, Index, NativeIndex,
     RangeSearchResult, SearchResult,
 };
 use crate::selector::IdSelector;
@@ -133,7 +133,7 @@ where
     /// # Safety
     ///
     /// While this method is safe, note that the returned index pointer is
-    /// already owned by this ID map. Therefore, it is undefined behaviour to
+    /// already owned by this ID map. Therefore, it is undefined behavior to
     /// create a high-level index value from this pointer without first
     /// decoupling this ownership. See [`into_inner`] for a safe alternative.
     pub fn index_inner_ptr(&self) -> *mut FaissIndex {
@@ -150,6 +150,40 @@ where
             faiss_IndexIDMap_set_own_fields(self.inner, 0);
             // now it's safe to build a managed index
             I::from_inner_ptr(self.index_inner)
+        }
+    }
+
+    /// Discard the ID map, recovering the index originally created without it.
+    /// Safety build managed index from pointer.
+    pub fn try_into_inner(self) -> Result<I>
+    where
+        I: index::TryFromInnerPtr,
+    {
+        unsafe {
+            // make id map disown the index
+            faiss_IndexIDMap_set_own_fields(self.inner, 0);
+            // now it's safe to build a managed index
+            I::try_from_inner_ptr(self.index_inner)
+        }
+    }
+
+    /// Specialization of the index type inside `IdMap`.
+    pub fn try_cast_inner_index<B>(self) -> Result<IdMap<B>>
+    where
+        B: index::TryFromInnerPtr,
+    {
+        if let Ok(index) = B::try_from_inner_ptr(self.index_inner) {
+            let res = IdMap {
+                inner: self.inner,
+                index_inner: index.inner_ptr(),
+                phantom: PhantomData,
+            };
+            mem::forget(index);
+            mem::forget(self);
+
+            Ok(res)
+        } else {
+            Err(Error::BadCast)
         }
     }
 }
@@ -318,7 +352,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::IdMap;
-    use crate::index::{index_factory, Idx, Index};
+    use crate::index::{flat::FlatIndexImpl, index_factory, Idx, Index, IndexImpl};
     use crate::selector::IdSelector;
     use crate::MetricType;
 
@@ -394,5 +428,32 @@ mod tests {
 
         id_index.remove_ids(&id_sel).unwrap();
         assert_eq!(id_index.ntotal(), 1);
+    }
+
+    #[test]
+    fn try_from_inner_ptr() {
+        let index = index_factory(4, "Flat", MetricType::L2).unwrap();
+        let id_index = IdMap::new(index).unwrap();
+
+        let index: IndexImpl = id_index.try_into_inner().unwrap();
+        assert_eq!(index.d(), 4);
+    }
+
+    #[test]
+    fn try_cast_inner_index() {
+        let index = index_factory(4, "Flat", MetricType::L2).unwrap();
+        let id_index = IdMap::new(index).unwrap();
+
+        let index: IdMap<FlatIndexImpl> = id_index.try_cast_inner_index::<FlatIndexImpl>().unwrap();
+        assert_eq!(index.d(), 4);
+    }
+
+    #[test]
+    fn flat_try_from_inner_ptr() {
+        let index = FlatIndexImpl::new_l2(4).unwrap();
+        let id_index = IdMap::new(index).unwrap();
+
+        let flat_index: FlatIndexImpl = id_index.try_into_inner().unwrap();
+        assert_eq!(flat_index.d(), 4);
     }
 }
