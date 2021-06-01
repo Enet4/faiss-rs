@@ -3,6 +3,7 @@
 use crate::error::Result;
 use crate::faiss_try;
 use faiss_sys::*;
+use std::os::raw::c_int;
 use std::ptr;
 
 /// Trait for native implementations of a Faiss VectorTransform.
@@ -171,7 +172,7 @@ impl PCAMatrixImpl {
                 d_in as i32,
                 d_out as i32,
                 eigen_power,
-                random_rotation as i32,
+                c_int::from(random_rotation),
             ))?;
 
             Ok(PCAMatrixImpl { inner })
@@ -256,7 +257,7 @@ impl ITQTransformImpl {
                 &mut inner,
                 d_in as i32,
                 d_out as i32,
-                do_pca as i32,
+                c_int::from(do_pca),
             ))?;
 
             Ok(ITQTransformImpl { inner })
@@ -304,7 +305,7 @@ impl OPQMatrixImpl {
     }
 
     pub fn set_verbose(&mut self, value: bool) {
-        unsafe { faiss_OPQMatrix_set_verbose(self.inner_ptr(), value as i32) }
+        unsafe { faiss_OPQMatrix_set_verbose(self.inner_ptr(), c_int::from(value)) }
     }
 
     pub fn verbose(&self) -> bool {
@@ -361,7 +362,7 @@ impl RemapDimensionsTransformImpl {
                 &mut inner,
                 d_in as i32,
                 d_out as i32,
-                uniform as i32,
+                c_int::from(uniform),
             ))?;
 
             Ok(RemapDimensionsTransformImpl { inner })

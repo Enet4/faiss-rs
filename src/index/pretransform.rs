@@ -6,6 +6,7 @@ use crate::error::{Error, Result};
 use crate::faiss_try;
 use crate::vector_transform::NativeVectorTransform;
 use std::mem;
+use std::os::raw::c_int;
 use std::ptr;
 
 /// Alias for the native implementation of a PreTransform index.
@@ -58,7 +59,7 @@ impl PreTransformIndexImpl {
                 lt.inner_ptr(),
                 sub_index.inner_ptr(),
             ))?;
-            faiss_IndexPreTransform_set_own_fields(inner, own_fields as i32);
+            faiss_IndexPreTransform_set_own_fields(inner, c_int::from(own_fields));
             Ok(PreTransformIndexImpl { inner })
         }
     }
