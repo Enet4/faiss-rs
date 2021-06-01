@@ -6,6 +6,7 @@ use crate::error::Result;
 use crate::faiss_try;
 use std::mem;
 use std::ptr;
+use std::os::raw::c_int;
 
 /// Alias for the native implementation of a scalar quantizer index.
 pub type ScalarQuantizerIndex = ScalarQuantizerIndexImpl;
@@ -279,7 +280,7 @@ impl IVFScalarQuantizerIndexImpl {
             let qt_ = qt as c_uint;
             let mut inner = ptr::null_mut();
             let quantizer_ = quantizer.inner_ptr();
-            let encode_residual_ = encode_residual.unwrap_or(true) as i32;
+            let encode_residual_ = c_int::from(encode_residual.unwrap_or(true));
             faiss_try(faiss_IndexIVFScalarQuantizer_new_with_metric(
                 &mut inner,
                 quantizer_,
@@ -290,7 +291,7 @@ impl IVFScalarQuantizerIndexImpl {
                 encode_residual_,
             ))?;
 
-            faiss_IndexIVFScalarQuantizer_set_own_fields(inner, own_fields as i32);
+            faiss_IndexIVFScalarQuantizer_set_own_fields(inner, c_int::from(own_fields));
             Ok(IVFScalarQuantizerIndexImpl { inner })
         }
     }
