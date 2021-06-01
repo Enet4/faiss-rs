@@ -5,6 +5,7 @@ use super::*;
 use crate::error::Result;
 use crate::faiss_try;
 use std::mem;
+use std::os::raw::c_int;
 use std::ptr;
 
 /// Alias for the native implementation of a index.
@@ -47,7 +48,7 @@ impl RefineFlatIndexImpl {
                 &mut inner,
                 base_index.inner_ptr(),
             ))?;
-            faiss_IndexRefineFlat_set_own_fields(inner, own_fields as i32);
+            faiss_IndexRefineFlat_set_own_fields(inner, c_int::from(own_fields));
             Ok(RefineFlatIndexImpl { inner })
         }
     }
