@@ -12,18 +12,6 @@ mod bindings;
 #[cfg(not(feature = "gpu"))]
 pub use bindings::*;
 
-pub fn bool_as_c_int(v: bool) -> ::std::os::raw::c_int {
-    if v {
-        1
-    } else {
-        0
-    }
-}
-
-pub fn c_int_as_bool(v: ::std::os::raw::c_int) -> bool {
-    v != 0
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

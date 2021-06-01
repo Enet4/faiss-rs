@@ -64,6 +64,7 @@ use faiss_sys::*;
 
 use std::marker::PhantomData;
 use std::mem;
+use std::os::raw::c_int;
 use std::ptr;
 
 /// Wrapper for implementing arbitrary ID mapping to an index.
@@ -264,13 +265,12 @@ impl<I> Index for IdMap<I> {
     }
 
     fn verbose(&self) -> bool {
-        unsafe { c_int_as_bool(faiss_Index_verbose(self.inner_ptr())) }
+        unsafe { faiss_Index_verbose(self.inner_ptr()) != 0 }
     }
 
     fn set_verbose(&mut self, value: bool) {
         unsafe {
-            let val_ = bool_as_c_int(value);
-            faiss_Index_set_verbose(self.inner_ptr(), val_);
+            faiss_Index_set_verbose(self.inner_ptr(), c_int::from(value));
         }
     }
 }
