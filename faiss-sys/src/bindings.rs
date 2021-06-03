@@ -694,17 +694,38 @@ extern "C" {
         index: *mut FaissIndexFlat1D,
     ) -> ::std::os::raw::c_int;
 }
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct FaissIndexIVFFlat_H {
-    _unused: [u8; 0],
-}
-pub type FaissIndexIVFFlat = FaissIndexIVFFlat_H;
+pub type FaissIndexIVFFlat = FaissIndex_H;
 extern "C" {
     pub fn faiss_IndexIVFFlat_free(obj: *mut FaissIndexIVFFlat);
 }
 extern "C" {
     pub fn faiss_IndexIVFFlat_cast(arg1: *mut FaissIndex) -> *mut FaissIndexIVFFlat;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_nprobe(arg1: *const FaissIndexIVFFlat) -> usize;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_nlist(arg1: *const FaissIndexIVFFlat) -> usize;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_set_nprobe(arg1: *mut FaissIndexIVFFlat, arg2: usize);
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_quantizer(arg1: *const FaissIndexIVFFlat) -> *mut FaissIndex;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_quantizer_trains_alone(
+        arg1: *const FaissIndexIVFFlat,
+    ) -> ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_own_fields(arg1: *const FaissIndexIVFFlat) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_set_own_fields(
+        arg1: *mut FaissIndexIVFFlat,
+        arg2: ::std::os::raw::c_int,
+    );
 }
 extern "C" {
     #[doc = " Inverted file with stored vectors. Here the inverted file"]
@@ -767,6 +788,9 @@ extern "C" {
     pub fn faiss_IndexIVF_nprobe(arg1: *const FaissIndexIVF) -> usize;
 }
 extern "C" {
+    pub fn faiss_IndexIVF_set_nprobe(arg1: *mut FaissIndexIVF, arg2: usize);
+}
+extern "C" {
     pub fn faiss_IndexIVF_quantizer(arg1: *const FaissIndexIVF) -> *mut FaissIndex;
 }
 extern "C" {
@@ -776,6 +800,9 @@ extern "C" {
 }
 extern "C" {
     pub fn faiss_IndexIVF_own_fields(arg1: *const FaissIndexIVF) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVF_set_own_fields(arg1: *mut FaissIndexIVF, arg2: ::std::os::raw::c_int);
 }
 extern "C" {
     #[doc = " moves the entries from another dataset to self. On output,"]
@@ -834,7 +861,7 @@ extern "C" {
     pub fn faiss_IndexIVF_get_list_size(index: *const FaissIndexIVF, list_no: usize) -> usize;
 }
 extern "C" {
-    #[doc = " intialize a direct map"]
+    #[doc = " initialize a direct map"]
     #[doc = ""]
     #[doc = " @param new_maintain_direct_map    if true, create a direct map,"]
     #[doc = "                                   else clear it"]
