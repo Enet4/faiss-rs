@@ -24,7 +24,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.faiss_c
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-1
+        key: ${{ runner.os }}-build-${{ env.cache-name }}1
     - name: Download and build Faiss
       run: ./faiss-sys/ci/install_faiss_c.sh
     - name: Install Faiss
