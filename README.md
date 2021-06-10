@@ -1,7 +1,7 @@
 # Faiss-rs
 
 [![faiss at crates.io](https://img.shields.io/crates/v/faiss.svg)](https://crates.io/crates/faiss)
-[![Build Status](https://travis-ci.org/Enet4/faiss-rs.svg?branch=master)](https://travis-ci.org/Enet4/faiss-rs)
+[![Continuous integration status](https://github.com/Enet4/faiss-rs/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Enet4/faiss-rs/actions/workflows/ci.yml)
 ![Minimum Rust Version Stable](https://img.shields.io/badge/Minimum%20Rust%20Version-stable-green.svg)
 [![dependency status](https://deps.rs/repo/github/Enet4/faiss-rs/status.svg)](https://deps.rs/repo/github/Enet4/faiss-rs)
 
@@ -12,12 +12,25 @@ the state-of-the-art vector search and clustering library.
 
 Currently, this crate does not build Faiss automatically for you. The dynamic library needs to be installed manually to your system.
 
-  1. Follow the instructions [here](https://github.com/Enet4/faiss/tree/c_api_head/INSTALL.md) to build Faiss.
-     The crate is only compatible with version v1.6.3, containing the C API patch.
+  1. Follow the instructions [here](https://github.com/Enet4/faiss/tree/c_api_head/INSTALL.md#step-1-invoking-cmake)
+     to build Faiss using CMake,
+     enabling the variables `FAISS_ENABLE_C_API` and `BUILD_SHARED_LIBS`.
+     The crate is currently only compatible with version v1.7.1.
      Consider building Faiss from [this fork, `c_api_head` branch](https://github.com/Enet4/faiss/tree/c_api_head),
      which will contain the latest bindings to the C interface.
-  2. Afterwards, follow the instructions on [building the C API of Faiss](https://github.com/Enet4/faiss/tree/c_api_head/c_api/INSTALL.md). This will result in the dynamic library `faiss_c`, which needs to be installed in a place where your system will pick up (in Linux, try somewhere in the `LD_LIBRARY_PATH` environment variable, such as "/usr/lib", or try adding a new path to this variable). For GPU support, don't forget to build and install `gpufaiss_c` instead.
-  3. You are now ready to include this crate as a dependency:
+     For example:
+     ```
+     cmake -B . -DFAISS_ENABLE_C_API=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
+     ```
+     This will result in the dynamic library `faiss_c` ("c_api/libfaiss_c.so" on Linux),
+     which needs to be installed in a place where your system will pick up
+     (in Linux, try somewhere in the `LD_LIBRARY_PATH` environment variable, such as "/usr/lib",
+     or try adding a new path to this variable).
+     For GPU support, don't forget to enable the option `FAISS_ENABLE_GPU`.
+     **Note:** `faiss_c` might link dynamically to the native `faiss` library,
+     which in that case you will need to install the main shared object (faiss/libfaiss.so)
+     as well. 
+  2. You are now ready to include this crate as a dependency:
 
 ```toml
 [dependencies]
