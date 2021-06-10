@@ -23,6 +23,10 @@ jobs:
     - name: Download and install Faiss
       run: ./faiss-sys/ci/install_faiss_c.sh
     - name: Build
+      env:
+        LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$HOME/.faiss_c
       run: cargo build --verbose
     - name: Run tests
+      env:
+        LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$HOME/.faiss_c
       run: cargo test --verbose

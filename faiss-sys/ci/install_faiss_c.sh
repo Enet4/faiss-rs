@@ -10,14 +10,13 @@ cd faiss
 
 # Build
 cmake . -DFAISS_ENABLE_C_API=ON -DBUILD_SHARED_LIBS=ON \
-    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_C_FLAGS_DEBUG="-g -O1" -DCMAKE_CXX_FLAGS_DEBUG="-g -O1" \
     -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=OFF -DBUILD_TESTING=OFF
 
 make
 mkdir -p "$HOME/.faiss_c"
 cp faiss/libfaiss.so c_api/libfaiss_c.so "$HOME/.faiss_c/"
-
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.faiss_c
 
 echo "libfaiss_c.so installed in $HOME/.faiss_c/"
 
