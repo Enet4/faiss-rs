@@ -56,11 +56,17 @@ extern "C" {
     pub fn faiss_Index_metric_type(arg1: *const FaissIndex) -> FaissMetricType;
 }
 extern "C" {
+    pub fn faiss_Index_verbose(arg1: *const FaissIndex) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_Index_set_verbose(arg1: *mut FaissIndex, arg2: ::std::os::raw::c_int);
+}
+extern "C" {
     #[doc = " Perform training on a representative set of vectors"]
     #[doc = ""]
     #[doc = " @param index  opaque pointer to index object"]
     #[doc = " @param n      nb of training vectors"]
-    #[doc = " @param x      training vecors, size n * d"]
+    #[doc = " @param x      training vectors, size n * d"]
     pub fn faiss_Index_train(
         index: *mut FaissIndex,
         n: idx_t,
@@ -676,6 +682,23 @@ extern "C" {
 extern "C" {
     pub fn faiss_IndexRefineFlat_free(obj: *mut FaissIndexRefineFlat);
 }
+extern "C" {
+    pub fn faiss_IndexRefineFlat_own_fields(
+        arg1: *const FaissIndexRefineFlat,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexRefineFlat_set_own_fields(
+        arg1: *mut FaissIndexRefineFlat,
+        arg2: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn faiss_IndexRefineFlat_k_factor(arg1: *const FaissIndexRefineFlat) -> f32;
+}
+extern "C" {
+    pub fn faiss_IndexRefineFlat_set_k_factor(arg1: *mut FaissIndexRefineFlat, arg2: f32);
+}
 pub type FaissIndexFlat1D = FaissIndex_H;
 extern "C" {
     #[doc = " Opaque type for IndexFlat1D"]
@@ -694,12 +717,7 @@ extern "C" {
         index: *mut FaissIndexFlat1D,
     ) -> ::std::os::raw::c_int;
 }
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct FaissIndexIVFFlat_H {
-    _unused: [u8; 0],
-}
-pub type FaissIndexIVFFlat = FaissIndexIVFFlat_H;
+pub type FaissIndexIVFFlat = FaissIndex_H;
 extern "C" {
     pub fn faiss_IndexIVFFlat_free(obj: *mut FaissIndexIVFFlat);
 }
@@ -707,9 +725,33 @@ extern "C" {
     pub fn faiss_IndexIVFFlat_cast(arg1: *mut FaissIndex) -> *mut FaissIndexIVFFlat;
 }
 extern "C" {
-    #[doc = " Inverted file with stored vectors. Here the inverted file"]
-    #[doc = " pre-selects the vectors to be searched, but they are not otherwise"]
-    #[doc = " encoded, the code array just contains the raw float entries."]
+    pub fn faiss_IndexIVFFlat_nlist(arg1: *const FaissIndexIVFFlat) -> usize;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_nprobe(arg1: *const FaissIndexIVFFlat) -> usize;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_set_nprobe(arg1: *mut FaissIndexIVFFlat, arg2: usize);
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_quantizer(arg1: *const FaissIndexIVFFlat) -> *mut FaissIndex;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_quantizer_trains_alone(
+        arg1: *const FaissIndexIVFFlat,
+    ) -> ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_own_fields(arg1: *const FaissIndexIVFFlat) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_set_own_fields(
+        arg1: *mut FaissIndexIVFFlat,
+        arg2: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[doc = " whether object owns the quantizer"]
     pub fn faiss_IndexIVFFlat_new(p_index: *mut *mut FaissIndexIVFFlat) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -767,6 +809,9 @@ extern "C" {
     pub fn faiss_IndexIVF_nprobe(arg1: *const FaissIndexIVF) -> usize;
 }
 extern "C" {
+    pub fn faiss_IndexIVF_set_nprobe(arg1: *mut FaissIndexIVF, arg2: usize);
+}
+extern "C" {
     pub fn faiss_IndexIVF_quantizer(arg1: *const FaissIndexIVF) -> *mut FaissIndex;
 }
 extern "C" {
@@ -776,6 +821,9 @@ extern "C" {
 }
 extern "C" {
     pub fn faiss_IndexIVF_own_fields(arg1: *const FaissIndexIVF) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVF_set_own_fields(arg1: *mut FaissIndexIVF, arg2: ::std::os::raw::c_int);
 }
 extern "C" {
     #[doc = " moves the entries from another dataset to self. On output,"]
@@ -834,7 +882,7 @@ extern "C" {
     pub fn faiss_IndexIVF_get_list_size(index: *const FaissIndexIVF, list_no: usize) -> usize;
 }
 extern "C" {
-    #[doc = " intialize a direct map"]
+    #[doc = " initialize a direct map"]
     #[doc = ""]
     #[doc = " @param new_maintain_direct_map    if true, create a direct map,"]
     #[doc = "                                   else clear it"]
@@ -959,10 +1007,220 @@ extern "C" {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct FaissIndexPreTransform_H {
+pub struct FaissVectorTransform_H {
     _unused: [u8; 0],
 }
-pub type FaissIndexPreTransform = FaissIndexPreTransform_H;
+pub type FaissVectorTransform = FaissVectorTransform_H;
+extern "C" {
+    pub fn faiss_VectorTransform_free(obj: *mut FaissVectorTransform);
+}
+extern "C" {
+    pub fn faiss_VectorTransform_is_trained(
+        arg1: *const FaissVectorTransform,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_VectorTransform_d_in(arg1: *const FaissVectorTransform) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_VectorTransform_d_out(arg1: *const FaissVectorTransform) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Perform training on a representative set of vectors"]
+    #[doc = ""]
+    #[doc = " @param vt     opaque pointer to VectorTransform object"]
+    #[doc = " @param n      nb of training vectors"]
+    #[doc = " @param x      training vectors, size n * d"]
+    pub fn faiss_VectorTransform_train(
+        vt: *mut FaissVectorTransform,
+        n: idx_t,
+        x: *const f32,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " apply the random rotation, return new allocated matrix"]
+    #[doc = " @param     x size n * d_in"]
+    #[doc = " @return    size n * d_out"]
+    pub fn faiss_VectorTransform_apply(
+        vt: *const FaissVectorTransform,
+        n: idx_t,
+        x: *const f32,
+    ) -> *mut f32;
+}
+extern "C" {
+    #[doc = " apply transformation and result is pre-allocated"]
+    #[doc = " @param     x size n * d_in"]
+    #[doc = " @param     xt size n * d_out"]
+    pub fn faiss_VectorTransform_apply_noalloc(
+        vt: *const FaissVectorTransform,
+        n: idx_t,
+        x: *const f32,
+        xt: *mut f32,
+    );
+}
+extern "C" {
+    #[doc = " reverse transformation. May not be implemented or may return"]
+    #[doc = " approximate result"]
+    pub fn faiss_VectorTransform_reverse_transform(
+        vt: *const FaissVectorTransform,
+        n: idx_t,
+        xt: *const f32,
+        x: *mut f32,
+    );
+}
+pub type FaissLinearTransform = FaissVectorTransform_H;
+extern "C" {
+    pub fn faiss_LinearTransform_free(obj: *mut FaissLinearTransform);
+}
+extern "C" {
+    #[doc = " compute x = A^T * (x - b)"]
+    #[doc = " is reverse transform if A has orthonormal lines"]
+    pub fn faiss_LinearTransform_transform_transpose(
+        vt: *const FaissLinearTransform,
+        n: idx_t,
+        y: *const f32,
+        x: *mut f32,
+    );
+}
+extern "C" {
+    #[doc = " compute A^T * A to set the is_orthonormal flag"]
+    pub fn faiss_LinearTransform_set_is_orthonormal(vt: *mut FaissLinearTransform);
+}
+extern "C" {
+    pub fn faiss_LinearTransform_have_bias(
+        arg1: *const FaissLinearTransform,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_LinearTransform_is_orthonormal(
+        arg1: *const FaissLinearTransform,
+    ) -> ::std::os::raw::c_int;
+}
+pub type FaissRandomRotationMatrix = FaissVectorTransform_H;
+extern "C" {
+    pub fn faiss_RandomRotationMatrix_free(obj: *mut FaissRandomRotationMatrix);
+}
+extern "C" {
+    #[doc = " Getter for is_orthonormal"]
+    pub fn faiss_RandomRotationMatrix_new_with(
+        p_vt: *mut *mut FaissRandomRotationMatrix,
+        d_in: ::std::os::raw::c_int,
+        d_out: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+pub type FaissPCAMatrix = FaissVectorTransform_H;
+extern "C" {
+    pub fn faiss_PCAMatrix_free(obj: *mut FaissPCAMatrix);
+}
+extern "C" {
+    pub fn faiss_PCAMatrix_new_with(
+        p_vt: *mut *mut FaissPCAMatrix,
+        d_in: ::std::os::raw::c_int,
+        d_out: ::std::os::raw::c_int,
+        eigen_power: f32,
+        random_rotation: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_PCAMatrix_eigen_power(arg1: *const FaissPCAMatrix) -> f32;
+}
+extern "C" {
+    pub fn faiss_PCAMatrix_random_rotation(arg1: *const FaissPCAMatrix) -> ::std::os::raw::c_int;
+}
+pub type FaissITQMatrix = FaissVectorTransform_H;
+extern "C" {
+    pub fn faiss_ITQMatrix_free(obj: *mut FaissITQMatrix);
+}
+extern "C" {
+    #[doc = " Getter for random_rotation"]
+    pub fn faiss_ITQMatrix_new_with(
+        p_vt: *mut *mut FaissITQMatrix,
+        d: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+pub type FaissITQTransform = FaissVectorTransform_H;
+extern "C" {
+    pub fn faiss_ITQTransform_free(obj: *mut FaissITQTransform);
+}
+extern "C" {
+    pub fn faiss_ITQTransform_new_with(
+        p_vt: *mut *mut FaissITQTransform,
+        d_in: ::std::os::raw::c_int,
+        d_out: ::std::os::raw::c_int,
+        do_pca: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_ITQTransform_do_pca(arg1: *const FaissITQTransform) -> ::std::os::raw::c_int;
+}
+pub type FaissOPQMatrix = FaissVectorTransform_H;
+extern "C" {
+    pub fn faiss_OPQMatrix_free(obj: *mut FaissOPQMatrix);
+}
+extern "C" {
+    #[doc = " Getter for do_pca"]
+    pub fn faiss_OPQMatrix_new_with(
+        p_vt: *mut *mut FaissOPQMatrix,
+        d: ::std::os::raw::c_int,
+        M: ::std::os::raw::c_int,
+        d2: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_OPQMatrix_verbose(arg1: *const FaissOPQMatrix) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_OPQMatrix_set_verbose(arg1: *mut FaissOPQMatrix, arg2: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn faiss_OPQMatrix_niter(arg1: *const FaissOPQMatrix) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_OPQMatrix_set_niter(arg1: *mut FaissOPQMatrix, arg2: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn faiss_OPQMatrix_niter_pq(arg1: *const FaissOPQMatrix) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_OPQMatrix_set_niter_pq(arg1: *mut FaissOPQMatrix, arg2: ::std::os::raw::c_int);
+}
+pub type FaissRemapDimensionsTransform = FaissVectorTransform_H;
+extern "C" {
+    pub fn faiss_RemapDimensionsTransform_free(obj: *mut FaissRemapDimensionsTransform);
+}
+extern "C" {
+    pub fn faiss_RemapDimensionsTransform_new_with(
+        p_vt: *mut *mut FaissRemapDimensionsTransform,
+        d_in: ::std::os::raw::c_int,
+        d_out: ::std::os::raw::c_int,
+        uniform: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+pub type FaissNormalizationTransform = FaissVectorTransform_H;
+extern "C" {
+    pub fn faiss_NormalizationTransform_free(obj: *mut FaissNormalizationTransform);
+}
+extern "C" {
+    pub fn faiss_NormalizationTransform_new_with(
+        p_vt: *mut *mut FaissNormalizationTransform,
+        d: ::std::os::raw::c_int,
+        norm: f32,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_NormalizationTransform_norm(arg1: *const FaissNormalizationTransform) -> f32;
+}
+pub type FaissCenteringTransform = FaissVectorTransform_H;
+extern "C" {
+    pub fn faiss_CenteringTransform_free(obj: *mut FaissCenteringTransform);
+}
+extern "C" {
+    pub fn faiss_CenteringTransform_new_with(
+        p_vt: *mut *mut FaissCenteringTransform,
+        d: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+pub type FaissIndexPreTransform = FaissIndex_H;
 extern "C" {
     pub fn faiss_IndexPreTransform_free(obj: *mut FaissIndexPreTransform);
 }
@@ -971,6 +1229,153 @@ extern "C" {
 }
 extern "C" {
     pub fn faiss_IndexPreTransform_index(arg1: *const FaissIndexPreTransform) -> *mut FaissIndex;
+}
+extern "C" {
+    pub fn faiss_IndexPreTransform_own_fields(
+        arg1: *const FaissIndexPreTransform,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexPreTransform_set_own_fields(
+        arg1: *mut FaissIndexPreTransform,
+        arg2: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[doc = " Index that applies a LinearTransform transform on vectors before"]
+    #[doc = "  handing them over to a sub-index"]
+    pub fn faiss_IndexPreTransform_new(
+        p_index: *mut *mut FaissIndexPreTransform,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexPreTransform_new_with(
+        p_index: *mut *mut FaissIndexPreTransform,
+        index: *mut FaissIndex,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexPreTransform_new_with_transform(
+        p_index: *mut *mut FaissIndexPreTransform,
+        ltrans: *mut FaissVectorTransform,
+        index: *mut FaissIndex,
+    ) -> ::std::os::raw::c_int;
+}
+#[doc = "< 8 bits per component"]
+pub const FaissQuantizerType_QT_8bit: FaissQuantizerType = 0;
+#[doc = "< 4 bits per component"]
+pub const FaissQuantizerType_QT_4bit: FaissQuantizerType = 1;
+#[doc = "< same, shared range for all dimensions"]
+pub const FaissQuantizerType_QT_8bit_uniform: FaissQuantizerType = 2;
+pub const FaissQuantizerType_QT_4bit_uniform: FaissQuantizerType = 3;
+pub const FaissQuantizerType_QT_fp16: FaissQuantizerType = 4;
+#[doc = "< fast indexing of uint8s"]
+pub const FaissQuantizerType_QT_8bit_direct: FaissQuantizerType = 5;
+#[doc = "< 6 bits per component"]
+pub const FaissQuantizerType_QT_6bit: FaissQuantizerType = 6;
+pub type FaissQuantizerType = ::std::os::raw::c_uint;
+pub type FaissIndexScalarQuantizer = FaissIndex_H;
+extern "C" {
+    #[doc = " Opaque type for IndexScalarQuantizer"]
+    pub fn faiss_IndexScalarQuantizer_new(
+        p_index: *mut *mut FaissIndexScalarQuantizer,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexScalarQuantizer_new_with(
+        p_index: *mut *mut FaissIndexScalarQuantizer,
+        d: idx_t,
+        qt: FaissQuantizerType,
+        metric: FaissMetricType,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexScalarQuantizer_cast(arg1: *mut FaissIndex)
+        -> *mut FaissIndexScalarQuantizer;
+}
+extern "C" {
+    pub fn faiss_IndexScalarQuantizer_free(obj: *mut FaissIndexScalarQuantizer);
+}
+pub type FaissIndexIVFScalarQuantizer = FaissIndex_H;
+extern "C" {
+    pub fn faiss_IndexIVFScalarQuantizer_cast(
+        arg1: *mut FaissIndex,
+    ) -> *mut FaissIndexIVFScalarQuantizer;
+}
+extern "C" {
+    pub fn faiss_IndexIVFScalarQuantizer_free(obj: *mut FaissIndexIVFScalarQuantizer);
+}
+extern "C" {
+    #[doc = " Opaque type for IndexIVFScalarQuantizer"]
+    pub fn faiss_IndexIVFScalarQuantizer_new(
+        p_index: *mut *mut FaissIndexIVFScalarQuantizer,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVFScalarQuantizer_new_with(
+        p_index: *mut *mut FaissIndexIVFScalarQuantizer,
+        quantizer: *mut FaissIndex,
+        d: idx_t,
+        nlist: usize,
+        qt: FaissQuantizerType,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVFScalarQuantizer_new_with_metric(
+        p_index: *mut *mut FaissIndexIVFScalarQuantizer,
+        quantizer: *mut FaissIndex,
+        d: usize,
+        nlist: usize,
+        qt: FaissQuantizerType,
+        metric: FaissMetricType,
+        encode_residual: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVFScalarQuantizer_nlist(arg1: *const FaissIndexIVFScalarQuantizer) -> usize;
+}
+extern "C" {
+    pub fn faiss_IndexIVFScalarQuantizer_nprobe(arg1: *const FaissIndexIVFScalarQuantizer)
+        -> usize;
+}
+extern "C" {
+    pub fn faiss_IndexIVFScalarQuantizer_set_nprobe(
+        arg1: *mut FaissIndexIVFScalarQuantizer,
+        arg2: usize,
+    );
+}
+extern "C" {
+    pub fn faiss_IndexIVFScalarQuantizer_quantizer(
+        arg1: *const FaissIndexIVFScalarQuantizer,
+    ) -> *mut FaissIndex;
+}
+extern "C" {
+    pub fn faiss_IndexIVFScalarQuantizer_own_fields(
+        arg1: *const FaissIndexIVFScalarQuantizer,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVFScalarQuantizer_set_own_fields(
+        arg1: *mut FaissIndexIVFScalarQuantizer,
+        arg2: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[doc = " whether object owns the quantizer"]
+    pub fn faiss_IndexIVFScalarQuantizer_add_core(
+        index: *mut FaissIndexIVFScalarQuantizer,
+        n: idx_t,
+        x: *const f32,
+        xids: *const idx_t,
+        precomputed_idx: *const idx_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVFScalarQuantizer_train_residual(
+        index: *mut FaissIndexIVFScalarQuantizer,
+        n: idx_t,
+        x: *const f32,
+    ) -> ::std::os::raw::c_int;
 }
 pub type FaissIndexShards = FaissIndex_H;
 extern "C" {
@@ -1741,7 +2146,7 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 pub type FaissGpuParameterSpace = FaissParameterSpace_H;
-pub type FaissStandardGpuResources = FaissGpuResources_H;
+pub type FaissStandardGpuResources = FaissGpuResourcesProvider_H;
 extern "C" {
     pub fn faiss_StandardGpuResources_free(obj: *mut FaissStandardGpuResources);
 }

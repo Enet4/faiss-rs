@@ -8,7 +8,7 @@ use std::ptr;
 /// Common interface for GPU resources used by Faiss.
 pub trait GpuResources {
     /// Obtain a raw pointer to the native GPU resources object.
-    fn inner_ptr(&self) -> *mut FaissGpuResources;
+    fn inner_ptr(&self) -> *mut FaissGpuResourcesProvider;
 
     /// Disable allocation of temporary memory; all temporary memory
     /// requests will call `cudaMalloc` / `cudaFree` at the point of use
@@ -93,7 +93,7 @@ pub trait GpuResourcesProvider {
 ///
 #[derive(Debug)]
 pub struct StandardGpuResources {
-    inner: *mut FaissGpuResources,
+    inner: *mut FaissGpuResourcesProvider,
 }
 
 // Deliberately _not_ Sync!
@@ -117,7 +117,7 @@ impl GpuResourcesProvider for StandardGpuResources {
 }
 
 impl GpuResources for StandardGpuResources {
-    fn inner_ptr(&self) -> *mut FaissGpuResources {
+    fn inner_ptr(&self) -> *mut FaissGpuResourcesProvider {
         self.inner
     }
 
@@ -144,7 +144,7 @@ impl GpuResources for StandardGpuResources {
 }
 
 impl<'g> GpuResources for &'g mut StandardGpuResources {
-    fn inner_ptr(&self) -> *mut FaissGpuResources {
+    fn inner_ptr(&self) -> *mut FaissGpuResourcesProvider {
         self.inner
     }
 
