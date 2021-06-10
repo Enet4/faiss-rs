@@ -20,13 +20,15 @@ jobs:
           - beta
     steps:
     - uses: actions/checkout@v2
-    - name: Download and install Faiss
+    - name: Cache Faiss shared objects
+      uses: actions/cache@v2
+      with:
+        path: ~/.faiss_c
+    - name: Download and build Faiss
       run: ./faiss-sys/ci/install_faiss_c.sh
+    - name: Install Faiss
+      run: sudo cp $HOME/.faiss_c/lib*.so /usr/lib/
     - name: Build
-      env:
-        LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$HOME/.faiss_c
       run: cargo build --verbose
     - name: Run tests
-      env:
-        LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$HOME/.faiss_c
       run: cargo test --verbose
