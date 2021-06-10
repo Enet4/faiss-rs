@@ -9,11 +9,11 @@ git clone $repo_url faiss --branch $repo_rev --depth 1
 cd faiss
 
 # Build
-cmake -B build . -DFAISS_ENABLE_C_API=ON -DBUILD_SHARED_LIBS=ON \
+cmake . -DFAISS_ENABLE_C_API=ON -DBUILD_SHARED_LIBS=ON \
     -DCMAKE_BUILD_TYPE=Release \
-    -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=OFF -DBUILD_TESTING=OFF 
+    -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=OFF -DBUILD_TESTING=OFF
 
-make faiss_c
+make
 mkdir -p "$HOME/.faiss_c"
 cp faiss/libfaiss.so c_api/libfaiss_c.so "$HOME/.faiss_c/"
 
