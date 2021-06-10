@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+          - beta
+    steps:
+    - uses: actions/checkout@v2
+    - name: Cache Faiss shared objects
+      uses: actions/cache@v2
+      with:
+        path: ~/.faiss_c
+        key: ${{ runner.os }}-build-${{ env.cache-name }}1
+    - name: Download and build Faiss
+      run: ./faiss-sys/ci/install_faiss_c.sh
+    - name: Install Faiss
+      run: sudo cp $HOME/.faiss_c/lib*.so /usr/lib/
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
