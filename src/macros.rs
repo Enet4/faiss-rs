@@ -122,6 +122,16 @@ macro_rules! impl_native_index {
                     Ok(n_removed)
                 }
             }
+
+            fn verbose(&self) -> bool {
+                unsafe { faiss_Index_verbose(self.inner_ptr()) != 0 }
+            }
+
+            fn set_verbose(&mut self, value: bool) {
+                unsafe {
+                    faiss_Index_set_verbose(self.inner_ptr(), std::os::raw::c_int::from(value));
+                }
+            }
         }
     };
 }

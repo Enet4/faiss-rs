@@ -92,9 +92,9 @@ where
 
     /// Build a GPU in from the given CPU native index.
     /// Users will indirectly use this through [`to_gpu`] or [`into_gpu`].
-    /// 
+    ///
     /// # Error
-    /// 
+    ///
     /// The operation fails if the number of GPU resources and number of
     /// devices do not match, or the index does not provide GPU support.
     ///
@@ -118,7 +118,7 @@ where
                 devices.as_ptr(),
                 devices.len(),
                 index.inner_ptr(),
-                &mut gpuindex_ptr
+                &mut gpuindex_ptr,
             ))?;
             Ok(GpuIndexImpl {
                 inner: gpuindex_ptr,
@@ -164,9 +164,9 @@ impl IndexImpl {
     }
 
     /// Build a GPU index from the given CPU native index.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// The operation fails if the number of GPU resources and number of
     /// devices do not match, or the index does not provide GPU support.
     pub fn to_gpu_multiple<'gpu, G: 'gpu>(
@@ -182,9 +182,9 @@ impl IndexImpl {
 
     /// Build a GPU index from the given CPU native index. The index residing
     /// in CPU memory is discarded in the process.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// The operation fails if the number of GPU resources and number of
     /// devices do not match, or the index does not provide GPU support.
     pub fn into_gpu_multiple<'gpu, G: 'gpu>(
@@ -337,6 +337,16 @@ where
             Ok(n_removed)
         }
     }
+
+    fn verbose(&self) -> bool {
+        unsafe { faiss_Index_verbose(self.inner) != 0 }
+    }
+
+    fn set_verbose(&mut self, value: bool) {
+        unsafe {
+            faiss_Index_set_verbose(self.inner, std::os::raw::c_int::from(value));
+        }
+    }
 }
 
 impl<'g, I> NativeIndex for GpuIndexImpl<'g, I>
@@ -378,9 +388,9 @@ impl FlatIndexImpl {
     }
 
     /// Build a GPU index from the given CPU native index.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// The operation fails if the number of GPU resources and number of
     /// devices do not match, or the index does not provide GPU support.
     pub fn to_gpu_multiple<'gpu, G: 'gpu>(
@@ -396,9 +406,9 @@ impl FlatIndexImpl {
 
     /// Build a GPU index from the given CPU native index. The index residing
     /// in CPU memory is discarded in the process.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// The operation fails if the number of GPU resources and number of
     /// devices do not match, or the index does not provide GPU support.
     pub fn into_gpu_multiple<'gpu, G: 'gpu>(
@@ -450,7 +460,6 @@ mod tests {
         }
         assert_eq!(gpu_index.ntotal(), 5); // indexed vectors should be retained
     }
-
 
     #[test]
     fn flat_in_and_out_multiple() {
