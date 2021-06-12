@@ -448,9 +448,7 @@ mod tests {
             0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
             100., 105., -100., 100., 100., 105.,
         ];
-        if !index.is_trained() {
-            index.train(some_data).unwrap();
-        }
+        index.train(some_data).unwrap();
         index.add(some_data).unwrap();
         assert_eq!(index.ntotal(), 5);
 
@@ -493,9 +491,7 @@ mod tests {
             0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
             100., 105., -100., 100., 100., 105.,
         ];
-        if !index.is_trained() {
-            index.train(some_data).unwrap();
-        }
+        index.train(some_data).unwrap();
         index.add(some_data).unwrap();
         assert_eq!(index.ntotal(), 5);
 
@@ -551,9 +547,7 @@ mod tests {
             0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
             100., 105., -100., 100., 100., 105.,
         ];
-        if !index.is_trained() {
-            index.train(some_data).unwrap();
-        }
+        index.train(some_data).unwrap();
         index.add(some_data).unwrap();
         assert_eq!(index.ntotal(), 5);
 
