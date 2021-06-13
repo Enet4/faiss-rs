@@ -206,6 +206,16 @@ impl<I> Index for PreTransformIndexImpl<I> {
             Ok(n_removed)
         }
     }
+
+    fn verbose(&self) -> bool {
+        unsafe { faiss_Index_verbose(self.inner) != 0 }
+    }
+
+    fn set_verbose(&mut self, value: bool) {
+        unsafe {
+            faiss_Index_set_verbose(self.inner, std::os::raw::c_int::from(value));
+        }
+    }
 }
 
 impl<I> PreTransformIndexImpl<I> {
