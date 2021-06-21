@@ -2,7 +2,7 @@
 
 use super::{
     AssignSearchResult, ConcurrentIndex, CpuIndex, FromInnerPtr, Idx, Index, IndexImpl,
-    NativeIndex, RangeSearchResult, SearchResult,
+    NativeIndex, RangeSearchResult, SearchResult, TryFromInnerPtr,
 };
 use crate::error::{Error, Result};
 use crate::faiss_try;
@@ -38,6 +38,22 @@ impl NativeIndex for LshIndex {
 impl FromInnerPtr for LshIndex {
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self {
         LshIndex { inner: inner_ptr }
+    }
+}
+
+impl TryFromInnerPtr for LshIndex {
+    fn try_from_inner_ptr(inner_ptr: *mut FaissIndex) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        unsafe {
+            let new_inner = faiss_IndexLSH_cast(inner_ptr);
+            if new_inner.is_null() {
+                Err(Error::BadCast)
+            } else {
+                Ok(LshIndex { inner: new_inner })
+            }
+        }
     }
 }
 
