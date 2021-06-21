@@ -5,8 +5,8 @@ use super::*;
 use crate::error::Result;
 use crate::faiss_try;
 use std::mem;
-use std::ptr;
 use std::os::raw::c_int;
+use std::ptr;
 
 /// Alias for the native implementation of a flat index.
 pub type IVFFlatIndex = IVFFlatIndexImpl;
@@ -125,7 +125,7 @@ impl IVFFlatIndexImpl {
  * = 1: just pass on the training set to the train() of the quantizer
  * = 2: kmeans training on a flat index + add the centroids to the quantizer
  */
- #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 pub enum TrainType {
     /// use the quantizer as index in a kmeans training
     QuantizerAsIndex,
