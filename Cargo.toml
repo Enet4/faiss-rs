@@ -21,7 +21,7 @@ branch = "master"
 repository = "Enet4/faiss-rs"
 
 [dependencies.faiss-sys]
-version = "0.4.0"
+version = "0.5.0"
 path = "faiss-sys"
 
 [package.metadata.docs.rs]
