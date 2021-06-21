@@ -28,6 +28,7 @@ pub mod io;
 pub mod ivf_flat;
 pub mod scalar_quantizer;
 pub mod lsh;
+pub mod refine_flat;
 pub mod pretransform;
 
 #[cfg(feature = "gpu")]
