@@ -1936,3 +1936,39 @@ extern "C" {
         p_out: *mut *mut FaissIndex,
     ) -> ::std::os::raw::c_int;
 }
+extern "C" {
+    #[doc = " Setter of threshold value on nx above which we switch to BLAS to compute"]
+    #[doc = " distances"]
+    pub fn faiss_set_distance_compute_blas_threshold(value: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[doc = " Getter of threshold value on nx above which we switch to BLAS to compute"]
+    #[doc = " distances"]
+    pub fn faiss_get_distance_compute_blas_threshold() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Setter of block sizes value for BLAS distance computations"]
+    pub fn faiss_set_distance_compute_blas_query_bs(value: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[doc = " Getter of block sizes value for BLAS distance computations"]
+    pub fn faiss_get_distance_compute_blas_query_bs() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Setter of block sizes value for BLAS distance computations"]
+    pub fn faiss_set_distance_compute_blas_database_bs(value: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[doc = " Getter of block sizes value for BLAS distance computations"]
+    pub fn faiss_get_distance_compute_blas_database_bs() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Setter of number of results we switch to a reservoir to collect results"]
+    #[doc = " rather than a heap"]
+    pub fn faiss_set_distance_compute_min_k_reservoir(value: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[doc = " Getter of number of results we switch to a reservoir to collect results"]
+    #[doc = " rather than a heap"]
+    pub fn faiss_get_distance_compute_min_k_reservoir() -> ::std::os::raw::c_int;
+}
