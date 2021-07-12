@@ -64,6 +64,14 @@ impl ClusteringParameters {
         self.inner.seed as u32
     }
 
+    pub fn int_centroids(&self) -> bool {
+        self.inner.int_centroids != 0
+    }
+
+    pub fn decode_block_size(&self) -> usize {
+        self.inner.decode_block_size
+    }
+
     pub fn set_niter(&mut self, niter: u32) {
         self.inner.niter = (niter & 0x7FFF_FFFF) as i32;
     }
@@ -98,6 +106,14 @@ impl ClusteringParameters {
 
     pub fn set_seed(&mut self, seed: u32) {
         self.inner.seed = seed as i32;
+    }
+
+    pub fn set_int_centroids(&mut self, value: bool) {
+        self.inner.int_centroids = ::std::os::raw::c_int::from(value);
+    }
+
+    pub fn set_decode_block_size(&mut self, value: usize) {
+        self.inner.decode_block_size = value;
     }
 }
 
@@ -328,6 +344,16 @@ impl Clustering {
     /** Getter for the maximum number of points per centroid. */
     pub fn max_points_per_centroid(&self) -> u32 {
         unsafe { faiss_Clustering_max_points_per_centroid(self.inner) as u32 }
+    }
+
+    /** Getter for the round centroids coordinates to integer flag. */
+    pub fn int_centroids(&self) -> bool {
+        unsafe { faiss_Clustering_int_centroids(self.inner) != 0 }
+    }
+
+    /** how many vectors at a time to decode. */
+    pub fn decode_block_size(&self) -> usize {
+        unsafe { faiss_Clustering_decode_block_size(self.inner) }
     }
 }
 
