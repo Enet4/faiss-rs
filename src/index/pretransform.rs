@@ -48,9 +48,9 @@ where
     pub fn prepend_transform<LT: NativeVectorTransform>(&mut self, lt: LT) -> Result<()> {
         unsafe {
             faiss_try(faiss_IndexPreTransform_prepend_transform(
-            self.inner_ptr(),
-            lt.inner_ptr(),
-        ))?;
+                self.inner_ptr(),
+                lt.inner_ptr(),
+            ))?;
         }
         mem::forget(lt);
 
@@ -301,7 +301,7 @@ where
 mod tests {
     use super::*;
     use crate::metric::MetricType;
-    use crate::vector_transform::{RandomRotationMatrix};
+    use crate::vector_transform::RandomRotationMatrix;
     use crate::{
         index::{index_factory, ConcurrentIndex, Idx, Index},
         vector_transform::PCAMatrixImpl,

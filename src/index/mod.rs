@@ -25,12 +25,12 @@ pub mod autotune;
 pub mod flat;
 pub mod id_map;
 pub mod io;
+pub mod ivf;
 pub mod ivf_flat;
 pub mod lsh;
 pub mod pretransform;
 pub mod refine_flat;
 pub mod scalar_quantizer;
-pub mod ivf;
 
 #[cfg(feature = "gpu")]
 pub mod gpu;

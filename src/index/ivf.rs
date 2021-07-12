@@ -10,12 +10,12 @@ pub struct IndexIVFStats {
     pub search_time: f64,
 }
 
-pub fn get_index_ivf_stats() -> Option<IndexIVFStats> {  
+pub fn get_index_ivf_stats() -> Option<IndexIVFStats> {
     unsafe {
         let v = faiss_get_indexIVF_stats();
         if !v.is_null() {
             let v = *v;
-            
+
             Some(IndexIVFStats {
                 nq: v.nq,
                 nlist: v.nlist,
@@ -28,6 +28,4 @@ pub fn get_index_ivf_stats() -> Option<IndexIVFStats> {
             None
         }
     }
-
-    
 }
