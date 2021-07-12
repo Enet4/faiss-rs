@@ -45,6 +45,18 @@ where
         Ok(index)
     }
 
+    pub fn prepend_transform<LT: NativeVectorTransform>(&mut self, lt: LT) -> Result<()> {
+        unsafe {
+            faiss_try(faiss_IndexPreTransform_prepend_transform(
+            self.inner_ptr(),
+            lt.inner_ptr(),
+        ))?;
+        }
+        mem::forget(lt);
+
+        Ok(())
+    }
+
     fn new_helper<LT: NativeVectorTransform>(
         lt: &LT,
         sub_index: &I,
@@ -289,6 +301,7 @@ where
 mod tests {
     use super::*;
     use crate::metric::MetricType;
+    use crate::vector_transform::{RandomRotationMatrix};
     use crate::{
         index::{index_factory, ConcurrentIndex, Idx, Index},
         vector_transform::PCAMatrixImpl,
@@ -368,5 +381,30 @@ mod tests {
 
         pre_transform_index.reset().unwrap();
         assert_eq!(pre_transform_index.ntotal(), 0);
+    }
+
+    #[test]
+    fn pre_transform_index_few_transform() {
+        const D_OUT: u32 = D / 2;
+        let index = crate::index::flat::FlatIndexImpl::new_l2(D_OUT).unwrap();
+        assert_eq!(index.d(), D_OUT);
+        assert_eq!(index.ntotal(), 0);
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
+        ];
+
+        let vt = PCAMatrixImpl::new(D, D_OUT, 0f32, false).unwrap();
+        let mut pre_transform_index = PreTransformIndexImpl::new(vt, index).unwrap();
+        let vt2 = RandomRotationMatrix::new(D, D).unwrap();
+        pre_transform_index.prepend_transform(vt2).unwrap();
+        assert_eq!(pre_transform_index.d(), D);
+
+        if !pre_transform_index.is_trained() {
+            pre_transform_index.train(some_data).unwrap();
+        }
+        pre_transform_index.add(some_data).unwrap();
+        assert_eq!(pre_transform_index.ntotal(), 5);
     }
 }
