@@ -77,7 +77,7 @@ extern "C" {
     #[doc = " Add n vectors of dimension d to the index."]
     #[doc = ""]
     #[doc = " Vectors are implicitly assigned labels ntotal .. ntotal + n - 1"]
-    #[doc = " This function slices the input vectors in chuncks smaller than"]
+    #[doc = " This function slices the input vectors in chunks smaller than"]
     #[doc = " blocksize_add and calls add_core."]
     #[doc = " @param index  opaque pointer to index object"]
     #[doc = " @param x      input matrix, size n * d"]
@@ -176,7 +176,7 @@ extern "C" {
     #[doc = " this function may not be defined for some indexes"]
     #[doc = " @param index       opaque pointer to index object"]
     #[doc = " @param key         id of the vector to reconstruct"]
-    #[doc = " @param recons      reconstucted vector (size d)"]
+    #[doc = " @param recons      reconstructed vector (size d)"]
     pub fn faiss_Index_reconstruct(
         index: *const FaissIndex,
         key: idx_t,
@@ -188,7 +188,7 @@ extern "C" {
     #[doc = ""]
     #[doc = " this function may not be defined for some indexes"]
     #[doc = " @param index       opaque pointer to index object"]
-    #[doc = " @param recons      reconstucted vector (size ni * d)"]
+    #[doc = " @param recons      reconstructed vector (size ni * d)"]
     pub fn faiss_Index_reconstruct_n(
         index: *const FaissIndex,
         i0: idx_t,
@@ -334,6 +334,8 @@ pub struct FaissClusteringParameters {
     pub verbose: ::std::os::raw::c_int,
     #[doc = "< (bool) do we want normalized centroids?"]
     pub spherical: ::std::os::raw::c_int,
+    #[doc = "< (bool) round centroids coordinates to integer"]
+    pub int_centroids: ::std::os::raw::c_int,
     #[doc = "< (bool) update index after each iteration?"]
     pub update_index: ::std::os::raw::c_int,
     #[doc = "< (bool) use the centroids provided as input and do"]
@@ -345,17 +347,19 @@ pub struct FaissClusteringParameters {
     pub max_points_per_centroid: ::std::os::raw::c_int,
     #[doc = "< seed for the random number generator"]
     pub seed: ::std::os::raw::c_int,
+    #[doc = "< how many vectors at a time to decode"]
+    pub decode_block_size: usize,
 }
 #[test]
 fn bindgen_test_layout_FaissClusteringParameters() {
     assert_eq!(
         ::std::mem::size_of::<FaissClusteringParameters>(),
-        36usize,
+        48usize,
         concat!("Size of: ", stringify!(FaissClusteringParameters))
     );
     assert_eq!(
         ::std::mem::align_of::<FaissClusteringParameters>(),
-        4usize,
+        8usize,
         concat!("Alignment of ", stringify!(FaissClusteringParameters))
     );
     assert_eq!(
@@ -404,9 +408,21 @@ fn bindgen_test_layout_FaissClusteringParameters() {
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<FaissClusteringParameters>())).update_index as *const _ as usize
+            &(*(::std::ptr::null::<FaissClusteringParameters>())).int_centroids as *const _ as usize
         },
         16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(FaissClusteringParameters),
+            "::",
+            stringify!(int_centroids)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<FaissClusteringParameters>())).update_index as *const _ as usize
+        },
+        20usize,
         concat!(
             "Offset of field: ",
             stringify!(FaissClusteringParameters),
@@ -419,7 +435,7 @@ fn bindgen_test_layout_FaissClusteringParameters() {
             &(*(::std::ptr::null::<FaissClusteringParameters>())).frozen_centroids as *const _
                 as usize
         },
-        20usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(FaissClusteringParameters),
@@ -432,7 +448,7 @@ fn bindgen_test_layout_FaissClusteringParameters() {
             &(*(::std::ptr::null::<FaissClusteringParameters>())).min_points_per_centroid
                 as *const _ as usize
         },
-        24usize,
+        28usize,
         concat!(
             "Offset of field: ",
             stringify!(FaissClusteringParameters),
@@ -445,7 +461,7 @@ fn bindgen_test_layout_FaissClusteringParameters() {
             &(*(::std::ptr::null::<FaissClusteringParameters>())).max_points_per_centroid
                 as *const _ as usize
         },
-        28usize,
+        32usize,
         concat!(
             "Offset of field: ",
             stringify!(FaissClusteringParameters),
@@ -455,12 +471,25 @@ fn bindgen_test_layout_FaissClusteringParameters() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<FaissClusteringParameters>())).seed as *const _ as usize },
-        32usize,
+        36usize,
         concat!(
             "Offset of field: ",
             stringify!(FaissClusteringParameters),
             "::",
             stringify!(seed)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<FaissClusteringParameters>())).decode_block_size as *const _
+                as usize
+        },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(FaissClusteringParameters),
+            "::",
+            stringify!(decode_block_size)
         )
     );
 }
@@ -487,6 +516,9 @@ extern "C" {
     pub fn faiss_Clustering_spherical(arg1: *const FaissClustering) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    pub fn faiss_Clustering_int_centroids(arg1: *const FaissClustering) -> ::std::os::raw::c_int;
+}
+extern "C" {
     pub fn faiss_Clustering_update_index(arg1: *const FaissClustering) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -505,6 +537,9 @@ extern "C" {
 }
 extern "C" {
     pub fn faiss_Clustering_seed(arg1: *const FaissClustering) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_Clustering_decode_block_size(arg1: *const FaissClustering) -> usize;
 }
 extern "C" {
     pub fn faiss_Clustering_d(arg1: *const FaissClustering) -> usize;
@@ -648,6 +683,12 @@ extern "C" {
 }
 pub type FaissIndexFlatIP = FaissIndex_H;
 extern "C" {
+    pub fn faiss_IndexFlatIP_cast(arg1: *mut FaissIndex) -> *mut FaissIndexFlatIP;
+}
+extern "C" {
+    pub fn faiss_IndexFlatIP_free(obj: *mut FaissIndexFlatIP);
+}
+extern "C" {
     #[doc = " Opaque type for IndexFlatIP"]
     pub fn faiss_IndexFlatIP_new(p_index: *mut *mut FaissIndexFlatIP) -> ::std::os::raw::c_int;
 }
@@ -658,6 +699,12 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 pub type FaissIndexFlatL2 = FaissIndex_H;
+extern "C" {
+    pub fn faiss_IndexFlatL2_cast(arg1: *mut FaissIndex) -> *mut FaissIndexFlatL2;
+}
+extern "C" {
+    pub fn faiss_IndexFlatL2_free(obj: *mut FaissIndexFlatL2);
+}
 extern "C" {
     #[doc = " Opaque type for IndexFlatL2"]
     pub fn faiss_IndexFlatL2_new(p_index: *mut *mut FaissIndexFlatL2) -> ::std::os::raw::c_int;
@@ -683,6 +730,9 @@ extern "C" {
     pub fn faiss_IndexRefineFlat_free(obj: *mut FaissIndexRefineFlat);
 }
 extern "C" {
+    pub fn faiss_IndexRefineFlat_cast(arg1: *mut FaissIndex) -> *mut FaissIndexRefineFlat;
+}
+extern "C" {
     pub fn faiss_IndexRefineFlat_own_fields(
         arg1: *const FaissIndexRefineFlat,
     ) -> ::std::os::raw::c_int;
@@ -701,6 +751,12 @@ extern "C" {
 }
 pub type FaissIndexFlat1D = FaissIndex_H;
 extern "C" {
+    pub fn faiss_IndexFlat1D_cast(arg1: *mut FaissIndex) -> *mut FaissIndexFlat1D;
+}
+extern "C" {
+    pub fn faiss_IndexFlat1D_free(obj: *mut FaissIndexFlat1D);
+}
+extern "C" {
     #[doc = " Opaque type for IndexFlat1D"]
     #[doc = ""]
     #[doc = " optimized version for 1D \"vectors\""]
@@ -716,6 +772,10 @@ extern "C" {
     pub fn faiss_IndexFlat1D_update_permutation(
         index: *mut FaissIndexFlat1D,
     ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " global var that collects all statists"]
+    pub fn faiss_get_indexIVF_stats() -> *mut FaissIndexIVFStats;
 }
 pub type FaissIndexIVFFlat = FaissIndex_H;
 extern "C" {
@@ -922,12 +982,15 @@ pub struct FaissIndexIVFStats {
     pub nq: usize,
     pub nlist: usize,
     pub ndis: usize,
+    pub nheap_updates: usize,
+    pub quantization_time: f64,
+    pub search_time: f64,
 }
 #[test]
 fn bindgen_test_layout_FaissIndexIVFStats() {
     assert_eq!(
         ::std::mem::size_of::<FaissIndexIVFStats>(),
-        24usize,
+        48usize,
         concat!("Size of: ", stringify!(FaissIndexIVFStats))
     );
     assert_eq!(
@@ -963,6 +1026,40 @@ fn bindgen_test_layout_FaissIndexIVFStats() {
             stringify!(FaissIndexIVFStats),
             "::",
             stringify!(ndis)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<FaissIndexIVFStats>())).nheap_updates as *const _ as usize
+        },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(FaissIndexIVFStats),
+            "::",
+            stringify!(nheap_updates)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<FaissIndexIVFStats>())).quantization_time as *const _ as usize
+        },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(FaissIndexIVFStats),
+            "::",
+            stringify!(quantization_time)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<FaissIndexIVFStats>())).search_time as *const _ as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(FaissIndexIVFStats),
+            "::",
+            stringify!(search_time)
         )
     );
 }
@@ -1261,6 +1358,12 @@ extern "C" {
         index: *mut FaissIndex,
     ) -> ::std::os::raw::c_int;
 }
+extern "C" {
+    pub fn faiss_IndexPreTransform_prepend_transform(
+        index: *mut FaissIndexPreTransform,
+        ltrans: *mut FaissVectorTransform,
+    ) -> ::std::os::raw::c_int;
+}
 #[doc = "< 8 bits per component"]
 pub const FaissQuantizerType_QT_8bit: FaissQuantizerType = 0;
 #[doc = "< 4 bits per component"]
@@ -1419,6 +1522,12 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    pub fn faiss_IndexShards_remove_shard(
+        index: *mut FaissIndexShards,
+        shard: *mut FaissIndex,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
     pub fn faiss_IndexShards_at(
         index: *mut FaissIndexShards,
         i: ::std::os::raw::c_int,
@@ -1439,6 +1548,9 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    pub fn faiss_IndexIDMap_cast(arg1: *mut FaissIndex) -> *mut FaissIndexIDMap;
+}
+extern "C" {
     #[doc = " get a pointer to the index map's internal ID vector (the `id_map` field)."]
     #[doc = " The outputs of this function become invalid after any operation that can"]
     #[doc = " modify the index."]
@@ -1452,12 +1564,16 @@ extern "C" {
         p_size: *mut usize,
     );
 }
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct FaissIndexIDMap_H {
-    _unused: [u8; 0],
+pub type FaissIndexIDMap2 = FaissIndex_H;
+extern "C" {
+    pub fn faiss_IndexIDMap2_own_fields(arg1: *const FaissIndexIDMap2) -> ::std::os::raw::c_int;
 }
-pub type FaissIndexIDMap2 = FaissIndexIDMap_H;
+extern "C" {
+    pub fn faiss_IndexIDMap2_set_own_fields(
+        arg1: *mut FaissIndexIDMap2,
+        arg2: ::std::os::raw::c_int,
+    );
+}
 extern "C" {
     #[doc = " same as IndexIDMap but also provides an efficient reconstruction"]
     #[doc = "implementation via a 2-way index"]
@@ -1479,6 +1595,9 @@ extern "C" {
         arg1: *const FaissIndex,
         p_out: *mut *mut FaissIndex,
     ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIDMap2_cast(arg1: *mut FaissIndex) -> *mut FaissIndexIDMap2;
 }
 #[doc = " No error"]
 pub const FaissErrorCode_OK: FaissErrorCode = 0;
