@@ -88,6 +88,7 @@
 mod macros;
 
 pub mod cluster;
+pub mod common_variables;
 pub mod error;
 pub mod index;
 pub mod metric;
