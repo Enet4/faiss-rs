@@ -201,7 +201,6 @@ impl<BI> Index for RefineFlatIndexImpl<BI> {
 }
 
 impl IndexImpl {
-
     /// Attempt a dynamic cast of an index to the refine flat index type.
     pub fn into_refine_flat(self) -> Result<RefineFlatIndexImpl<IndexImpl>> {
         unsafe {
@@ -210,7 +209,10 @@ impl IndexImpl {
                 Err(Error::BadCast)
             } else {
                 mem::forget(self);
-                Ok(RefineFlatIndexImpl { inner: new_inner, base_index: PhantomData })
+                Ok(RefineFlatIndexImpl {
+                    inner: new_inner,
+                    base_index: PhantomData,
+                })
             }
         }
     }
