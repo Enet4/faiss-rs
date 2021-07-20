@@ -1,6 +1,8 @@
 //! GPU Index implementation
 
 use super::flat::FlatIndexImpl;
+use super::ivf_flat::IVFFlatIndexImpl;
+use super::scalar_quantizer::IVFScalarQuantizerIndexImpl;
 use super::{
     AssignSearchResult, CpuIndex, FromInnerPtr, Idx, Index, IndexImpl, NativeIndex,
     RangeSearchResult, SearchResult,
@@ -416,6 +418,141 @@ impl FlatIndexImpl {
         gpu_res: &'gpu [G],
         devices: &[i32],
     ) -> Result<GpuIndexImpl<'gpu, FlatIndexImpl>>
+    where
+        G: GpuResourcesProvider,
+    {
+        self.to_gpu_multiple(gpu_res, devices)
+        // let the CPU index drop naturally
+    }
+}
+
+impl IVFFlatIndexImpl {
+    /// Build a GPU in from the given CPU native index, yielding two
+    /// independent indices. The operation fails if the index does
+    /// not provide GPU support.
+    pub fn to_gpu<'gpu, G>(
+        &self,
+        gpu_res: &'gpu G,
+        device: i32,
+    ) -> Result<GpuIndexImpl<'gpu, IVFFlatIndexImpl>>
+    where
+        G: GpuResourcesProvider,
+    {
+        GpuIndexImpl::from_cpu(self, gpu_res, device)
+    }
+
+    /// Build a GPU index from the given CPU native index, discarding the
+    /// CPU-backed index. The operation fails if the index does not
+    /// provide GPU support.
+    pub fn into_gpu<'gpu, G>(
+        self,
+        gpu_res: &'gpu G,
+        device: i32,
+    ) -> Result<GpuIndexImpl<'gpu, IVFFlatIndexImpl>>
+    where
+        G: GpuResourcesProvider,
+    {
+        self.to_gpu(gpu_res, device)
+    }
+
+    /// Build a GPU index from the given CPU native index.
+    ///
+    /// # Errors
+    ///
+    /// The operation fails if the number of GPU resources and number of
+    /// devices do not match, or the index does not provide GPU support.
+    pub fn to_gpu_multiple<'gpu, G: 'gpu>(
+        &self,
+        gpu_res: &'gpu [G],
+        devices: &[i32],
+    ) -> Result<GpuIndexImpl<'gpu, IVFFlatIndexImpl>>
+    where
+        G: GpuResourcesProvider,
+    {
+        GpuIndexImpl::from_cpu_multiple(&self, gpu_res, devices)
+    }
+
+    /// Build a GPU index from the given CPU native index. The index residing
+    /// in CPU memory is discarded in the process.
+    ///
+    /// # Errors
+    ///
+    /// The operation fails if the number of GPU resources and number of
+    /// devices do not match, or the index does not provide GPU support.
+    pub fn into_gpu_multiple<'gpu, G: 'gpu>(
+        self,
+        gpu_res: &'gpu [G],
+        devices: &[i32],
+    ) -> Result<GpuIndexImpl<'gpu, IVFFlatIndexImpl>>
+    where
+        G: GpuResourcesProvider,
+    {
+        self.to_gpu_multiple(gpu_res, devices)
+        // let the CPU index drop naturally
+    }
+}
+
+impl<Q> IVFScalarQuantizerIndexImpl<Q>
+where
+    Q: NativeIndex + CpuIndex,
+{
+    /// Build a GPU in from the given CPU native index, yielding two
+    /// independent indices. The operation fails if the index does
+    /// not provide GPU support.
+    pub fn to_gpu<'gpu, G>(
+        &self,
+        gpu_res: &'gpu G,
+        device: i32,
+    ) -> Result<GpuIndexImpl<'gpu, IVFScalarQuantizerIndexImpl<Q>>>
+    where
+        G: GpuResourcesProvider,
+    {
+        GpuIndexImpl::from_cpu(self, gpu_res, device)
+    }
+
+    /// Build a GPU index from the given CPU native index, discarding the
+    /// CPU-backed index. The operation fails if the index does not
+    /// provide GPU support.
+    pub fn into_gpu<'gpu, G>(
+        self,
+        gpu_res: &'gpu G,
+        device: i32,
+    ) -> Result<GpuIndexImpl<'gpu, IVFScalarQuantizerIndexImpl<Q>>>
+    where
+        G: GpuResourcesProvider,
+    {
+        self.to_gpu(gpu_res, device)
+    }
+
+    /// Build a GPU index from the given CPU native index.
+    ///
+    /// # Errors
+    ///
+    /// The operation fails if the number of GPU resources and number of
+    /// devices do not match, or the index does not provide GPU support.
+    pub fn to_gpu_multiple<'gpu, G: 'gpu>(
+        &self,
+        gpu_res: &'gpu [G],
+        devices: &[i32],
+    ) -> Result<GpuIndexImpl<'gpu, IVFScalarQuantizerIndexImpl<Q>>>
+    where
+        G: GpuResourcesProvider,
+    {
+        GpuIndexImpl::from_cpu_multiple(&self, gpu_res, devices)
+    }
+
+    /// Build a GPU index from the given CPU native index. The index residing
+    /// in CPU memory is discarded in the process.
+    ///
+    /// # Errors
+    ///
+    /// The operation fails if the number of GPU resources and number of
+    /// devices do not match, or the index does not provide GPU support.
+    pub fn into_gpu_multiple<'gpu, G: 'gpu>(
+        self,
+        gpu_res: &'gpu [G],
+        devices: &[i32],
+    ) -> Result<GpuIndexImpl<'gpu, IVFScalarQuantizerIndexImpl<Q>>>
     where
         G: GpuResourcesProvider,
     {
