@@ -13,7 +13,7 @@ git clone $repo_url faiss --branch $repo_rev --depth 1
 
 bindgen_opt='--size_t-is-usize --whitelist-function faiss_.* --whitelist-type idx_t|Faiss.* --opaque-type FILE'
 
-headers=`ls faiss/c_api/*_c.h faiss/c_api/impl/*_c.h`
+headers=`ls faiss/c_api/*_c.h faiss/c_api/impl/*_c.h faiss/c_api/utils/*_c.h`
 echo '// Auto-generated, do not edit!' > c_api.h
 for header in $headers; do
     echo "#include \""$header"\"" >> c_api.h;
