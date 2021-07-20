@@ -31,16 +31,6 @@ impl Drop for IVFFlatIndexImpl {
 }
 
 impl IVFFlatIndexImpl {
-    /// Create a new IVF flat index.
-    pub fn new_by_ref(
-        quantizer: &flat::FlatIndex,
-        d: u32,
-        nlist: u32,
-        metric: MetricType,
-    ) -> Result<Self> {
-        IVFFlatIndexImpl::new_helper(quantizer, d, nlist, metric, false)
-    }
-
     fn new_helper(
         quantizer: &flat::FlatIndex,
         d: u32,
@@ -73,19 +63,9 @@ impl IVFFlatIndexImpl {
     }
 
     /// Create a new IVF flat index with L2 as the metric type.
-    pub fn new_l2_by_ref(quantizer: &flat::FlatIndex, d: u32, nlist: u32) -> Result<Self> {
-        IVFFlatIndexImpl::new_by_ref(quantizer, d, nlist, MetricType::L2)
-    }
-
-    /// Create a new IVF flat index with L2 as the metric type.
     // The index owns the quantizer.
     pub fn new_l2(quantizer: flat::FlatIndex, d: u32, nlist: u32) -> Result<Self> {
         IVFFlatIndexImpl::new(quantizer, d, nlist, MetricType::L2)
-    }
-
-    /// Create a new IVF flat index with IP (inner product) as the metric type.
-    pub fn new_ip_by_ref(quantizer: &flat::FlatIndex, d: u32, nlist: u32) -> Result<Self> {
-        IVFFlatIndexImpl::new_by_ref(quantizer, d, nlist, MetricType::InnerProduct)
     }
 
     /// Create a new IVF flat index with IP (inner product) as the metric type.
@@ -195,7 +175,7 @@ mod tests {
     // #[ignore]
     fn index_search() {
         let q = FlatIndexImpl::new_l2(D).unwrap();
-        let mut index = IVFFlatIndexImpl::new_l2_by_ref(&q, D, 1).unwrap();
+        let mut index = IVFFlatIndexImpl::new_l2(q, D, 1).unwrap();
         assert_eq!(index.d(), D);
         assert_eq!(index.ntotal(), 0);
         let some_data = &[
@@ -263,7 +243,7 @@ mod tests {
     #[test]
     fn index_assign() {
         let q = FlatIndexImpl::new_l2(D).unwrap();
-        let mut index = IVFFlatIndexImpl::new_l2_by_ref(&q, D, 1).unwrap();
+        let mut index = IVFFlatIndexImpl::new_l2(q, D, 1).unwrap();
         assert_eq!(index.d(), D);
         assert_eq!(index.ntotal(), 0);
         let some_data = &[
