@@ -146,53 +146,7 @@ impl_native_index!(FlatIndex);
 
 impl_native_index_clone!(FlatIndex);
 
-impl ConcurrentIndex for FlatIndexImpl {
-    fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
-        unsafe {
-            let nq = query.len() / self.d() as usize;
-            let mut out_labels = vec![Idx::none(); k * nq];
-            faiss_try(faiss_Index_assign(
-                self.inner,
-                nq as idx_t,
-                query.as_ptr(),
-                out_labels.as_mut_ptr() as *mut _,
-                k as i64,
-            ))?;
-            Ok(AssignSearchResult { labels: out_labels })
-        }
-    }
-    fn search(&self, query: &[f32], k: usize) -> Result<SearchResult> {
-        unsafe {
-            let nq = query.len() / self.d() as usize;
-            let mut distances = vec![0_f32; k * nq];
-            let mut labels = vec![Idx::none(); k * nq];
-            faiss_try(faiss_Index_search(
-                self.inner,
-                nq as idx_t,
-                query.as_ptr(),
-                k as idx_t,
-                distances.as_mut_ptr(),
-                labels.as_mut_ptr() as *mut _,
-            ))?;
-            Ok(SearchResult { distances, labels })
-        }
-    }
-    fn range_search(&self, query: &[f32], radius: f32) -> Result<RangeSearchResult> {
-        unsafe {
-            let nq = (query.len() / self.d() as usize) as idx_t;
-            let mut p_res: *mut FaissRangeSearchResult = ptr::null_mut();
-            faiss_try(faiss_RangeSearchResult_new(&mut p_res, nq))?;
-            faiss_try(faiss_Index_range_search(
-                self.inner,
-                nq,
-                query.as_ptr(),
-                radius,
-                p_res,
-            ))?;
-            Ok(RangeSearchResult { inner: p_res })
-        }
-    }
-}
+impl_concurrent_index!(FlatIndexImpl);
 
 #[cfg(test)]
 mod tests {
