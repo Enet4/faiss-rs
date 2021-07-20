@@ -191,59 +191,59 @@ where
     I: Index,
 {
     fn is_trained(&self) -> bool {
-        self.as_ref().is_trained()
+        (**self).is_trained()
     }
 
     fn ntotal(&self) -> u64 {
-        self.as_ref().ntotal()
+        (**self).ntotal()
     }
 
     fn d(&self) -> u32 {
-        self.as_ref().d()
+        (**self).d()
     }
 
     fn metric_type(&self) -> MetricType {
-        self.as_ref().metric_type()
+        (**self).metric_type()
     }
 
     fn add(&mut self, x: &[f32]) -> Result<()> {
-        self.as_mut().add(x)
+        (**self).add(x)
     }
 
     fn add_with_ids(&mut self, x: &[f32], xids: &[Idx]) -> Result<()> {
-        self.as_mut().add_with_ids(x, xids)
+        (**self).add_with_ids(x, xids)
     }
 
     fn train(&mut self, x: &[f32]) -> Result<()> {
-        self.as_mut().train(x)
+        (**self).train(x)
     }
 
     fn assign(&mut self, q: &[f32], k: usize) -> Result<AssignSearchResult> {
-        self.as_mut().assign(q, k)
+        (**self).assign(q, k)
     }
 
     fn search(&mut self, q: &[f32], k: usize) -> Result<SearchResult> {
-        self.as_mut().search(q, k)
+        (**self).search(q, k)
     }
 
     fn range_search(&mut self, q: &[f32], radius: f32) -> Result<RangeSearchResult> {
-        self.as_mut().range_search(q, radius)
+        (**self).range_search(q, radius)
     }
 
     fn reset(&mut self) -> Result<()> {
-        self.as_mut().reset()
+        (**self).reset()
     }
 
     fn remove_ids(&mut self, sel: &IdSelector) -> Result<usize> {
-        self.as_mut().remove_ids(sel)
+        (**self).remove_ids(sel)
     }
 
     fn verbose(&self) -> bool {
-        self.as_ref().verbose()
+        (**self).verbose()
     }
 
     fn set_verbose(&mut self, value: bool) {
-        self.as_mut().set_verbose(value)
+        (**self).set_verbose(value)
     }
 }
 
@@ -255,7 +255,7 @@ pub trait NativeIndex: Index {
 
 impl<NI: NativeIndex> NativeIndex for Box<NI> {
     fn inner_ptr(&self) -> *mut FaissIndex {
-        self.as_ref().inner_ptr()
+        (**self).inner_ptr()
     }
 }
 
@@ -281,15 +281,15 @@ pub trait ConcurrentIndex: Index {
 
 impl<CI: ConcurrentIndex> ConcurrentIndex for Box<CI> {
     fn assign(&self, q: &[f32], k: usize) -> Result<AssignSearchResult> {
-        self.as_ref().assign(q, k)
+        (**self).assign(q, k)
     }
 
     fn search(&self, q: &[f32], k: usize) -> Result<SearchResult> {
-        self.as_ref().search(q, k)
+        (**self).search(q, k)
     }
 
     fn range_search(&self, q: &[f32], radius: f32) -> Result<RangeSearchResult> {
-        self.as_ref().range_search(q, radius)
+        (**self).range_search(q, radius)
     }
 }
 
