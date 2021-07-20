@@ -186,10 +186,77 @@ pub trait Index {
     fn set_verbose(&mut self, value: bool);
 }
 
+impl<I> Index for Box<I>
+where
+    I: Index,
+{
+    fn is_trained(&self) -> bool {
+        self.as_ref().is_trained()
+    }
+
+    fn ntotal(&self) -> u64 {
+        self.as_ref().ntotal()
+    }
+
+    fn d(&self) -> u32 {
+        self.as_ref().d()
+    }
+
+    fn metric_type(&self) -> MetricType {
+        self.as_ref().metric_type()
+    }
+
+    fn add(&mut self, x: &[f32]) -> Result<()> {
+        self.as_mut().add(x)
+    }
+
+    fn add_with_ids(&mut self, x: &[f32], xids: &[Idx]) -> Result<()> {
+        self.as_mut().add_with_ids(x, xids)
+    }
+
+    fn train(&mut self, x: &[f32]) -> Result<()> {
+        self.as_mut().train(x)
+    }
+
+    fn assign(&mut self, q: &[f32], k: usize) -> Result<AssignSearchResult> {
+        self.as_mut().assign(q, k)
+    }
+
+    fn search(&mut self, q: &[f32], k: usize) -> Result<SearchResult> {
+        self.as_mut().search(q, k)
+    }
+
+    fn range_search(&mut self, q: &[f32], radius: f32) -> Result<RangeSearchResult> {
+        self.as_mut().range_search(q, radius)
+    }
+
+    fn reset(&mut self) -> Result<()> {
+        self.as_mut().reset()
+    }
+
+    fn remove_ids(&mut self, sel: &IdSelector) -> Result<usize> {
+        self.as_mut().remove_ids(sel)
+    }
+
+    fn verbose(&self) -> bool {
+        self.as_ref().verbose()
+    }
+
+    fn set_verbose(&mut self, value: bool) {
+        self.as_mut().set_verbose(value)
+    }
+}
+
 /// Sub-trait for native implementations of a Faiss index.
 pub trait NativeIndex: Index {
     /// Retrieve a pointer to the native index object.
     fn inner_ptr(&self) -> *mut FaissIndex;
+}
+
+impl<NI: NativeIndex> NativeIndex for Box<NI> {
+    fn inner_ptr(&self) -> *mut FaissIndex {
+        self.as_ref().inner_ptr()
+    }
 }
 
 /// Trait for a Faiss index that can be safely searched over multiple threads.
@@ -212,8 +279,24 @@ pub trait ConcurrentIndex: Index {
     fn range_search(&self, q: &[f32], radius: f32) -> Result<RangeSearchResult>;
 }
 
+impl<CI: ConcurrentIndex> ConcurrentIndex for Box<CI> {
+    fn assign(&self, q: &[f32], k: usize) -> Result<AssignSearchResult> {
+        self.as_ref().assign(q, k)
+    }
+
+    fn search(&self, q: &[f32], k: usize) -> Result<SearchResult> {
+        self.as_ref().search(q, k)
+    }
+
+    fn range_search(&self, q: &[f32], radius: f32) -> Result<RangeSearchResult> {
+        self.as_ref().range_search(q, radius)
+    }
+}
+
 /// Trait for Faiss index types known to be running on the CPU.
 pub trait CpuIndex: Index {}
+
+impl<CI: CpuIndex> CpuIndex for Box<CI> {}
 
 /// Trait for Faiss index types which can be built from a pointer
 /// to a native implementation.
@@ -425,6 +508,14 @@ mod tests {
         let index = index_factory(64, "Flat", MetricType::L2).unwrap();
         assert_eq!(index.is_trained(), true); // Flat index does not need training
         assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn index_factory_flat_boxed() {
+        let index = index_factory(64, "Flat", MetricType::L2).unwrap();
+        let boxed = Box::new(index);
+        assert_eq!(boxed.is_trained(), true); // Flat index does not need training
+        assert_eq!(boxed.ntotal(), 0);
     }
 
     #[test]
