@@ -176,6 +176,25 @@ mod tests {
     }
 
     #[test]
+    fn flat_index_boxed() {
+        let mut index = FlatIndexImpl::new_l2(8).unwrap();
+        assert_eq!(index.is_trained(), true); // Flat index does not need training
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
+        ];
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        let boxed = Box::new(index);
+        assert_eq!(boxed.is_trained(), true);
+        assert_eq!(boxed.ntotal(), 5);
+        let xb = boxed.xb();
+        assert_eq!(xb.len(), 8 * 5);
+    }
+
+    #[test]
     fn index_verbose() {
         let mut index = FlatIndexImpl::new_l2(D).unwrap();
         assert_eq!(index.is_trained(), true); // Flat index does not need training
