@@ -17,7 +17,7 @@ use crate::selector::IdSelector;
 use std::ffi::CString;
 use std::fmt::{self, Display, Formatter, Write};
 use std::os::raw::c_uint;
-use std::ptr;
+use std::{mem, ptr};
 
 use faiss_sys::*;
 
@@ -464,6 +464,19 @@ impl TryFromInnerPtr for IndexImpl {
         } else {
             Ok(IndexImpl { inner: inner_ptr })
         }
+    }
+}
+
+pub trait UpcastIndex: NativeIndex {
+    fn upcast(self) -> IndexImpl;
+}
+
+impl<NI: NativeIndex> UpcastIndex for NI {
+    fn upcast(self) -> IndexImpl {
+        let inner_ptr = self.inner_ptr();
+        mem::forget(self);
+
+        unsafe { IndexImpl::from_inner_ptr(inner_ptr) }
     }
 }
 

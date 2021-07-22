@@ -270,7 +270,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::RefineFlatIndexImpl;
-    use crate::index::{flat::FlatIndexImpl, ConcurrentIndex, Idx, Index};
+    use crate::index::{flat::FlatIndexImpl, ConcurrentIndex, Idx, Index, UpcastIndex};
 
     const D: u32 = 8;
 
@@ -314,5 +314,17 @@ mod tests {
 
         refine.reset().unwrap();
         assert_eq!(refine.ntotal(), 0);
+    }
+
+    #[test]
+    fn refine_flat_index_upcast() {
+        let index = FlatIndexImpl::new_l2(D).unwrap();
+        assert_eq!(index.d(), D);
+        assert_eq!(index.ntotal(), 0);
+
+        let refine = RefineFlatIndexImpl::new(index).unwrap();
+
+        let index_impl = refine.upcast();
+        assert_eq!(index_impl.d(), D);
     }
 }

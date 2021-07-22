@@ -297,7 +297,7 @@ mod tests {
     const D: u32 = 8;
 
     #[test]
-    fn pre_transform_index_from_cast() {
+    fn pre_transform_index_from_cast_upcast() {
         let mut index = index_factory(D, "PCA4,Flat", MetricType::L2).unwrap();
 
         let some_data = &[
@@ -315,6 +315,11 @@ mod tests {
         assert_eq!(index.is_trained(), true);
         assert_eq!(index.ntotal(), 5);
         assert_eq!(index.d(), 8);
+
+        let index_impl = index.upcast();
+        assert_eq!(index_impl.is_trained(), true);
+        assert_eq!(index_impl.ntotal(), 5);
+        assert_eq!(index_impl.d(), 8);
     }
 
     #[test]

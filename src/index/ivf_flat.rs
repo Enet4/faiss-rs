@@ -166,7 +166,7 @@ mod tests {
 
     use super::IVFFlatIndexImpl;
     use crate::index::flat::FlatIndexImpl;
-    use crate::index::{index_factory, ConcurrentIndex, Idx, Index};
+    use crate::index::{index_factory, ConcurrentIndex, Idx, Index, UpcastIndex};
     use crate::MetricType;
 
     const D: u32 = 8;
@@ -285,5 +285,16 @@ mod tests {
         let index: IVFFlatIndexImpl = index.into_ivf_flat().unwrap();
         assert_eq!(index.is_trained(), true);
         assert_eq!(index.ntotal(), 5);
+    }
+
+    #[test]
+    fn index_upcast() {
+        let q = FlatIndexImpl::new_l2(D).unwrap();
+        let index = IVFFlatIndexImpl::new_l2(q, D, 1).unwrap();
+        assert_eq!(index.d(), D);
+        assert_eq!(index.ntotal(), 0);
+
+        let index_impl = index.upcast();
+        assert_eq!(index_impl.d(), D);
     }
 }
