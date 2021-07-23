@@ -151,10 +151,20 @@ impl_concurrent_index!(FlatIndexImpl);
 #[cfg(test)]
 mod tests {
     use super::FlatIndexImpl;
-    use crate::index::{index_factory, ConcurrentIndex, FromInnerPtr, Idx, Index, NativeIndex};
+    use crate::index::{
+        index_factory, ConcurrentIndex, FromInnerPtr, Idx, Index, NativeIndex, UpcastIndex,
+    };
     use crate::metric::MetricType;
 
     const D: u32 = 8;
+
+    #[test]
+    fn flat_index_from_upcast() {
+        let index = FlatIndexImpl::new_l2(D).unwrap();
+
+        let index_impl = index.upcast();
+        assert_eq!(index_impl.d(), D);
+    }
 
     #[test]
     fn flat_index_from_cast() {

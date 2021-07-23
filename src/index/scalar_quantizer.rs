@@ -491,7 +491,7 @@ impl IndexImpl {
 #[cfg(test)]
 mod tests {
     use super::{IVFScalarQuantizerIndexImpl, QuantizerType, ScalarQuantizerIndexImpl};
-    use crate::index::{flat, index_factory, ConcurrentIndex, Idx, Index};
+    use crate::index::{flat, index_factory, ConcurrentIndex, Idx, Index, UpcastIndex};
     use crate::metric::MetricType;
 
     const D: u32 = 8;
@@ -678,5 +678,17 @@ mod tests {
         let index = index.into_ivf_scalar_quantizer().unwrap();
         assert_eq!(index.is_trained(), true);
         assert_eq!(index.ntotal(), 5);
+    }
+
+    #[test]
+    fn ivf_sq_index_upcast() {
+        let quantizer = flat::FlatIndex::new_l2(D).unwrap();
+        let index =
+            IVFScalarQuantizerIndexImpl::new_l2(quantizer, D, QuantizerType::QT_fp16, 1).unwrap();
+        assert_eq!(index.d(), D);
+        assert_eq!(index.ntotal(), 0);
+
+        let index_impl = index.upcast();
+        assert_eq!(index_impl.d(), D);
     }
 }

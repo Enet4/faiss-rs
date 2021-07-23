@@ -17,7 +17,7 @@ use crate::selector::IdSelector;
 use std::ffi::CString;
 use std::fmt::{self, Display, Formatter, Write};
 use std::os::raw::c_uint;
-use std::ptr;
+use std::{mem, ptr};
 
 use faiss_sys::*;
 
@@ -464,6 +464,36 @@ impl TryFromInnerPtr for IndexImpl {
         } else {
             Ok(IndexImpl { inner: inner_ptr })
         }
+    }
+}
+
+/// Index upcast trait.
+/// 
+/// If you need to store several different types of indexes in one collection,
+/// you can cast all indexes to the common type `IndexImpl`.
+/// # Examples
+///
+/// ```
+/// # use faiss::{index::{IndexImpl, UpcastIndex}, FlatIndex, index_factory, MetricType};
+/// let f1 = FlatIndex::new_l2(128).unwrap();
+/// let f2 = index_factory(128, "Flat", MetricType::L2).unwrap();
+/// let v: Vec<IndexImpl> = vec![
+///     f1.upcast(),
+///     f2,
+/// ];
+/// ```
+///
+pub trait UpcastIndex: NativeIndex {
+    /// Convert an index to the base `IndexImpl` type
+    fn upcast(self) -> IndexImpl;
+}
+
+impl<NI: NativeIndex> UpcastIndex for NI {
+    fn upcast(self) -> IndexImpl {
+        let inner_ptr = self.inner_ptr();
+        mem::forget(self);
+
+        unsafe { IndexImpl::from_inner_ptr(inner_ptr) }
     }
 }
 
