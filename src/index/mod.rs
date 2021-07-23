@@ -467,12 +467,14 @@ impl TryFromInnerPtr for IndexImpl {
     }
 }
 
-/// If you need to store several different types of indexes in one collection.
-/// You can cast all indexes to one type of IndexImpl.
+/// Index upcast trait.
+/// 
+/// If you need to store several different types of indexes in one collection,
+/// you can cast all indexes to the common type `IndexImpl`.
 /// # Examples
 ///
 /// ```
-/// use faiss::{index::{IndexImpl, UpcastIndex}, FlatIndex, index_factory, MetricType};
+/// # use faiss::{index::{IndexImpl, UpcastIndex}, FlatIndex, index_factory, MetricType};
 /// let f1 = FlatIndex::new_l2(128).unwrap();
 /// let f2 = index_factory(128, "Flat", MetricType::L2).unwrap();
 /// let v: Vec<IndexImpl> = vec![
@@ -482,7 +484,7 @@ impl TryFromInnerPtr for IndexImpl {
 /// ```
 ///
 pub trait UpcastIndex: NativeIndex {
-    /// Converting an index to the base type of `IndexImpl`
+    /// Convert an index to the base `IndexImpl` type
     fn upcast(self) -> IndexImpl;
 }
 
