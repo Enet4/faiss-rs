@@ -2,7 +2,7 @@
 
 use super::{
     AssignSearchResult, CpuIndex, FromInnerPtr, Idx, Index, IndexImpl, NativeIndex,
-    RangeSearchResult, SearchResult, TryFromInnerPtr,
+    RangeSearchResult, SearchResult, TryClone, TryFromInnerPtr,
 };
 use crate::error::{Error, Result};
 use crate::faiss_try;
@@ -110,7 +110,7 @@ impl LshIndex {
 
 impl_native_index!(LshIndex);
 
-impl_native_index_clone!(LshIndex);
+impl TryClone for LshIndex {}
 
 impl IndexImpl {
     /// Attempt a dynamic cast of an index to the LSH index type.

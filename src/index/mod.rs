@@ -322,6 +322,26 @@ pub trait TryFromInnerPtr: NativeIndex {
         Self: Sized;
 }
 
+/// A trait which provides a Clone implementation to native index types.
+pub trait TryClone: FromInnerPtr {
+    /// Create an independent clone of this index.
+    ///
+    /// # Errors
+    ///
+    /// May result in a native error if the clone operation is not
+    /// supported for the internal type of index.
+    fn try_clone(&self) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        unsafe {
+            let mut new_index_ptr = ::std::ptr::null_mut();
+            faiss_try(faiss_clone_index(self.inner_ptr(), &mut new_index_ptr))?;
+            Ok(crate::index::FromInnerPtr::from_inner_ptr(new_index_ptr))
+        }
+    }
+}
+
 /// The outcome of an index assign operation.
 #[derive(Debug, Clone, PartialEq)]
 pub struct AssignSearchResult {
@@ -468,7 +488,7 @@ impl TryFromInnerPtr for IndexImpl {
 }
 
 /// Index upcast trait.
-/// 
+///
 /// If you need to store several different types of indexes in one collection,
 /// you can cast all indexes to the common type `IndexImpl`.
 /// # Examples
@@ -499,7 +519,7 @@ impl<NI: NativeIndex> UpcastIndex for NI {
 
 impl_native_index!(IndexImpl);
 
-impl_native_index_clone!(IndexImpl);
+impl TryClone for IndexImpl {}
 
 /// Use the index factory to create a native instance of a Faiss index, for `d`-dimensional
 /// vectors. `description` should follow the exact guidelines as the native Faiss interface
@@ -530,7 +550,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{index_factory, Idx, Index};
+    use super::{index_factory, Idx, Index, TryClone};
     use crate::metric::MetricType;
 
     #[test]

@@ -200,21 +200,7 @@ impl<BI> Index for RefineFlatIndexImpl<BI> {
     }
 }
 
-impl<BI> RefineFlatIndexImpl<BI> {
-    /// Create an independent clone of this index.
-    ///
-    /// # Errors
-    ///
-    /// May result in a native error if the clone operation is not
-    /// supported for the internal type of index.
-    pub fn try_clone(&self) -> Result<Self> {
-        unsafe {
-            let mut new_index_ptr = ::std::ptr::null_mut();
-            faiss_try(faiss_clone_index(self.inner_ptr(), &mut new_index_ptr))?;
-            Ok(crate::index::FromInnerPtr::from_inner_ptr(new_index_ptr))
-        }
-    }
-}
+impl<BI: TryClone> TryClone for RefineFlatIndexImpl<BI> {}
 
 impl<BI> ConcurrentIndex for RefineFlatIndexImpl<BI>
 where

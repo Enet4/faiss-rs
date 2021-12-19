@@ -144,7 +144,7 @@ impl TryFromInnerPtr for FlatIndexImpl {
 
 impl_native_index!(FlatIndex);
 
-impl_native_index_clone!(FlatIndex);
+impl TryClone for FlatIndexImpl {}
 
 impl_concurrent_index!(FlatIndexImpl);
 
@@ -152,7 +152,8 @@ impl_concurrent_index!(FlatIndexImpl);
 mod tests {
     use super::FlatIndexImpl;
     use crate::index::{
-        index_factory, ConcurrentIndex, FromInnerPtr, Idx, Index, NativeIndex, UpcastIndex,
+        index_factory, ConcurrentIndex, FromInnerPtr, Idx, Index, NativeIndex, TryClone,
+        UpcastIndex,
     };
     use crate::metric::MetricType;
 

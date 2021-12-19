@@ -176,27 +176,6 @@ macro_rules! impl_native_index {
     };
 }
 
-/// A macro which provides a Clone implementation to native index types.
-macro_rules! impl_native_index_clone {
-    ($t:ty) => {
-        impl $t {
-            /// Create an independent clone of this index.
-            ///
-            /// # Errors
-            ///
-            /// May result in a native error if the clone operation is not
-            /// supported for the internal type of index.
-            pub fn try_clone(&self) -> Result<Self> {
-                unsafe {
-                    let mut new_index_ptr = ::std::ptr::null_mut();
-                    faiss_try(faiss_clone_index(self.inner_ptr(), &mut new_index_ptr))?;
-                    Ok(crate::index::FromInnerPtr::from_inner_ptr(new_index_ptr))
-                }
-            }
-        }
-    };
-}
-
 /// A macro which provides a concurrent index implementation to the given type.
 macro_rules! impl_concurrent_index {
     ($t:ty) => {
