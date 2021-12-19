@@ -322,7 +322,7 @@ pub trait TryFromInnerPtr: NativeIndex {
         Self: Sized;
 }
 
-/// A macro which provides a Clone implementation to native index types.
+/// A trait which provides a Clone implementation to native index types.
 pub trait TryClone: FromInnerPtr {
     /// Create an independent clone of this index.
     ///
