@@ -1,7 +1,7 @@
 [package]
 name = "faiss"
 description = "High-level bindings for Faiss, the vector similarity search engine"
-version = "0.10.1-alpha.0"
+version = "0.11.1-alpha.0"
 authors = ["Eduardo Pinho <enet4mikeenet@gmail.com>"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/Enet4/faiss-rs"
