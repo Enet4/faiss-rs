@@ -47,10 +47,34 @@ where
     }
 }
 
+/// Read an index from a file with io flags. You can memory map some index types with this.
+///
+/// # Error
+///
+/// This function returns an error if the description contains any byte with the value `\0` (since
+/// it cannot be converted to a C string), or if the internal index reading operation fails.
+pub fn read_index_with_flags<P>(file_name: P, io_flags: u8) -> Result<IndexImpl>
+where
+    P: AsRef<str>,
+{
+    unsafe {
+        let f = file_name.as_ref();
+        let f = CString::new(f).map_err(|_| Error::BadFilePath)?;
+        let mut inner = ptr::null_mut();
+        faiss_try(faiss_read_index_fname(
+            f.as_ptr(),
+            io_flags as i32,
+            &mut inner,
+        ))?;
+        Ok(IndexImpl::from_inner_ptr(inner))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::index::flat::FlatIndex;
+    use crate::index::io_flags::io_flag;
     use crate::index::Index;
     const D: u32 = 8;
 
@@ -73,5 +97,12 @@ mod tests {
         let index = read_index(&filename).unwrap();
         assert_eq!(index.ntotal(), 5);
         ::std::fs::remove_file(&filepath).unwrap();
+    }
+
+    #[test]
+    fn test_read_with_flags() {
+        let index = read_index_with_flags("file_name", io_flag::MEM_MAP | io_flag::READ_ONLY);
+        // we just want to ensure the method signature is right here
+        assert!(index.is_err());
     }
 }
