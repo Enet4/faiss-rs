@@ -318,7 +318,20 @@ pub trait FromInnerPtr: NativeIndex {
 /// Trait for Faiss index types which can be built from a pointer
 /// to a native implementation.
 pub trait TryFromInnerPtr: NativeIndex {
-    fn try_from_inner_ptr(inner_ptr: *mut FaissIndex) -> Result<Self>
+
+    /// Create an index using the given pointer to a native object,
+    /// checking that the index behind the given pointer
+    /// is compatible with the target index type.
+    /// If the inner index is not compatible with the intended target type
+    /// (e.g. creating a `FlatIndex` out of a `FaissIndexLSH`),
+    /// an error is returned.
+    ///
+    /// # Safety
+    ///
+    /// This function is unable to check that
+    /// `inner_ptr` points to a valid, non-freed CPU index.
+    /// Moreover, `inner_ptr` must not be shared across multiple instances.
+    unsafe fn try_from_inner_ptr(inner_ptr: *mut FaissIndex) -> Result<Self>
     where
         Self: Sized;
 }
@@ -476,7 +489,7 @@ impl FromInnerPtr for IndexImpl {
 }
 
 impl TryFromInnerPtr for IndexImpl {
-    fn try_from_inner_ptr(inner_ptr: *mut FaissIndex) -> Result<Self>
+    unsafe fn try_from_inner_ptr(inner_ptr: *mut FaissIndex) -> Result<Self>
     where
         Self: Sized,
     {

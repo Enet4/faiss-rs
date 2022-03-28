@@ -150,6 +150,7 @@ where
             // make id map disown the index
             faiss_IndexIDMap_set_own_fields(self.inner, 0);
             // now it's safe to build a managed index
+            // (`index_inner` is expected to always point to a valid index)
             I::from_inner_ptr(self.index_inner)
         }
     }
@@ -164,6 +165,7 @@ where
             // make id map disown the index
             faiss_IndexIDMap_set_own_fields(self.inner, 0);
             // now it's safe to build a managed index
+            // (`index_inner` is expected to always point to a valid index)
             I::try_from_inner_ptr(self.index_inner)
         }
     }
@@ -173,7 +175,11 @@ where
     where
         B: index::TryFromInnerPtr,
     {
-        if let Ok(index) = B::try_from_inner_ptr(self.index_inner) {
+        // safety: index_inner is expected to always point to a valid index
+        let r = unsafe {
+            B::try_from_inner_ptr(self.index_inner)
+        };
+        if let Ok(index) = r {
             let res = IdMap {
                 inner: self.inner,
                 index_inner: index.inner_ptr(),
