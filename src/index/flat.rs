@@ -127,10 +127,13 @@ impl FromInnerPtr for FlatIndexImpl {
 }
 
 impl TryFromInnerPtr for FlatIndexImpl {
-    fn try_from_inner_ptr(inner_ptr: *mut FaissIndex) -> Result<Self>
+    unsafe fn try_from_inner_ptr(inner_ptr: *mut FaissIndex) -> Result<Self>
     where
         Self: Sized,
     {
+        // safety: `inner_ptr` is documented to be a valid pointer to an index,
+        // so the dynamic cast should be safe.
+        #[allow(unused_unsafe)]
         unsafe {
             let new_inner = faiss_IndexFlat_cast(inner_ptr);
             if new_inner.is_null() {
