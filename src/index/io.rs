@@ -5,9 +5,10 @@ use crate::faiss_try;
 use crate::index::{CpuIndex, FromInnerPtr, IndexImpl, NativeIndex};
 use faiss_sys::*;
 use std::ffi::CString;
+use std::os::raw::c_int;
 use std::ptr;
 
-use super::io_flags::IoFlags;
+pub use super::io_flags::IoFlags;
 
 /// Write an index to a file.
 ///
@@ -53,7 +54,9 @@ where
     }
 }
 
-/// Read an index from a file with io flags. You can memory map some index types with this.
+/// Read an index from a file with I/O flags.
+/// 
+/// You can memory map some index types with this.
 ///
 /// # Error
 ///
@@ -69,7 +72,7 @@ where
         let mut inner = ptr::null_mut();
         faiss_try(faiss_read_index_fname(
             f.as_ptr(),
-            io_flags.into(),
+            io_flags.0 as c_int,
             &mut inner,
         ))?;
         Ok(IndexImpl::from_inner_ptr(inner))

@@ -1,9 +1,10 @@
-//! Module containing the io flags.
+//! Module containing the I/O flags.
 
-/// Io Flags used during index reading, not all flags applicable to all indices
-// This is a set of constants rather than enum so that bitwise operations exist
+/// I/O flags used during index reading.
+/// 
+/// Note that not all flags are applicable to all index types.
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
-pub struct IoFlags(u16);
+pub struct IoFlags(pub(crate) u16);
 
 impl IoFlags {
     /// Load entire index into memory (default behavior)
@@ -12,6 +13,12 @@ impl IoFlags {
     pub const MEM_MAP: Self = IoFlags(0x01);
     /// Index is read-only
     pub const READ_ONLY: Self = IoFlags(0x02);
+}
+
+impl Default for IoFlags {
+    fn default() -> Self {
+        IoFlags::MEM_RESIDENT
+    }
 }
 
 impl std::ops::BitOr for IoFlags {
