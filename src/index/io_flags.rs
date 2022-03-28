@@ -1,7 +1,7 @@
 //! Module containing the I/O flags.
 
 /// I/O flags used during index reading.
-/// 
+///
 /// Note that not all flags are applicable to all index types.
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 pub struct IoFlags(pub(crate) u16);

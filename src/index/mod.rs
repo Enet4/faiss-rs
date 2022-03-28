@@ -318,7 +318,6 @@ pub trait FromInnerPtr: NativeIndex {
 /// Trait for Faiss index types which can be built from a pointer
 /// to a native implementation.
 pub trait TryFromInnerPtr: NativeIndex {
-
     /// Create an index using the given pointer to a native object,
     /// checking that the index behind the given pointer
     /// is compatible with the target index type.

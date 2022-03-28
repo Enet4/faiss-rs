@@ -176,9 +176,7 @@ where
         B: index::TryFromInnerPtr,
     {
         // safety: index_inner is expected to always point to a valid index
-        let r = unsafe {
-            B::try_from_inner_ptr(self.index_inner)
-        };
+        let r = unsafe { B::try_from_inner_ptr(self.index_inner) };
         if let Ok(index) = r {
             let res = IdMap {
                 inner: self.inner,

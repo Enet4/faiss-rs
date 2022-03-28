@@ -55,7 +55,7 @@ where
 }
 
 /// Read an index from a file with I/O flags.
-/// 
+///
 /// You can memory map some index types with this.
 ///
 /// # Error
