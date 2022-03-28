@@ -15,11 +15,11 @@ Currently, this crate does not build Faiss automatically for you. The dynamic li
   1. Follow the instructions [here](https://github.com/Enet4/faiss/tree/c_api_head/INSTALL.md#step-1-invoking-cmake)
      to build Faiss using CMake,
      enabling the variables `FAISS_ENABLE_C_API` and `BUILD_SHARED_LIBS`.
-     The crate is currently only compatible with version v1.7.1.
+     The crate is currently only compatible with version v1.7.2.
      Consider building Faiss from [this fork, `c_api_head` branch](https://github.com/Enet4/faiss/tree/c_api_head),
      which will contain the latest bindings to the C interface.
      For example:
-     ```
+     ```sh
      cmake -B . -DFAISS_ENABLE_C_API=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
      ```
      This will result in the dynamic library `faiss_c` ("c_api/libfaiss_c.so" on Linux),
@@ -29,19 +29,19 @@ Currently, this crate does not build Faiss automatically for you. The dynamic li
      For GPU support, don't forget to enable the option `FAISS_ENABLE_GPU`.
      **Note:** `faiss_c` might link dynamically to the native `faiss` library,
      which in that case you will need to install the main shared object (faiss/libfaiss.so)
-     as well. 
+     as well.
   2. You are now ready to include this crate as a dependency:
 
 ```toml
 [dependencies]
-"faiss" = "0.10.0"
+"faiss" = "0.11.0"
 ```
 
 If you have built Faiss with GPU support, you can include the "gpu" feature in the bindings:
 
 ```toml
 [dependencies]
-"faiss" = {version = "0.10.0", features = ["gpu"]}
+"faiss" = {version = "0.11.0", features = ["gpu"]}
 ```
 
 ## Using
