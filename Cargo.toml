@@ -16,10 +16,6 @@ gpu = ["faiss-sys/gpu"]
 [badges.maintenance]
 status = "passively-maintained"
 
-[badges.travis-ci]
-branch = "master"
-repository = "Enet4/faiss-rs"
-
 [dependencies.faiss-sys]
 version = "0.5.0"
 path = "faiss-sys"
