@@ -7,6 +7,8 @@ use faiss_sys::*;
 use std::ffi::CString;
 use std::ptr;
 
+use super::io_flags::IoFlags;
+
 /// Write an index to a file.
 ///
 /// # Error
@@ -42,7 +44,34 @@ where
         let f = file_name.as_ref();
         let f = CString::new(f).map_err(|_| Error::BadFilePath)?;
         let mut inner = ptr::null_mut();
-        faiss_try(faiss_read_index_fname(f.as_ptr(), 0, &mut inner))?;
+        faiss_try(faiss_read_index_fname(
+            f.as_ptr(),
+            IoFlags::MEM_RESIDENT.into(),
+            &mut inner,
+        ))?;
+        Ok(IndexImpl::from_inner_ptr(inner))
+    }
+}
+
+/// Read an index from a file with io flags. You can memory map some index types with this.
+///
+/// # Error
+///
+/// This function returns an error if the description contains any byte with the value `\0` (since
+/// it cannot be converted to a C string), or if the internal index reading operation fails.
+pub fn read_index_with_flags<P>(file_name: P, io_flags: IoFlags) -> Result<IndexImpl>
+where
+    P: AsRef<str>,
+{
+    unsafe {
+        let f = file_name.as_ref();
+        let f = CString::new(f).map_err(|_| Error::BadFilePath)?;
+        let mut inner = ptr::null_mut();
+        faiss_try(faiss_read_index_fname(
+            f.as_ptr(),
+            io_flags.into(),
+            &mut inner,
+        ))?;
         Ok(IndexImpl::from_inner_ptr(inner))
     }
 }
@@ -73,5 +102,12 @@ mod tests {
         let index = read_index(&filename).unwrap();
         assert_eq!(index.ntotal(), 5);
         ::std::fs::remove_file(&filepath).unwrap();
+    }
+
+    #[test]
+    fn test_read_with_flags() {
+        let index = read_index_with_flags("file_name", IoFlags::MEM_MAP | IoFlags::READ_ONLY);
+        // we just want to ensure the method signature is right here
+        assert!(index.is_err());
     }
 }
