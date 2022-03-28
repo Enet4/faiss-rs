@@ -103,8 +103,8 @@ impl LshIndex {
         unsafe { faiss_IndexLSH_rotate_data(self.inner) != 0 }
     }
 
-    pub fn bytes_per_vec(&self) -> usize {
-        unsafe { faiss_IndexLSH_bytes_per_vec(self.inner) as usize }
+    pub fn code_size(&self) -> usize {
+        unsafe { faiss_IndexLSH_code_size(self.inner) as usize }
     }
 }
 

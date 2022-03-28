@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -eu
 
-repo_url=https://github.com/Enet4/faiss.git
-repo_rev=c_api_head
+repo_url=https://github.com/facebookresearch/faiss
+repo_rev=v1.7.2
 
-git clone $repo_url faiss --branch $repo_rev --depth 1
+git clone "$repo_url" faiss --branch "$repo_rev" --depth 1
 
 mkdir -p "$HOME/.faiss_c"
 
