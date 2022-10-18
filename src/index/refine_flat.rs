@@ -80,6 +80,25 @@ impl<BI> FromInnerPtr for RefineFlatIndexImpl<BI> {
     }
 }
 
+impl<BI> TryFromInnerPtr for RefineFlatIndexImpl<BI> {
+    unsafe fn try_from_inner_ptr(inner_ptr: *mut FaissIndex) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        // safety: `inner_ptr` is documented to be a valid pointer to an index,
+        // so the dynamic cast should be safe.
+        #[allow(unused_unsafe)]
+        unsafe {
+            let new_inner = faiss_IndexRefineFlat_cast(inner_ptr);
+            if new_inner.is_null() {
+                Err(Error::BadCast)
+            } else {
+                Ok(RefineFlatIndexImpl { inner: new_inner, base_index: PhantomData })
+            }
+        }
+    }
+}
+
 impl<BI> Index for RefineFlatIndexImpl<BI> {
     fn is_trained(&self) -> bool {
         unsafe { faiss_Index_is_trained(self.inner_ptr()) != 0 }
