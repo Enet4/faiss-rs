@@ -52,6 +52,10 @@ impl ClusteringParameters {
         self.inner.spherical != 0
     }
 
+    pub fn int_centroids(&self) -> bool {
+        self.inner.int_centroids != 0
+    }
+
     pub fn update_index(&self) -> bool {
         self.inner.update_index != 0
     }
@@ -62,6 +66,10 @@ impl ClusteringParameters {
 
     pub fn seed(&self) -> u32 {
         self.inner.seed as u32
+    }
+
+    pub fn decode_block_size(&self) -> usize {
+        self.inner.decode_block_size
     }
 
     pub fn set_niter(&mut self, niter: u32) {
@@ -92,12 +100,20 @@ impl ClusteringParameters {
         self.inner.spherical = if spherical { 1 } else { 0 };
     }
 
+    pub fn set_int_centroids(&mut self, int_centroids: bool) {
+        self.inner.int_centroids = if int_centroids { 1 } else { 0 }
+    }
+
     pub fn set_verbose(&mut self, verbose: bool) {
         self.inner.verbose = if verbose { 1 } else { 0 };
     }
 
     pub fn set_seed(&mut self, seed: u32) {
         self.inner.seed = seed as i32;
+    }
+
+    pub fn set_decode_block_size(&mut self, decode_block_size: usize) {
+        self.inner.decode_block_size = decode_block_size;
     }
 }
 
@@ -305,6 +321,11 @@ impl Clustering {
         unsafe { faiss_Clustering_spherical(self.inner) != 0 }
     }
 
+    /** Getter for the `int_centroids` property of `Clustering`. */
+    pub fn int_centroids(&self) -> bool {
+        unsafe { faiss_Clustering_int_centroids(self.inner) != 0 }
+    }
+
     /** Getter for the `update_index` property of `Clustering`. */
     pub fn update_index(&self) -> bool {
         unsafe { faiss_Clustering_update_index(self.inner) != 0 }
@@ -318,6 +339,12 @@ impl Clustering {
     /** Getter for the `seed` property of `Clustering`. */
     pub fn seed(&self) -> u32 {
         unsafe { faiss_Clustering_seed(self.inner) as u32 }
+    }
+
+    /** Getter for the `seed` property of `Clustering`. */
+    /// how many vectors at a time to decode
+    pub fn decode_block_size(&self) -> usize {
+        unsafe { faiss_Clustering_decode_block_size(self.inner) }
     }
 
     /** Getter for the minimum number of points per centroid. */
