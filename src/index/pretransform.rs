@@ -64,6 +64,17 @@ where
             })
         }
     }
+
+    pub fn prepend_transform<LT: NativeVectorTransform>(&mut self, ltrans: LT) -> Result<()>{
+        unsafe {
+            faiss_try(faiss_IndexPreTransform_prepend_transform(
+                self.inner,
+                ltrans.inner_ptr(),
+            ))?;
+    
+            Ok(())
+        }
+    }
 }
 
 impl IndexImpl {
