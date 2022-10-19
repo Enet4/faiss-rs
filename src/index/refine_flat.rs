@@ -71,7 +71,7 @@ impl<BI> NativeIndex for RefineFlatIndexImpl<BI> {
     }
 }
 
-impl<BI> FromInnerPtr for RefineFlatIndexImpl<BI> {
+impl<IndexImpl> FromInnerPtr for RefineFlatIndexImpl<IndexImpl> {
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self {
         RefineFlatIndexImpl {
             inner: inner_ptr as *mut FaissIndexFlat,
@@ -80,7 +80,7 @@ impl<BI> FromInnerPtr for RefineFlatIndexImpl<BI> {
     }
 }
 
-impl<BI> TryFromInnerPtr for RefineFlatIndexImpl<BI> {
+impl<IndexImpl> TryFromInnerPtr for RefineFlatIndexImpl<IndexImpl> {
     unsafe fn try_from_inner_ptr(inner_ptr: *mut FaissIndex) -> Result<Self>
     where
         Self: Sized,
@@ -93,7 +93,10 @@ impl<BI> TryFromInnerPtr for RefineFlatIndexImpl<BI> {
             if new_inner.is_null() {
                 Err(Error::BadCast)
             } else {
-                Ok(RefineFlatIndexImpl { inner: new_inner, base_index: PhantomData })
+                Ok(RefineFlatIndexImpl {
+                    inner: new_inner,
+                    base_index: PhantomData,
+                })
             }
         }
     }
