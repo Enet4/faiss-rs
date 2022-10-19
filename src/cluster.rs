@@ -52,6 +52,8 @@ impl ClusteringParameters {
         self.inner.spherical != 0
     }
 
+    /// Getter for the `int_centroids` property.
+    /// Round centroids coordinates to integer
     pub fn int_centroids(&self) -> bool {
         self.inner.int_centroids != 0
     }
@@ -68,6 +70,8 @@ impl ClusteringParameters {
         self.inner.seed as u32
     }
 
+    /// Getter for the `decode_block_size` property.
+    /// How many vectors at a time to decode
     pub fn decode_block_size(&self) -> usize {
         self.inner.decode_block_size
     }
@@ -100,6 +104,8 @@ impl ClusteringParameters {
         self.inner.spherical = if spherical { 1 } else { 0 };
     }
 
+    /// Setter for the `int_centroids` property.
+    /// Round centroids coordinates to integer
     pub fn set_int_centroids(&mut self, int_centroids: bool) {
         self.inner.int_centroids = if int_centroids { 1 } else { 0 }
     }
@@ -112,6 +118,8 @@ impl ClusteringParameters {
         self.inner.seed = seed as i32;
     }
 
+    /// Setter for the `decode_block_size` property.
+    /// How many vectors at a time to decode
     pub fn set_decode_block_size(&mut self, decode_block_size: usize) {
         self.inner.decode_block_size = decode_block_size;
     }
@@ -321,7 +329,8 @@ impl Clustering {
         unsafe { faiss_Clustering_spherical(self.inner) != 0 }
     }
 
-    /** Getter for the `int_centroids` property of `Clustering`. */
+    /// Getter for the `int_centroids` property of `Clustering`.
+    /// Round centroids coordinates to integer
     pub fn int_centroids(&self) -> bool {
         unsafe { faiss_Clustering_int_centroids(self.inner) != 0 }
     }
@@ -341,8 +350,8 @@ impl Clustering {
         unsafe { faiss_Clustering_seed(self.inner) as u32 }
     }
 
-    /** Getter for the `seed` property of `Clustering`. */
-    /// how many vectors at a time to decode
+    /// Getter for the `decode_block_size` property of `Clustering`.
+    /// How many vectors at a time to decode
     pub fn decode_block_size(&self) -> usize {
         unsafe { faiss_Clustering_decode_block_size(self.inner) }
     }
