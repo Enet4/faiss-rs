@@ -71,7 +71,7 @@ impl<BI> NativeIndex for RefineFlatIndexImpl<BI> {
     }
 }
 
-impl<IndexImpl> FromInnerPtr for RefineFlatIndexImpl<IndexImpl> {
+impl FromInnerPtr for RefineFlatIndexImpl<IndexImpl> {
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self {
         RefineFlatIndexImpl {
             inner: inner_ptr as *mut FaissIndexFlat,
@@ -80,7 +80,7 @@ impl<IndexImpl> FromInnerPtr for RefineFlatIndexImpl<IndexImpl> {
     }
 }
 
-impl<IndexImpl> TryFromInnerPtr for RefineFlatIndexImpl<IndexImpl> {
+impl TryFromInnerPtr for RefineFlatIndexImpl<IndexImpl> {
     unsafe fn try_from_inner_ptr(inner_ptr: *mut FaissIndex) -> Result<Self>
     where
         Self: Sized,
