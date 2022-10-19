@@ -89,7 +89,7 @@ impl<I> NativeIndex for PreTransformIndexImpl<I> {
     }
 }
 
-impl<I> FromInnerPtr for PreTransformIndexImpl<I> {
+impl<IndexImpl> FromInnerPtr for PreTransformIndexImpl<IndexImpl> {
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self {
         PreTransformIndexImpl {
             inner: inner_ptr as *mut FaissIndexPreTransform,
