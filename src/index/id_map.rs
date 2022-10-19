@@ -367,6 +367,9 @@ where
 }
 
 impl IndexImpl {
+    /// Attempt a dynamic cast of the index to one that is [ID-mapped][1].
+    /// 
+    /// [1]: crate::IdMap
     pub fn into_id_map(self) -> Result<IdMap<IndexImpl>> {
         unsafe {
             let new_inner = faiss_IndexIDMap_cast(self.inner_ptr());
