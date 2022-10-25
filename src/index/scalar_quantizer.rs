@@ -407,7 +407,7 @@ impl<Q: TryClone> TryClone for IVFScalarQuantizerIndexImpl<Q> {}
 
 impl<Q> ConcurrentIndex for IVFScalarQuantizerIndexImpl<Q>
 where
-    Q: ConcurrentIndex,
+    Q: Index,
 {
     fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
         unsafe {

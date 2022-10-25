@@ -317,7 +317,7 @@ impl<I> Index for IdMap<I> {
 
 impl<I> ConcurrentIndex for IdMap<I>
 where
-    I: ConcurrentIndex,
+    I: Index,
 {
     fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
         unsafe {
