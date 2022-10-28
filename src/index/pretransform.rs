@@ -233,7 +233,7 @@ impl<I: TryClone> TryClone for PreTransformIndexImpl<I> {}
 
 impl<I> ConcurrentIndex for PreTransformIndexImpl<I>
 where
-    I: Index,
+    I: Index + NativeIndex,
 {
     fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
         unsafe {

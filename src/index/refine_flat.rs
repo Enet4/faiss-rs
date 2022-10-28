@@ -204,7 +204,7 @@ impl<BI: TryClone> TryClone for RefineFlatIndexImpl<BI> {}
 
 impl<BI> ConcurrentIndex for RefineFlatIndexImpl<BI>
 where
-    BI: Index,
+    BI: Index + NativeIndex,
 {
     fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
         unsafe {
