@@ -5,7 +5,7 @@ use super::*;
 use crate::error::Result;
 use crate::faiss_try;
 use std::mem;
-use std::os::raw::c_int;
+use std::os::raw::{c_char, c_int};
 use std::ptr;
 
 /// Alias for the native implementation of a flat index.
@@ -116,7 +116,7 @@ pub enum TrainType {
 }
 
 impl TrainType {
-    pub(crate) fn from_code(code: i8) -> Option<Self> {
+    pub(crate) fn from_code(code: c_char) -> Option<Self> {
         match code {
             0 => Some(TrainType::QuantizerAsIndex),
             1 => Some(TrainType::QuantizerTrainsAlone),
