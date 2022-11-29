@@ -1974,6 +1974,101 @@ extern "C" {
     pub fn faiss_DistanceComputer_free(obj: *mut FaissDistanceComputer);
 }
 extern "C" {
+    #[doc = " Compute pairwise distances between sets of vectors"]
+    pub fn faiss_pairwise_L2sqr(
+        d: i64,
+        nq: i64,
+        xq: *const f32,
+        nb: i64,
+        xb: *const f32,
+        dis: *mut f32,
+        ldq: i64,
+        ldb: i64,
+        ldd: i64,
+    );
+}
+extern "C" {
+    #[doc = " Compute pairwise distances between sets of vectors"]
+    #[doc = " arguments from \"faiss_pairwise_L2sqr\""]
+    #[doc = " ldq equal -1 by default"]
+    #[doc = " ldb equal -1 by default"]
+    #[doc = " ldd equal -1 by default"]
+    pub fn faiss_pairwise_L2sqr_with_defaults(
+        d: i64,
+        nq: i64,
+        xq: *const f32,
+        nb: i64,
+        xb: *const f32,
+        dis: *mut f32,
+    );
+}
+extern "C" {
+    #[doc = " compute the inner product between nx vectors x and one y"]
+    pub fn faiss_fvec_inner_products_ny(
+        ip: *mut f32,
+        x: *const f32,
+        y: *const f32,
+        d: usize,
+        ny: usize,
+    );
+}
+extern "C" {
+    #[doc = " compute ny square L2 distance between x and a set of contiguous y vectors"]
+    pub fn faiss_fvec_L2sqr_ny(dis: *mut f32, x: *const f32, y: *const f32, d: usize, ny: usize);
+}
+extern "C" {
+    #[doc = " squared norm of a vector"]
+    pub fn faiss_fvec_norm_L2sqr(x: *const f32, d: usize) -> f32;
+}
+extern "C" {
+    #[doc = " compute the L2 norms for a set of vectors"]
+    pub fn faiss_fvec_norms_L2(norms: *mut f32, x: *const f32, d: usize, nx: usize);
+}
+extern "C" {
+    #[doc = " same as fvec_norms_L2, but computes squared norms"]
+    pub fn faiss_fvec_norms_L2sqr(norms: *mut f32, x: *const f32, d: usize, nx: usize);
+}
+extern "C" {
+    #[doc = " L2-renormalize a set of vector. Nothing done if the vector is 0-normed"]
+    pub fn faiss_fvec_renorm_L2(d: usize, nx: usize, x: *mut f32);
+}
+extern "C" {
+    #[doc = " Setter of threshold value on nx above which we switch to BLAS to compute"]
+    #[doc = " distances"]
+    pub fn faiss_set_distance_compute_blas_threshold(value: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[doc = " Getter of threshold value on nx above which we switch to BLAS to compute"]
+    #[doc = " distances"]
+    pub fn faiss_get_distance_compute_blas_threshold() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Setter of block sizes value for BLAS distance computations"]
+    pub fn faiss_set_distance_compute_blas_query_bs(value: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[doc = " Getter of block sizes value for BLAS distance computations"]
+    pub fn faiss_get_distance_compute_blas_query_bs() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Setter of block sizes value for BLAS distance computations"]
+    pub fn faiss_set_distance_compute_blas_database_bs(value: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[doc = " Getter of block sizes value for BLAS distance computations"]
+    pub fn faiss_get_distance_compute_blas_database_bs() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Setter of number of results we switch to a reservoir to collect results"]
+    #[doc = " rather than a heap"]
+    pub fn faiss_set_distance_compute_min_k_reservoir(value: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[doc = " Getter of number of results we switch to a reservoir to collect results"]
+    #[doc = " rather than a heap"]
+    pub fn faiss_get_distance_compute_min_k_reservoir() -> ::std::os::raw::c_int;
+}
+extern "C" {
     #[doc = " Build and index with the sequence of processing steps described in"]
     #[doc = "  the string."]
     pub fn faiss_index_factory(
