@@ -93,6 +93,7 @@ pub mod index;
 pub mod metric;
 pub mod selector;
 pub mod vector_transform;
+pub mod utils;
 
 #[cfg(feature = "gpu")]
 pub mod gpu;
