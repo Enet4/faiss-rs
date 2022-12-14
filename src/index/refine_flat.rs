@@ -71,7 +71,7 @@ impl<BI> NativeIndex for RefineFlatIndexImpl<BI> {
     }
 }
 
-impl<IndexImpl> FromInnerPtr for RefineFlatIndexImpl<IndexImpl> {
+impl FromInnerPtr for RefineFlatIndexImpl<IndexImpl> {
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self {
         RefineFlatIndexImpl {
             inner: inner_ptr as *mut FaissIndexFlat,
@@ -222,7 +222,21 @@ impl<BI> Index for RefineFlatIndexImpl<BI> {
     }
 }
 
-impl<BI: TryClone> TryClone for RefineFlatIndexImpl<BI> {}
+impl<I> TryClone for RefineFlatIndexImpl<I> {
+    fn try_clone(&self) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        unsafe {
+            let mut new_index_ptr = ::std::ptr::null_mut();
+            faiss_try(faiss_clone_index(self.inner_ptr(), &mut new_index_ptr))?;
+            Ok(RefineFlatIndexImpl {
+                inner: new_index_ptr as *mut FaissIndexFlat,
+                base_index: PhantomData,
+            })
+        }
+    }
+}
 
 impl<BI> ConcurrentIndex for RefineFlatIndexImpl<BI>
 where

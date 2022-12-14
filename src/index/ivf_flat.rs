@@ -5,7 +5,7 @@ use super::*;
 use crate::error::Result;
 use crate::faiss_try;
 use std::mem;
-use std::os::raw::{c_int, c_char};
+use std::os::raw::{c_char, c_int};
 use std::ptr;
 
 /// Alias for the native implementation of a flat index.
@@ -142,7 +142,14 @@ impl FromInnerPtr for IVFFlatIndexImpl {
 
 impl_native_index!(IVFFlatIndex);
 
-impl TryClone for IVFFlatIndexImpl {}
+impl TryClone for IVFFlatIndexImpl {
+    fn try_clone(&self) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        try_clone_from_inner_ptr(self)
+    }
+}
 
 impl_concurrent_index!(IVFFlatIndexImpl);
 

@@ -89,7 +89,7 @@ impl<I> NativeIndex for PreTransformIndexImpl<I> {
     }
 }
 
-impl<IndexImpl> FromInnerPtr for PreTransformIndexImpl<IndexImpl> {
+impl FromInnerPtr for PreTransformIndexImpl<IndexImpl> {
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self {
         PreTransformIndexImpl {
             inner: inner_ptr as *mut FaissIndexPreTransform,
@@ -218,7 +218,21 @@ impl<I> Index for PreTransformIndexImpl<I> {
     }
 }
 
-impl<I: TryClone> TryClone for PreTransformIndexImpl<I> {}
+impl<I> TryClone for PreTransformIndexImpl<I> {
+    fn try_clone(&self) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        unsafe {
+            let mut new_index_ptr = ::std::ptr::null_mut();
+            faiss_try(faiss_clone_index(self.inner_ptr(), &mut new_index_ptr))?;
+            Ok(PreTransformIndexImpl {
+                inner: new_index_ptr as *mut FaissIndexPreTransform,
+                sub_index: PhantomData,
+            })
+        }
+    }
+}
 
 impl<I> ConcurrentIndex for PreTransformIndexImpl<I>
 where

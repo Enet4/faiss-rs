@@ -105,7 +105,14 @@ impl FromInnerPtr for ScalarQuantizerIndexImpl {
 
 impl_native_index!(ScalarQuantizerIndexImpl);
 
-impl TryClone for ScalarQuantizerIndexImpl {}
+impl TryClone for ScalarQuantizerIndexImpl {
+    fn try_clone(&self) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        try_clone_from_inner_ptr(self)
+    }
+}
 
 impl IndexImpl {
     /// Attempt a dynamic cast of an index to the Scalar Quantizer index type.
@@ -274,7 +281,7 @@ impl<Q> NativeIndex for IVFScalarQuantizerIndexImpl<Q> {
     }
 }
 
-impl<Q> FromInnerPtr for IVFScalarQuantizerIndexImpl<Q> {
+impl FromInnerPtr for IVFScalarQuantizerIndexImpl<IndexImpl> {
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self {
         IVFScalarQuantizerIndexImpl {
             inner: inner_ptr as *mut FaissIndexIVFScalarQuantizer,
@@ -403,7 +410,21 @@ impl<Q> Index for IVFScalarQuantizerIndexImpl<Q> {
     }
 }
 
-impl<Q: TryClone> TryClone for IVFScalarQuantizerIndexImpl<Q> {}
+impl<Q> TryClone for IVFScalarQuantizerIndexImpl<Q> {
+    fn try_clone(&self) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        unsafe {
+            let mut new_index_ptr = ::std::ptr::null_mut();
+            faiss_try(faiss_clone_index(self.inner_ptr(), &mut new_index_ptr))?;
+            Ok(IVFScalarQuantizerIndexImpl {
+                inner: new_index_ptr as *mut FaissIndexIVFScalarQuantizer,
+                quantizer: PhantomData,
+            })
+        }
+    }
+}
 
 impl<Q> ConcurrentIndex for IVFScalarQuantizerIndexImpl<Q>
 where

@@ -1,8 +1,8 @@
 //! Interface and implementation to Locality-Sensitive Hashing (LSH) index type.
 
 use super::{
-    AssignSearchResult, CpuIndex, FromInnerPtr, Idx, Index, IndexImpl, NativeIndex,
-    RangeSearchResult, SearchResult, TryClone, TryFromInnerPtr,
+    try_clone_from_inner_ptr, AssignSearchResult, CpuIndex, FromInnerPtr, Idx, Index, IndexImpl,
+    NativeIndex, RangeSearchResult, SearchResult, TryClone, TryFromInnerPtr,
 };
 use crate::error::{Error, Result};
 use crate::faiss_try;
@@ -113,7 +113,14 @@ impl LshIndex {
 
 impl_native_index!(LshIndex);
 
-impl TryClone for LshIndex {}
+impl TryClone for LshIndex {
+    fn try_clone(&self) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        try_clone_from_inner_ptr(self)
+    }
+}
 
 impl IndexImpl {
     /// Attempt a dynamic cast of an index to the LSH index type.

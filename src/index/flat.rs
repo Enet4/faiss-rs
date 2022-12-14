@@ -147,7 +147,14 @@ impl TryFromInnerPtr for FlatIndexImpl {
 
 impl_native_index!(FlatIndex);
 
-impl TryClone for FlatIndexImpl {}
+impl TryClone for FlatIndexImpl {
+    fn try_clone(&self) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        try_clone_from_inner_ptr(self)
+    }
+}
 
 impl_concurrent_index!(FlatIndexImpl);
 
