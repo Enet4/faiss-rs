@@ -71,11 +71,33 @@ impl<BI> NativeIndex for RefineFlatIndexImpl<BI> {
     }
 }
 
-impl<BI> FromInnerPtr for RefineFlatIndexImpl<BI> {
+impl FromInnerPtr for RefineFlatIndexImpl<IndexImpl> {
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndex) -> Self {
         RefineFlatIndexImpl {
             inner: inner_ptr as *mut FaissIndexFlat,
             base_index: PhantomData,
+        }
+    }
+}
+
+impl TryFromInnerPtr for RefineFlatIndexImpl<IndexImpl> {
+    unsafe fn try_from_inner_ptr(inner_ptr: *mut FaissIndex) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        // safety: `inner_ptr` is documented to be a valid pointer to an index,
+        // so the dynamic cast should be safe.
+        #[allow(unused_unsafe)]
+        unsafe {
+            let new_inner = faiss_IndexRefineFlat_cast(inner_ptr);
+            if new_inner.is_null() {
+                Err(Error::BadCast)
+            } else {
+                Ok(RefineFlatIndexImpl {
+                    inner: new_inner,
+                    base_index: PhantomData,
+                })
+            }
         }
     }
 }
@@ -200,7 +222,21 @@ impl<BI> Index for RefineFlatIndexImpl<BI> {
     }
 }
 
-impl<BI: TryClone> TryClone for RefineFlatIndexImpl<BI> {}
+impl<I> TryClone for RefineFlatIndexImpl<I> {
+    fn try_clone(&self) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        unsafe {
+            let mut new_index_ptr = ::std::ptr::null_mut();
+            faiss_try(faiss_clone_index(self.inner_ptr(), &mut new_index_ptr))?;
+            Ok(RefineFlatIndexImpl {
+                inner: new_index_ptr as *mut FaissIndexFlat,
+                base_index: PhantomData,
+            })
+        }
+    }
+}
 
 impl<BI> ConcurrentIndex for RefineFlatIndexImpl<BI>
 where

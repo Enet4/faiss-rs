@@ -142,7 +142,14 @@ impl FromInnerPtr for IVFFlatIndexImpl {
 
 impl_native_index!(IVFFlatIndex);
 
-impl TryClone for IVFFlatIndexImpl {}
+impl TryClone for IVFFlatIndexImpl {
+    fn try_clone(&self) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        try_clone_from_inner_ptr(self)
+    }
+}
 
 impl_concurrent_index!(IVFFlatIndexImpl);
 
