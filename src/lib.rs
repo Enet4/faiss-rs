@@ -21,7 +21,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! "faiss" = {version = "0.6.0", features = ["gpu"]}
+//! "faiss" = {version = "0.12.0", features = ["gpu"]}
 //! ```
 //!
 //! # Examples
@@ -82,7 +82,7 @@
 //! the [Faiss wiki](https://github.com/facebookresearch/faiss/wiki)
 //! for additional guidance.
 //!
-#![doc(html_root_url = "https://docs.rs/faiss/0.9.0")]
+#![doc(html_root_url = "https://docs.rs/faiss/0.12.0")]
 
 #[macro_use]
 mod macros;
