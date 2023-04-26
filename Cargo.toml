@@ -12,6 +12,7 @@ edition = "2018"
 
 [features]
 gpu = ["faiss-sys/gpu"]
+static = ["faiss-sys/static"]
 
 [badges.maintenance]
 status = "passively-maintained"

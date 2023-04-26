@@ -11,6 +11,8 @@ keywords = ["cbir", "clustering", "index", "similarity", "bindings"]
 
 [features]
 gpu = []
+static = []
+
 
 [build-dependencies]
 cmake = "0.1.50"

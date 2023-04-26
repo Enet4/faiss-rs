@@ -1,14 +1,12 @@
 fn main() {
-    build_faiss();
-    link_cxx();
-    println!("cargo:rustc-link-lib=static=faiss_c");
-    println!("cargo:rustc-link-lib=static=faiss");
-    println!("cargo:rustc-link-lib=gomp");
-    println!("cargo:rustc-link-lib=blas");
-    println!("cargo:rustc-link-lib=lapack");
+    #[cfg(feature = "static")]
+    static_link_faiss();
+    #[cfg(not(feature = "static"))]
+    println!("cargo:rustc-link-lib=faiss_c");
 }
 
-fn build_faiss() {
+#[cfg(feature = "static")]
+fn static_link_faiss() {
     let mut cfg = cmake::Config::new("faiss");
     cfg.define("FAISS_ENABLE_C_API", "ON")
         .define("BUILD_SHARED_LIBS", "OFF")
@@ -28,6 +26,12 @@ fn build_faiss() {
         "cargo:rustc-link-search=native={}",
         faiss_c_location.display()
     );
+    println!("cargo:rustc-link-lib=static=faiss_c");
+    println!("cargo:rustc-link-lib=static=faiss");
+    link_cxx();
+    println!("cargo:rustc-link-lib=gomp");
+    println!("cargo:rustc-link-lib=blas");
+    println!("cargo:rustc-link-lib=lapack");
 }
 
 fn link_cxx() {
