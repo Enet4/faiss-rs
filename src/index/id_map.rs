@@ -368,7 +368,7 @@ where
 
 impl IndexImpl {
     /// Attempt a dynamic cast of the index to one that is [ID-mapped][1].
-    /// 
+    ///
     /// [1]: crate::IdMap
     pub fn into_id_map(self) -> Result<IdMap<IndexImpl>> {
         unsafe {
@@ -378,7 +378,11 @@ impl IndexImpl {
             } else {
                 mem::forget(self);
                 let index_inner = faiss_IndexIDMap_sub_index(new_inner);
-                Ok(IdMap { inner: new_inner, index_inner, phantom: PhantomData })
+                Ok(IdMap {
+                    inner: new_inner,
+                    index_inner,
+                    phantom: PhantomData,
+                })
             }
         }
     }

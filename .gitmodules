@@ -1,0 +1,3 @@
+[submodule "faiss-sys/faiss"]
+	path = faiss-sys/faiss
+	url = https://github.com/Enet4/faiss.git
