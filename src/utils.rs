@@ -1,8 +1,6 @@
 /// L2-renormalize a set of vector. Nothing done if the vector is 0-normed
-pub fn fvec_renorm_l2(d: usize, nx:usize, fvec: &mut[f32]) {
-    unsafe {
-        faiss_sys::faiss_fvec_renorm_L2(d, nx, fvec.as_mut_ptr())
-    }
+pub fn fvec_renorm_l2(d: usize, nx: usize, fvec: &mut [f32]) {
+    unsafe { faiss_sys::faiss_fvec_renorm_L2(d, nx, fvec.as_mut_ptr()) }
 }
 
 #[cfg(test)]
