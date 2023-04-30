@@ -34,6 +34,7 @@ fn static_link_faiss() {
     println!("cargo:rustc-link-lib=lapack");
 }
 
+#[cfg(feature = "static")]
 fn link_cxx() {
     let cxx = match std::env::var("CXXSTDLIB") {
         Ok(s) if s.is_empty() => None,
