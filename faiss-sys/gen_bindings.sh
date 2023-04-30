@@ -9,7 +9,9 @@ repo_url=https://github.com/facebookresearch/faiss
 repo_rev=v1.7.2
 cuda_root=/opt/cuda
 
-git clone "$repo_url" faiss --branch "$repo_rev" --depth 1
+if [ ! -d faiss ]; then
+    git clone "$repo_url" faiss --branch "$repo_rev" --depth 1
+fi
 
 bindgen_opt='--size_t-is-usize --whitelist-function faiss_.* --whitelist-type idx_t|Faiss.* --opaque-type FILE'
 
