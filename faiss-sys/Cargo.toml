@@ -11,6 +11,11 @@ keywords = ["cbir", "clustering", "index", "similarity", "bindings"]
 
 [features]
 gpu = []
+static = ["cmake"]
+
+
+[build-dependencies]
+cmake = {version = "0.1.50",optional = true}
 
 [badges.maintenance]
 status = "passively-maintained"
