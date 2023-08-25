@@ -10,8 +10,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  # test `faiss` crates after installing libfaiss_c.so
   build:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -19,17 +19,59 @@ jobs:
           - stable
           - beta
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Cache Faiss shared objects
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.faiss_c
-        key: ${{ runner.os }}-build-${{ env.cache-name }}1
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-libfaiss
+    - name: Install CMake
+      uses: lukka/get-cmake@latest
     - name: Download and build Faiss
       run: ./faiss-sys/ci/install_faiss_c.sh
     - name: Install Faiss
       run: sudo cp $HOME/.faiss_c/lib*.so /usr/lib/
-    - name: Build
-      run: cargo build --verbose
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        cache: true
+    # Build and run tests
     - name: Run tests
       run: cargo test --verbose
+
+  # test `faiss` crates with static linking
+  build-static:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        rust:
+          - stable
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        cache: true
+    - name: Install CMake
+      uses: lukka/get-cmake@latest
+    - run: gcc -v
+    - run: cmake --version
+    # Build everything and run tests
+    - name: Run tests
+      run: cargo test --verbose --features static
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: clippy
+          cache: true
+      - run: cargo clippy
+        env:
+          RUSTFLAGS: -W warnings
