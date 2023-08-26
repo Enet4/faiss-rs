@@ -29,19 +29,19 @@ impl ClusteringParameters {
     }
 
     pub fn niter(&self) -> i32 {
-        self.inner.niter as i32
+        self.inner.niter
     }
 
     pub fn nredo(&self) -> i32 {
-        self.inner.nredo as i32
+        self.inner.nredo
     }
 
     pub fn min_points_per_centroid(&self) -> i32 {
-        self.inner.min_points_per_centroid as i32
+        self.inner.min_points_per_centroid
     }
 
     pub fn max_points_per_centroid(&self) -> i32 {
-        self.inner.max_points_per_centroid as i32
+        self.inner.max_points_per_centroid
     }
 
     pub fn frozen_centroids(&self) -> bool {
