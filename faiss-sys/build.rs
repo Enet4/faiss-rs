@@ -68,7 +68,7 @@ fn link_cxx() {
     }
 }
 
-#[cfg(all(feature = "static", feature = "gpu"))]
+#[cfg(feature = "static")]
 fn cuda_lib_path() -> String {
     // look for CUDA_PATH in environment,
     // then CUDA_LIB_PATH,
