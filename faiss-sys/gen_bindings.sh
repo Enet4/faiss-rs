@@ -1,4 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env sh
+# Generate Rust bindings to the Faiss C API
+#
+# Ensure that the submodule is updated and checked out in the intended revision
 if ! which bindgen > /dev/null; then
     echo "ERROR: `bindgen` not found. Please install using cargo:"
     echo "    cargo install bindgen"
@@ -35,5 +38,4 @@ echo ${cmd}
 ${cmd}
 
 # clean up
-rm -rf faiss
 rm -f c_api.h
