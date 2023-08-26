@@ -8,20 +8,25 @@
 This project provides Rust bindings to [Faiss](https://github.com/facebookresearch/faiss),
 the state-of-the-art vector search and clustering library.
 
-## Installing as a dependency
+## Installing with dynamic linking
 
-Currently, this crate does not build Faiss automatically for you. The dynamic library needs to be installed manually to your system.
+By default, this crate is dynamically linked with the Faiss library installed in your system,
+so it does not build Faiss automatically for you.
+To build the library yourself:
 
   1. Follow the instructions [here](https://github.com/Enet4/faiss/tree/c_api_head/INSTALL.md#step-1-invoking-cmake)
      to build Faiss using CMake,
      enabling the variables `FAISS_ENABLE_C_API` and `BUILD_SHARED_LIBS`.
      The crate is currently only compatible with version v1.7.2.
      Consider building Faiss from [this fork, `c_api_head` branch](https://github.com/Enet4/faiss/tree/c_api_head),
-     which will contain the latest bindings to the C interface.
+     which will contain the latest supported bindings to the C interface.
      For example:
+
      ```sh
-     cmake -B . -DFAISS_ENABLE_C_API=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
+     cmake -B build -DFAISS_ENABLE_C_API=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
+     cmake --build build
      ```
+
      This will result in the dynamic library `faiss_c` ("c_api/libfaiss_c.so" on Linux),
      which needs to be installed in a place where your system will pick up
      (in Linux, try somewhere in the `LD_LIBRARY_PATH` environment variable, such as "/usr/lib",
@@ -32,16 +37,35 @@ Currently, this crate does not build Faiss automatically for you. The dynamic li
      as well.
   2. You are now ready to include this crate as a dependency:
 
+     ```toml
+     [dependencies]
+     "faiss" = "0.11.0"
+     ```
+
+If you have built Faiss with GPU support, you can include the "gpu" Cargo feature:
+
 ```toml
 [dependencies]
-"faiss" = "0.11.0"
+"faiss" = { version = "0.11.0", features = ["gpu"] }
 ```
 
-If you have built Faiss with GPU support, you can include the "gpu" feature in the bindings:
+## Installing with static linking
+
+Alternatively to the above, enable the "static" Cargo feature to let Rust build Faiss for you.
+You will still need the dependencies required to build and run Faiss
+as described in their [INSTALL.md](https://github.com/Enet4/faiss/blob/c_api_head/INSTALL.md#building-from-source),
+namely a compatible C++ compiler and a BLAS implementation.
 
 ```toml
 [dependencies]
-"faiss" = {version = "0.11.0", features = ["gpu"]}
+"faiss" = { version = "0.11.0", features = ["static"] }
+```
+
+Compiling Faiss with GPU support is also possible.
+
+```toml
+[dependencies]
+"faiss" = { version = "0.11.0", features = ["static", "gpu"] }
 ```
 
 ## Using
