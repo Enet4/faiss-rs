@@ -8,7 +8,7 @@ repository = "https://github.com/Enet4/faiss-rs"
 categories = ["algorithms", "science"]
 keywords = ["cbir", "clustering", "index", "similarity"]
 readme = "README.md"
-edition = "2018"
+edition = "2021"
 
 [features]
 gpu = ["faiss-sys/gpu"]
@@ -20,6 +20,14 @@ status = "passively-maintained"
 [dependencies.faiss-sys]
 version = "0.6.1"
 path = "faiss-sys"
+
+[dependencies]
+tokio = { version = "1.32.0", features = ["sync", "rt-multi-thread", "io-util", "rt", "net"] }
+bytes = "1.4"
+nix = { version = "0.27.1", features = ["fs"] }
+
+[dev-dependencies]
+tokio = { version = "1.32.0", features = ["sync", "rt-multi-thread", "io-util", "fs", "rt", "macros"] }
 
 [package.metadata.docs.rs]
 features = ["gpu"]

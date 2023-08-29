@@ -12,6 +12,12 @@ mod bindings;
 #[cfg(not(feature = "gpu"))]
 pub use bindings::*;
 
+mod iobridge;
+pub use iobridge::{
+    ffi::{faiss_read_index_br, faiss_write_index_bs},
+    new_bufreceiver, new_bufsender, BufReceiver, BufSender,
+};
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -8,14 +8,21 @@ repository = "https://github.com/Enet4/faiss-rs"
 links = "faiss_c"
 categories = ["external-ffi-bindings", "algorithms"]
 keywords = ["cbir", "clustering", "index", "similarity", "bindings"]
+edition = "2021"
 
 [features]
 gpu = []
 static = ["cmake"]
 
+[dependencies]
+cxx = "1.0"
+bytes = "1.4"
+tokio = { version = "1.32.0", features = ["sync"] }
+
 
 [build-dependencies]
 cmake = {version = "0.1.50",optional = true}
+cxx-build = "1.0"
 
 [badges.maintenance]
 status = "passively-maintained"

@@ -1,8 +1,28 @@
+use std::env;
+use std::path::Path;
+
 fn main() {
     #[cfg(feature = "static")]
     static_link_faiss();
     #[cfg(not(feature = "static"))]
     println!("cargo:rustc-link-lib=faiss_c");
+
+    let faiss_src = env::var("FAISS_SRC_DIR").unwrap();
+    let src_path = Path::new(&faiss_src);
+    assert!(src_path.is_dir());
+    assert!(src_path.is_absolute());
+
+    cxx_build::bridge("src/iobridge.rs")
+        .file("src/cpp/iobridge.cpp")
+        .include(src_path)
+        .flag_if_supported("-std=c++17")
+        .compile("iobridge");
+
+    println!("cargo:rerun-if-changed=src/iobridge.rs");
+    println!("cargo:rerun-if-changed=src/cpp/iobridge.cpp");
+    println!("cargo:rerun-if-changed=src/cpp/iobridge.h");
+
+    println!("cargo:rerun-if-changed=build.rs");
 }
 
 #[cfg(feature = "static")]
