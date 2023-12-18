@@ -30,7 +30,7 @@ To build the library yourself:
      This will result in the dynamic library `faiss_c` ("c_api/libfaiss_c.so" on Linux),
      which needs to be installed in a place where your system will pick up
      (in Linux, try somewhere in the `LD_LIBRARY_PATH` environment variable, such as "/usr/lib",
-     or try adding a new path to this variable).
+     or try adding a new path to this variable. For mac users, this means placing it in `/usr/local/lib/libfaiss_c.dylib`).
      For GPU support, don't forget to enable the option `FAISS_ENABLE_GPU`.
      **Note:** `faiss_c` might link dynamically to the native `faiss` library,
      which in that case you will need to install the main shared object (faiss/libfaiss.so)
