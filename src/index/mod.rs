@@ -126,6 +126,69 @@ impl PartialOrd<Idx> for Idx {
     }
 }
 
+
+/// Interface for a Faiss binary index. Most methods in this trait match the ones in
+/// the native library, whereas some others serve as getters to the index'
+/// parameters.
+///
+/// Although all methods appear to be available for all binary index implementations,
+/// some methods may not be supported. For instance, a [`BinaryFlatIndex`] stores
+/// vectors sequentially, and so does not support `add_with_ids` nor
+/// `remove_ids`. Users are advised to read the Faiss wiki pages in order
+/// to understand which index algorithms support which operations.
+///
+/// [`BinaryFlatIndex`]: flat/struct.BinaryFlatIndex.html
+pub trait IndexBinary {
+
+    /// Whether the BinaryIndex does not require training, or if training is done already
+    fn is_trained(&self) -> bool;
+
+    /// The total number of vectors indexed
+    fn ntotal(&self) -> u64;
+
+    /// The dimensionality of the indexed vectors
+    fn d(&self) -> u32;
+
+    /// The metric type assumed by the index
+    fn metric_type(&self) -> MetricType;
+
+    /// Add new data vectors to the index.
+    /// This assumes a C-contiguous memory slice of vectors, where the total
+    /// number of vectors is `x.len() / d`.
+    fn add(&mut self, x: &[u8]) -> Result<()>;
+
+    /// Add new data vectors to the index with IDs.
+    /// This assumes a C-contiguous memory slice of vectors, where the total
+    /// number of vectors is `x.len() / d`.
+    /// Not all index types may support this operation.
+    fn add_with_ids(&mut self, x: &[u8], xids: &[Idx]) -> Result<()>;
+
+    /// Train the underlying index with the given data.
+    fn train(&mut self, x: &[u8]) -> Result<()>;
+
+    /// Similar to `search`, but only provides the labels.
+    fn assign(&mut self, q: &[u8], k: usize) -> Result<AssignSearchResult>;
+
+    /// Perform a search for the `k` closest vectors to the given query vectors.
+    fn search(&mut self, q: &[u8], k: usize) -> Result<SearchResultBinary>;
+
+    /// Perform a ranged search for the vectors closest to the given query vectors
+    /// by the given radius.
+    fn range_search(&mut self, q: &[u8], radius: i32) -> Result<RangeSearchResult>;
+
+    /// Clear the entire index.
+    fn reset(&mut self) -> Result<()>;
+
+    /// Remove data vectors represented by IDs.
+    fn remove_ids(&mut self, sel: &IdSelector) -> Result<usize>;
+
+    /// Index verbosity level
+    fn verbose(&self) -> bool;
+
+    /// Set Index verbosity level
+    fn set_verbose(&mut self, value: bool);
+}
+
 /// Interface for a Faiss index. Most methods in this trait match the ones in
 /// the native library, whereas some others serve as getters to the index'
 /// parameters.
@@ -185,6 +248,67 @@ pub trait Index {
 
     /// Set Index verbosity level
     fn set_verbose(&mut self, value: bool);
+}
+
+impl<BI> IndexBinary for Box<BI>
+where
+    BI: IndexBinary
+{
+    fn is_trained(&self) -> bool {
+        (**self).is_trained()
+    }
+
+    fn ntotal(&self) -> u64 {
+        (**self).ntotal()
+    }
+
+    fn d(&self) -> u32 {
+        (**self).d()
+    }
+
+    fn metric_type(&self) -> MetricType {
+        (**self).metric_type()
+    }
+
+    fn add(&mut self, x: &[u8]) -> Result<()> {
+        (**self).add(x)
+    }
+
+    fn add_with_ids(&mut self, x: &[u8], xids: &[Idx]) -> Result<()> {
+        (**self).add_with_ids(x, xids)
+    }
+
+    fn train(&mut self, x: &[u8]) -> Result<()> {
+        (**self).train(x)
+    }
+
+    fn assign(&mut self, q: &[u8], k: usize) -> Result<AssignSearchResult> {
+        (**self).assign(q, k)
+    }
+
+    fn search(&mut self, q: &[u8], k: usize) -> Result<SearchResultBinary> {
+        (**self).search(q, k)
+    }
+
+    fn range_search(&mut self, q: &[u8], radius: i32) -> Result<RangeSearchResult> {
+        (**self).range_search(q, radius)
+    }
+
+    fn reset(&mut self) -> Result<()> {
+        (**self).reset()
+    }
+
+    fn remove_ids(&mut self, sel: &IdSelector) -> Result<usize> {
+        (**self).remove_ids(sel)
+    }
+
+    fn verbose(&self) -> bool {
+        (**self).verbose()
+    }
+
+    fn set_verbose(&mut self, value: bool) {
+        (**self).set_verbose(value)
+    }
 }
 
 impl<I> Index for Box<I>
@@ -247,6 +371,96 @@ where
         (**self).set_verbose(value)
     }
 }
+
+/// Sub-trait for native implementations of a Faiss binary index.
+pub trait NativeIndexBinary: IndexBinary {
+    /// Retrieve a pointer to the native index object.
+    fn inner_ptr(&self) -> *mut FaissIndexBinary;
+}
+
+impl<NIB: NativeIndexBinary> NativeIndexBinary for Box<NIB> {
+    fn inner_ptr(&self) -> *mut FaissIndexBinary {
+        (**self).inner_ptr()
+    }
+}
+
+/// Trait for a Faiss binary index that can be safely searched over multiple threads.
+/// Operations which do not modify the index are given a method taking an
+/// immutable reference. This is not the default for every index type because
+/// some implementations (such as the ones running on the GPU) do not allow
+/// concurrent searches.
+///
+/// Users of these methods should still note that batched querying is
+/// considerably faster than running queries one by one, even in parallel.
+pub trait ConcurrentIndexBinary: IndexBinary {
+    /// Similar to `search`, but only provides the labels.
+    fn assign(&self, q: &[u8], k: usize) -> Result<AssignSearchResult>;
+
+    /// Perform a search for the `k` closest vectors to the given query vectors.
+    fn search(&self, q: &[u8], k: usize) -> Result<SearchResult>;
+
+    /// Perform a ranged search for the vectors closest to the given query vectors
+    /// by the given radius.
+    fn range_search(&self, q: &[u8], radius: i32) -> Result<RangeSearchResult>;
+}
+
+
+impl<CIB: ConcurrentIndexBinary> ConcurrentIndexBinary for Box<CIB> {
+    fn assign(&self, q: &[u8], k: usize) -> Result<AssignSearchResult> {
+        (**self).assign(q, k)
+    }
+
+    fn search(&self, q: &[u8], k: usize) -> Result<SearchResult> {
+        (**self).search(q, k)
+    }
+
+    fn range_search(&self, q: &[u8], radius: i32) -> Result<RangeSearchResult> {
+        (**self).range_search(q, radius)
+    }
+}
+
+
+/// Trait for Faiss index types known to be running on the CPU.
+pub trait CpuIndexBinary: IndexBinary {}
+
+impl<CIB: CpuIndexBinary> CpuIndexBinary for Box<CIB> {}
+
+/// Trait for Faiss binary index types which can be built from a pointer
+/// to a native implementation.
+pub trait FromInnerPtrBinary: NativeIndexBinary {
+    /// Create a binary index using the given pointer to a native object.
+    ///
+    /// # Safety
+    ///
+    /// `inner_ptr` must point to a valid, non-freed CPU binary index, and cannot be
+    /// shared across multiple instances. The inner binary index must also be
+    /// compatible with the target `NativeIndexBinary` type according to the native
+    /// class hierarchy. For example, creating an `BinaryIndexImpl` out of a pointer
+    /// to `FaissIndexBinaryFlat` is valid, but creating a `FlatIndexBinary` out of a
+    /// plain `FaissIndexBinary` can cause undefined behavior.
+    unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndexBinary) -> Self;
+}
+
+/// Trait for Faiss binary index types which can be built from a pointer
+/// to a native implementation.
+pub trait TryFromInnerPtrBinary: NativeIndexBinary {
+    /// Create a binary index using the given pointer to a native object,
+    /// checking that the binary index behind the given pointer
+    /// is compatible with the target index type.
+    /// If the inner index is not compatible with the intended target type
+    /// (e.g. creating a `FlatIndexBinary` out of a `FaissIndexBinaryHNSW`),
+    /// an error is returned.
+    ///
+    /// # Safety
+    ///
+    /// This function is unable to check that
+    /// `inner_ptr` points to a valid, non-freed CPU binary index.
+    /// Moreover, `inner_ptr` must not be shared across multiple instances.
+    unsafe fn try_from_inner_ptr(inner_ptr: *mut FaissIndexBinary) -> Result<Self>
+    where
+        Self: Sized;
+}
+
 
 /// Sub-trait for native implementations of a Faiss index.
 pub trait NativeIndex: Index {
@@ -359,6 +573,17 @@ where
     }
 }
 
+pub fn try_clone_from_inner_ptr_binary<T>(val: &T) -> Result<T>
+where
+    T: FromInnerPtrBinary,
+{
+    unsafe {
+        let mut new_index_ptr = ::std::ptr::null_mut();
+        faiss_try(faiss_clone_index_binary(val.inner_ptr(), &mut new_index_ptr))?;
+        Ok(crate::index::FromInnerPtrBinary::from_inner_ptr(new_index_ptr))
+    }
+}
+
 /// The outcome of an index assign operation.
 #[derive(Debug, Clone, PartialEq)]
 pub struct AssignSearchResult {
@@ -369,6 +594,13 @@ pub struct AssignSearchResult {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SearchResult {
     pub distances: Vec<f32>,
+    pub labels: Vec<Idx>,
+}
+
+/// The outcome of an index search operation.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SearchResultBinary {
+    pub distances: Vec<i32>,
     pub labels: Vec<Idx>,
 }
 
@@ -460,10 +692,21 @@ pub struct IndexImpl {
     inner: *mut FaissIndex,
 }
 
+/// Native implementation of a Faiss binary index
+/// running on the CPU.
+#[derive(Debug)]
+pub struct BinaryIndexImpl {
+    inner: *mut FaissIndexBinary,
+}
+
 unsafe impl Send for IndexImpl {}
 unsafe impl Sync for IndexImpl {}
 
+unsafe impl Send for BinaryIndexImpl {}
+unsafe impl Sync for BinaryIndexImpl {}
+
 impl CpuIndex for IndexImpl {}
+impl CpuIndexBinary for BinaryIndexImpl {}
 
 impl Drop for IndexImpl {
     fn drop(&mut self) {
@@ -473,8 +716,30 @@ impl Drop for IndexImpl {
     }
 }
 
+
+impl Drop for BinaryIndexImpl {
+    fn drop(&mut self) {
+        unsafe {
+            faiss_IndexBinary_free(self.inner);
+        }
+    }
+}
+
+impl BinaryIndexImpl {
+    pub fn inner_ptr(&self) -> *mut FaissIndexBinary {
+        self.inner
+    }
+}
+
 impl IndexImpl {
     pub fn inner_ptr(&self) -> *mut FaissIndex {
+        self.inner
+    }
+}
+
+
+impl NativeIndexBinary for BinaryIndexImpl {
+    fn inner_ptr(&self) -> *mut FaissIndexBinary {
         self.inner
     }
 }
@@ -482,6 +747,12 @@ impl IndexImpl {
 impl NativeIndex for IndexImpl {
     fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
+    }
+}
+
+impl FromInnerPtrBinary for BinaryIndexImpl {
+    unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndexBinary) -> Self {
+        BinaryIndexImpl { inner: inner_ptr }
     }
 }
 
@@ -500,6 +771,19 @@ impl TryFromInnerPtr for IndexImpl {
             Err(Error::BadCast)
         } else {
             Ok(IndexImpl { inner: inner_ptr })
+        }
+    }
+}
+
+impl TryFromInnerPtrBinary for BinaryIndexImpl {
+    unsafe fn try_from_inner_ptr(inner_ptr: *mut FaissIndexBinary) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        if inner_ptr.is_null() {
+            Err(Error::BadCast)
+        } else {
+            Ok(BinaryIndexImpl { inner: inner_ptr })
         }
     }
 }
@@ -525,6 +809,28 @@ pub trait UpcastIndex: NativeIndex {
     fn upcast(self) -> IndexImpl;
 }
 
+
+/// BinaryIndex upcast trait.
+///
+/// If you need to store several different types of binary indexes in one collection,
+/// you can cast all binary indexes to the common type `BinaryIndexImpl`.
+/// # Examples
+///
+/// ```
+/// # use faiss::{index::{BinaryIndexImpl, UpcastIndexBinary}, BinaryFlatIndex, index_binary_factory};
+/// let f1 = BinaryFlatIndex::new(128).unwrap();
+/// let f2 = index_binary_factory(128, "BFlat").unwrap();
+/// let v: Vec<BinaryIndexImpl> = vec![
+///     f1.upcast(),
+///     f2,
+/// ];
+/// ```
+///
+pub trait UpcastIndexBinary: NativeIndexBinary {
+    /// Convert an index to the base `BinaryIndexImpl` type
+    fn upcast(self) -> BinaryIndexImpl;
+}
+
 impl<NI: NativeIndex> UpcastIndex for NI {
     fn upcast(self) -> IndexImpl {
         let inner_ptr = self.inner_ptr();
@@ -534,7 +840,18 @@ impl<NI: NativeIndex> UpcastIndex for NI {
     }
 }
 
+
+impl<NIB: NativeIndexBinary> UpcastIndexBinary for NIB {
+    fn upcast(self) -> BinaryIndexImpl {
+        let inner_ptr = self.inner_ptr();
+        mem::forget(self);
+
+        unsafe { BinaryIndexImpl::from_inner_ptr(inner_ptr) }
+    }
+}
+
 impl_native_index!(IndexImpl);
+impl_native_binary_index!(BinaryIndexImpl);
 
 impl TryClone for IndexImpl {
     fn try_clone(&self) -> Result<Self>
@@ -542,6 +859,16 @@ impl TryClone for IndexImpl {
         Self: Sized,
     {
         try_clone_from_inner_ptr(self)
+    }
+}
+
+
+impl TryClone for BinaryIndexImpl {
+    fn try_clone(&self) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        try_clone_from_inner_ptr_binary(self)
     }
 }
 
@@ -569,6 +896,32 @@ where
             metric,
         ))?;
         Ok(IndexImpl { inner: index_ptr })
+    }
+}
+
+
+/// Use the index binary factory to create a native instance of a Faiss binary index, for `d`-dimensional
+/// vectors. `description` should follow the exact guidelines as the native Faiss interface
+/// (see the [Faiss wiki](https://github.com/facebookresearch/faiss/wiki/Binary-indexes) for examples).
+///
+/// # Error
+///
+/// This function returns an error if the description contains any byte with the value `\0` (since
+/// it cannot be converted to a C string), or if the internal index factory operation fails.
+pub fn index_binary_factory<D>(d: u32, description: D) -> Result<BinaryIndexImpl>
+where
+    D: AsRef<str>,
+{
+    unsafe {
+        let description =
+            CString::new(description.as_ref()).map_err(|_| Error::IndexDescription)?;
+        let mut index_ptr = ::std::ptr::null_mut();
+        faiss_try(faiss_index_binary_factory(
+            &mut index_ptr,
+            (d & 0x7FFF_FFFF) as i32,
+            description.as_ptr(),
+        ))?;
+        Ok(BinaryIndexImpl { inner: index_ptr })
     }
 }
 
