@@ -4,19 +4,19 @@
 # Ensure that the submodule is updated and checked out in the intended revision
 if ! which bindgen > /dev/null; then
     echo "ERROR: `bindgen` not found. Please install using cargo:"
-    echo "    cargo install bindgen"
+    echo "    cargo install bindgen-cli --version=^0.69"
     exit 1
 fi
 
 repo_url=https://github.com/facebookresearch/faiss
-repo_rev=v1.7.2
+repo_rev=v1.8.0
 cuda_root=/opt/cuda
 
 if [ ! -d faiss ]; then
     git clone "$repo_url" faiss --branch "$repo_rev" --depth 1
 fi
 
-bindgen_opt='--size_t-is-usize --whitelist-function faiss_.* --whitelist-type idx_t|Faiss.* --opaque-type FILE'
+bindgen_opt='--allowlist-function faiss_.* --allowlist-type idx_t|Faiss.* --opaque-type FILE'
 
 headers=`ls faiss/c_api/*_c.h faiss/c_api/impl/*_c.h faiss/c_api/utils/*_c.h`
 echo '// Auto-generated, do not edit!' > c_api.h
@@ -24,7 +24,7 @@ for header in $headers; do
     echo "#include \""$header"\"" >> c_api.h;
 done
 
-cmd="bindgen --rust-target 1.33 $bindgen_opt c_api.h -o src/bindings.rs"
+cmd="bindgen --rust-target 1.59 $bindgen_opt c_api.h -o src/bindings.rs"
 echo ${cmd}
 ${cmd}
 
@@ -33,7 +33,7 @@ for header in $headers; do
     echo "#include \""$header"\"" >> c_api.h;
 done
 
-cmd="bindgen --rust-target 1.33 $bindgen_opt c_api.h -o src/bindings_gpu.rs -- -Ifaiss/c_api -I$cuda_root/include"
+cmd="bindgen --rust-target 1.59 $bindgen_opt c_api.h -o src/bindings_gpu.rs -- -Ifaiss/c_api -I$cuda_root/include"
 echo ${cmd}
 ${cmd}
 
