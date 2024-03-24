@@ -2,11 +2,6 @@
 
 use super::*;
 
-use crate::error::{Error, Result};
-use crate::faiss_try;
-use std::mem;
-use std::ptr;
-
 /// Alias for the native implementation of a flat index.
 pub type FlatIndex = FlatIndexImpl;
 

@@ -1,10 +1,6 @@
 use std::ffi;
-use std::ptr;
 
 use super::*;
-
-use crate::error::{Error, Result};
-use crate::faiss_try;
 
 /// Uses a-priori knowledge on the Faiss indexes to extract tunable parameters.
 pub struct ParameterSpace {
