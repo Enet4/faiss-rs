@@ -257,18 +257,6 @@ where
             faiss_IndexIVFScalarQuantizer_set_nprobe(self.inner_ptr(), value as usize);
         }
     }
-
-    pub fn train_residual(&mut self, x: &[f32]) -> Result<()> {
-        unsafe {
-            let n = x.len() / self.d() as usize;
-            faiss_try(faiss_IndexIVFScalarQuantizer_train_residual(
-                self.inner_ptr(),
-                n as i64,
-                x.as_ptr(),
-            ))?;
-            Ok(())
-        }
-    }
 }
 
 impl<Q> NativeIndex for IVFScalarQuantizerIndexImpl<Q> {
