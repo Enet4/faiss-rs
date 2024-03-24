@@ -397,7 +397,7 @@ pub trait ConcurrentIndexBinary: IndexBinary {
     fn assign(&self, q: &[u8], k: usize) -> Result<AssignSearchResult>;
 
     /// Perform a search for the `k` closest vectors to the given query vectors.
-    fn search(&self, q: &[u8], k: usize) -> Result<SearchResult>;
+    fn search(&self, q: &[u8], k: usize) -> Result<SearchResultBinary>;
 
     /// Perform a ranged search for the vectors closest to the given query vectors
     /// by the given radius.
@@ -410,7 +410,7 @@ impl<CIB: ConcurrentIndexBinary> ConcurrentIndexBinary for Box<CIB> {
         (**self).assign(q, k)
     }
 
-    fn search(&self, q: &[u8], k: usize) -> Result<SearchResult> {
+    fn search(&self, q: &[u8], k: usize) -> Result<SearchResultBinary> {
         (**self).search(q, k)
     }
 

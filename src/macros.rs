@@ -350,7 +350,7 @@ macro_rules! impl_concurrent_binary_index {
                         distances.as_mut_ptr(),
                         labels.as_mut_ptr() as *mut _,
                     ))?;
-                    Ok(SearchResult { distances, labels })
+                    Ok(SearchResultBinary { distances, labels })
                 }
             }
 
