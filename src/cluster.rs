@@ -227,9 +227,9 @@ impl Clustering {
      * Perform the clustering algorithm with the given data and index.
      * The index is used during the assignment stage.
      */
-    pub fn train<I: ?Sized>(&mut self, x: &[f32], index: &mut I) -> Result<()>
+    pub fn train<I>(&mut self, x: &[f32], index: &mut I) -> Result<()>
     where
-        I: NativeIndex,
+        I: ?Sized + NativeIndex,
     {
         unsafe {
             let n = x.len() / self.d() as usize;
