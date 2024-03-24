@@ -927,13 +927,20 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{index_factory, Idx, Index, TryClone};
+    use super::{index_factory, Idx, Index, TryClone, index_binary_factory, IndexBinary};
     use crate::metric::MetricType;
 
     #[test]
     fn index_factory_flat() {
         let index = index_factory(64, "Flat", MetricType::L2).unwrap();
         assert_eq!(index.is_trained(), true); // Flat index does not need training
+        assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn index_binary_factory_flat() {
+        let index = index_binary_factory(64, "BFlat").unwrap();
+        assert_eq!(index.is_trained(), true); // BFlat index does not need training
         assert_eq!(index.ntotal(), 0);
     }
 
