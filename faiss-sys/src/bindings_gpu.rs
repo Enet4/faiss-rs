@@ -297,14 +297,6 @@ extern "C" {
         arg3: *mut *mut FaissParameterRange,
     ) -> ::std::os::raw::c_int;
 }
-pub type FILE = [u64; 27usize];
-extern "C" {
-    #[doc = " Clone an index. This is equivalent to `faiss::clone_index`"]
-    pub fn faiss_clone_index(
-        arg1: *const FaissIndex,
-        p_out: *mut *mut FaissIndex,
-    ) -> ::std::os::raw::c_int;
-}
 #[doc = " Class for the clustering parameters. Can be passed to the\n constructor of the Clustering object."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -593,19 +585,309 @@ extern "C" {
         q_error: *mut f32,
     ) -> ::std::os::raw::c_int;
 }
-#[doc = " No error"]
-pub const FaissErrorCode_OK: FaissErrorCode = 0;
-#[doc = " Any exception other than Faiss or standard C++ library exceptions"]
-pub const FaissErrorCode_UNKNOWN_EXCEPT: FaissErrorCode = -1;
-#[doc = " Faiss library exception"]
-pub const FaissErrorCode_FAISS_EXCEPT: FaissErrorCode = -2;
-#[doc = " Standard C++ library exception"]
-pub const FaissErrorCode_STD_EXCEPT: FaissErrorCode = -4;
-#[doc = " An error code which depends on the exception thrown from the previous\n operation. See `faiss_get_last_error` to retrieve the error message."]
-pub type FaissErrorCode = ::std::os::raw::c_int;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct FaissIndexBinary_H {
+    _unused: [u8; 0],
+}
+pub type FaissIndexBinary = FaissIndexBinary_H;
 extern "C" {
-    #[doc = " Get the error message of the last failed operation performed by Faiss.\n The given pointer is only invalid until another Faiss function is\n called."]
-    pub fn faiss_get_last_error() -> *const ::std::os::raw::c_char;
+    pub fn faiss_IndexBinary_free(obj: *mut FaissIndexBinary);
+}
+extern "C" {
+    pub fn faiss_IndexBinary_d(arg1: *const FaissIndexBinary) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexBinary_is_trained(arg1: *const FaissIndexBinary) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexBinary_ntotal(arg1: *const FaissIndexBinary) -> idx_t;
+}
+extern "C" {
+    pub fn faiss_IndexBinary_metric_type(arg1: *const FaissIndexBinary) -> FaissMetricType;
+}
+extern "C" {
+    pub fn faiss_IndexBinary_verbose(arg1: *const FaissIndexBinary) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexBinary_set_verbose(arg1: *mut FaissIndexBinary, arg2: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[doc = " Perform training on a representative set of vectors\n\n @param index  opaque pointer to index object\n @param n      nb of training vectors\n @param x      training vectors, size n * d"]
+    pub fn faiss_IndexBinary_train(
+        index: *mut FaissIndexBinary,
+        n: idx_t,
+        x: *const u8,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Add n vectors of dimension d to the index.\n\n Vectors are implicitly assigned labels ntotal .. ntotal + n - 1\n This function slices the input vectors in chunks smaller than\n blocksize_add and calls add_core.\n @param index  opaque pointer to index object\n @param x      input matrix, size n * d"]
+    pub fn faiss_IndexBinary_add(
+        index: *mut FaissIndexBinary,
+        n: idx_t,
+        x: *const u8,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Same as add, but stores xids instead of sequential ids.\n\n The default implementation fails with an assertion, as it is\n not supported by all indexes.\n\n @param index  opaque pointer to index object\n @param xids   if non-null, ids to store for the vectors (size n)"]
+    pub fn faiss_IndexBinary_add_with_ids(
+        index: *mut FaissIndexBinary,
+        n: idx_t,
+        x: *const u8,
+        xids: *const idx_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " query n vectors of dimension d to the index.\n\n return at most k vectors. If there are not enough results for a\n query, the result array is padded with -1s.\n\n @param index       opaque pointer to index object\n @param x           input vectors to search, size n * d\n @param labels      output labels of the NNs, size n*k\n @param distances   output pairwise distances, size n*k"]
+    pub fn faiss_IndexBinary_search(
+        index: *const FaissIndexBinary,
+        n: idx_t,
+        x: *const u8,
+        k: idx_t,
+        distances: *mut i32,
+        labels: *mut idx_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " query n vectors of dimension d to the index.\n\n return all vectors with distance < radius. Note that many\n indexes do not implement the range_search (only the k-NN search\n is mandatory).\n\n @param index       opaque pointer to index object\n @param x           input vectors to search, size n * d\n @param radius      search radius\n @param result      result table"]
+    pub fn faiss_IndexBinary_range_search(
+        index: *const FaissIndexBinary,
+        n: idx_t,
+        x: *const u8,
+        radius: ::std::os::raw::c_int,
+        result: *mut FaissRangeSearchResult,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " return the indexes of the k vectors closest to the query x.\n\n This function is identical as search but only return labels of neighbors.\n @param index       opaque pointer to index object\n @param x           input vectors to search, size n * d\n @param labels      output labels of the NNs, size n*k"]
+    pub fn faiss_IndexBinary_assign(
+        index: *mut FaissIndexBinary,
+        n: idx_t,
+        x: *const u8,
+        labels: *mut idx_t,
+        k: idx_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " removes all elements from the database.\n @param index       opaque pointer to index object"]
+    pub fn faiss_IndexBinary_reset(index: *mut FaissIndexBinary) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " removes IDs from the index. Not supported by all indexes\n @param index       opaque pointer to index object\n @param nremove     output for the number of IDs removed"]
+    pub fn faiss_IndexBinary_remove_ids(
+        index: *mut FaissIndexBinary,
+        sel: *const FaissIDSelector,
+        n_removed: *mut usize,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Reconstruct a stored vector (or an approximation if lossy coding)\n\n this function may not be defined for some indexes\n @param index       opaque pointer to index object\n @param key         id of the vector to reconstruct\n @param recons      reconstructed vector (size d)"]
+    pub fn faiss_IndexBinary_reconstruct(
+        index: *const FaissIndexBinary,
+        key: idx_t,
+        recons: *mut u8,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Reconstruct vectors i0 to i0 + ni - 1\n\n this function may not be defined for some indexes\n @param index       opaque pointer to index object\n @param recons      reconstructed vector (size ni * d)"]
+    pub fn faiss_IndexBinary_reconstruct_n(
+        index: *const FaissIndexBinary,
+        i0: idx_t,
+        ni: idx_t,
+        recons: *mut u8,
+    ) -> ::std::os::raw::c_int;
+}
+pub type FaissIndexFlat = FaissIndex_H;
+extern "C" {
+    #[doc = " Opaque type for IndexFlat"]
+    pub fn faiss_IndexFlat_new(p_index: *mut *mut FaissIndexFlat) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexFlat_new_with(
+        p_index: *mut *mut FaissIndexFlat,
+        d: idx_t,
+        metric: FaissMetricType,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " get a pointer to the index's internal data (the `xb` field). The outputs\n become invalid after any data addition or removal operation.\n\n @param index   opaque pointer to index object\n @param p_xb    output, the pointer to the beginning of `xb`.\n @param p_size  output, the current size of `sb` in number of float values."]
+    pub fn faiss_IndexFlat_xb(index: *mut FaissIndexFlat, p_xb: *mut *mut f32, p_size: *mut usize);
+}
+extern "C" {
+    pub fn faiss_IndexFlat_cast(arg1: *mut FaissIndex) -> *mut FaissIndexFlat;
+}
+extern "C" {
+    pub fn faiss_IndexFlat_free(obj: *mut FaissIndexFlat);
+}
+extern "C" {
+    #[doc = " compute distance with a subset of vectors\n\n @param index   opaque pointer to index object\n @param x       query vectors, size n * d\n @param labels  indices of the vectors that should be compared\n                for each query vector, size n * k\n @param distances\n                corresponding output distances, size n * k"]
+    pub fn faiss_IndexFlat_compute_distance_subset(
+        index: *mut FaissIndex,
+        n: idx_t,
+        x: *const f32,
+        k: idx_t,
+        distances: *mut f32,
+        labels: *const idx_t,
+    ) -> ::std::os::raw::c_int;
+}
+pub type FaissIndexFlatIP = FaissIndex_H;
+extern "C" {
+    pub fn faiss_IndexFlatIP_cast(arg1: *mut FaissIndex) -> *mut FaissIndexFlatIP;
+}
+extern "C" {
+    pub fn faiss_IndexFlatIP_free(obj: *mut FaissIndexFlatIP);
+}
+extern "C" {
+    #[doc = " Opaque type for IndexFlatIP"]
+    pub fn faiss_IndexFlatIP_new(p_index: *mut *mut FaissIndexFlatIP) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexFlatIP_new_with(
+        p_index: *mut *mut FaissIndexFlatIP,
+        d: idx_t,
+    ) -> ::std::os::raw::c_int;
+}
+pub type FaissIndexFlatL2 = FaissIndex_H;
+extern "C" {
+    pub fn faiss_IndexFlatL2_cast(arg1: *mut FaissIndex) -> *mut FaissIndexFlatL2;
+}
+extern "C" {
+    pub fn faiss_IndexFlatL2_free(obj: *mut FaissIndexFlatL2);
+}
+extern "C" {
+    #[doc = " Opaque type for IndexFlatL2"]
+    pub fn faiss_IndexFlatL2_new(p_index: *mut *mut FaissIndexFlatL2) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexFlatL2_new_with(
+        p_index: *mut *mut FaissIndexFlatL2,
+        d: idx_t,
+    ) -> ::std::os::raw::c_int;
+}
+pub type FaissIndexRefineFlat = FaissIndex_H;
+extern "C" {
+    #[doc = " Opaque type for IndexRefineFlat\n\n Index that queries in a base_index (a fast one) and refines the\n results with an exact search, hopefully improving the results."]
+    pub fn faiss_IndexRefineFlat_new(
+        p_index: *mut *mut FaissIndexRefineFlat,
+        base_index: *mut FaissIndex,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexRefineFlat_free(obj: *mut FaissIndexRefineFlat);
+}
+extern "C" {
+    pub fn faiss_IndexRefineFlat_cast(arg1: *mut FaissIndex) -> *mut FaissIndexRefineFlat;
+}
+extern "C" {
+    pub fn faiss_IndexRefineFlat_own_fields(
+        arg1: *const FaissIndexRefineFlat,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexRefineFlat_set_own_fields(
+        arg1: *mut FaissIndexRefineFlat,
+        arg2: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn faiss_IndexRefineFlat_k_factor(arg1: *const FaissIndexRefineFlat) -> f32;
+}
+extern "C" {
+    pub fn faiss_IndexRefineFlat_set_k_factor(arg1: *mut FaissIndexRefineFlat, arg2: f32);
+}
+pub type FaissIndexFlat1D = FaissIndex_H;
+extern "C" {
+    pub fn faiss_IndexFlat1D_cast(arg1: *mut FaissIndex) -> *mut FaissIndexFlat1D;
+}
+extern "C" {
+    pub fn faiss_IndexFlat1D_free(obj: *mut FaissIndexFlat1D);
+}
+extern "C" {
+    #[doc = " Opaque type for IndexFlat1D\n\n optimized version for 1D \"vectors\""]
+    pub fn faiss_IndexFlat1D_new(p_index: *mut *mut FaissIndexFlat1D) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexFlat1D_new_with(
+        p_index: *mut *mut FaissIndexFlat1D,
+        continuous_update: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexFlat1D_update_permutation(
+        index: *mut FaissIndexFlat1D,
+    ) -> ::std::os::raw::c_int;
+}
+pub type FaissIndexIVFFlat = FaissIndex_H;
+extern "C" {
+    pub fn faiss_IndexIVFFlat_free(obj: *mut FaissIndexIVFFlat);
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_cast(arg1: *mut FaissIndex) -> *mut FaissIndexIVFFlat;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_nlist(arg1: *const FaissIndexIVFFlat) -> usize;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_nprobe(arg1: *const FaissIndexIVFFlat) -> usize;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_set_nprobe(arg1: *mut FaissIndexIVFFlat, arg2: usize);
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_quantizer(arg1: *const FaissIndexIVFFlat) -> *mut FaissIndex;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_quantizer_trains_alone(
+        arg1: *const FaissIndexIVFFlat,
+    ) -> ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_own_fields(arg1: *const FaissIndexIVFFlat) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_set_own_fields(
+        arg1: *mut FaissIndexIVFFlat,
+        arg2: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[doc = " whether object owns the quantizer"]
+    pub fn faiss_IndexIVFFlat_new(p_index: *mut *mut FaissIndexIVFFlat) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_new_with(
+        p_index: *mut *mut FaissIndexIVFFlat,
+        quantizer: *mut FaissIndex,
+        d: usize,
+        nlist: usize,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_new_with_metric(
+        p_index: *mut *mut FaissIndexIVFFlat,
+        quantizer: *mut FaissIndex,
+        d: usize,
+        nlist: usize,
+        metric: FaissMetricType,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn faiss_IndexIVFFlat_add_core(
+        index: *mut FaissIndexIVFFlat,
+        n: idx_t,
+        x: *const f32,
+        xids: *const idx_t,
+        precomputed_idx: *const i64,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Update a subset of vectors.\n\n The index must have a direct_map\n\n @param nv     nb of vectors to update\n @param idx    vector indices to update, size nv\n @param v      vectors of new values, size nv*d"]
+    pub fn faiss_IndexIVFFlat_update_vectors(
+        index: *mut FaissIndexIVFFlat,
+        nv: ::std::os::raw::c_int,
+        idx: *mut idx_t,
+        v: *const f32,
+    ) -> ::std::os::raw::c_int;
 }
 extern "C" {
     pub fn faiss_RangeSearchResult_nq(arg1: *const FaissRangeSearchResult) -> usize;
@@ -927,304 +1209,6 @@ extern "C" {
 extern "C" {
     pub fn faiss_DistanceComputer_free(obj: *mut FaissDistanceComputer);
 }
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct FaissIndexBinary_H {
-    _unused: [u8; 0],
-}
-pub type FaissIndexBinary = FaissIndexBinary_H;
-extern "C" {
-    pub fn faiss_IndexBinary_free(obj: *mut FaissIndexBinary);
-}
-extern "C" {
-    pub fn faiss_IndexBinary_d(arg1: *const FaissIndexBinary) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn faiss_IndexBinary_is_trained(arg1: *const FaissIndexBinary) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn faiss_IndexBinary_ntotal(arg1: *const FaissIndexBinary) -> idx_t;
-}
-extern "C" {
-    pub fn faiss_IndexBinary_metric_type(arg1: *const FaissIndexBinary) -> FaissMetricType;
-}
-extern "C" {
-    pub fn faiss_IndexBinary_verbose(arg1: *const FaissIndexBinary) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn faiss_IndexBinary_set_verbose(arg1: *mut FaissIndexBinary, arg2: ::std::os::raw::c_int);
-}
-extern "C" {
-    #[doc = " Perform training on a representative set of vectors\n\n @param index  opaque pointer to index object\n @param n      nb of training vectors\n @param x      training vectors, size n * d"]
-    pub fn faiss_IndexBinary_train(
-        index: *mut FaissIndexBinary,
-        n: idx_t,
-        x: *const u8,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Add n vectors of dimension d to the index.\n\n Vectors are implicitly assigned labels ntotal .. ntotal + n - 1\n This function slices the input vectors in chunks smaller than\n blocksize_add and calls add_core.\n @param index  opaque pointer to index object\n @param x      input matrix, size n * d"]
-    pub fn faiss_IndexBinary_add(
-        index: *mut FaissIndexBinary,
-        n: idx_t,
-        x: *const u8,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Same as add, but stores xids instead of sequential ids.\n\n The default implementation fails with an assertion, as it is\n not supported by all indexes.\n\n @param index  opaque pointer to index object\n @param xids   if non-null, ids to store for the vectors (size n)"]
-    pub fn faiss_IndexBinary_add_with_ids(
-        index: *mut FaissIndexBinary,
-        n: idx_t,
-        x: *const u8,
-        xids: *const idx_t,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " query n vectors of dimension d to the index.\n\n return at most k vectors. If there are not enough results for a\n query, the result array is padded with -1s.\n\n @param index       opaque pointer to index object\n @param x           input vectors to search, size n * d\n @param labels      output labels of the NNs, size n*k\n @param distances   output pairwise distances, size n*k"]
-    pub fn faiss_IndexBinary_search(
-        index: *const FaissIndexBinary,
-        n: idx_t,
-        x: *const u8,
-        k: idx_t,
-        distances: *mut i32,
-        labels: *mut idx_t,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " query n vectors of dimension d to the index.\n\n return all vectors with distance < radius. Note that many\n indexes do not implement the range_search (only the k-NN search\n is mandatory).\n\n @param index       opaque pointer to index object\n @param x           input vectors to search, size n * d\n @param radius      search radius\n @param result      result table"]
-    pub fn faiss_IndexBinary_range_search(
-        index: *const FaissIndexBinary,
-        n: idx_t,
-        x: *const u8,
-        radius: ::std::os::raw::c_int,
-        result: *mut FaissRangeSearchResult,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " return the indexes of the k vectors closest to the query x.\n\n This function is identical as search but only return labels of neighbors.\n @param index       opaque pointer to index object\n @param x           input vectors to search, size n * d\n @param labels      output labels of the NNs, size n*k"]
-    pub fn faiss_IndexBinary_assign(
-        index: *mut FaissIndexBinary,
-        n: idx_t,
-        x: *const u8,
-        labels: *mut idx_t,
-        k: idx_t,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " removes all elements from the database.\n @param index       opaque pointer to index object"]
-    pub fn faiss_IndexBinary_reset(index: *mut FaissIndexBinary) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " removes IDs from the index. Not supported by all indexes\n @param index       opaque pointer to index object\n @param nremove     output for the number of IDs removed"]
-    pub fn faiss_IndexBinary_remove_ids(
-        index: *mut FaissIndexBinary,
-        sel: *const FaissIDSelector,
-        n_removed: *mut usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Reconstruct a stored vector (or an approximation if lossy coding)\n\n this function may not be defined for some indexes\n @param index       opaque pointer to index object\n @param key         id of the vector to reconstruct\n @param recons      reconstructed vector (size d)"]
-    pub fn faiss_IndexBinary_reconstruct(
-        index: *const FaissIndexBinary,
-        key: idx_t,
-        recons: *mut u8,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Reconstruct vectors i0 to i0 + ni - 1\n\n this function may not be defined for some indexes\n @param index       opaque pointer to index object\n @param recons      reconstructed vector (size ni * d)"]
-    pub fn faiss_IndexBinary_reconstruct_n(
-        index: *const FaissIndexBinary,
-        i0: idx_t,
-        ni: idx_t,
-        recons: *mut u8,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Build and index with the sequence of processing steps described in\n  the string."]
-    pub fn faiss_index_factory(
-        p_index: *mut *mut FaissIndex,
-        d: ::std::os::raw::c_int,
-        description: *const ::std::os::raw::c_char,
-        metric: FaissMetricType,
-    ) -> ::std::os::raw::c_int;
-}
-pub type FaissIndexFlat = FaissIndex_H;
-extern "C" {
-    #[doc = " Opaque type for IndexFlat"]
-    pub fn faiss_IndexFlat_new(p_index: *mut *mut FaissIndexFlat) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn faiss_IndexFlat_new_with(
-        p_index: *mut *mut FaissIndexFlat,
-        d: idx_t,
-        metric: FaissMetricType,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " get a pointer to the index's internal data (the `xb` field). The outputs\n become invalid after any data addition or removal operation.\n\n @param index   opaque pointer to index object\n @param p_xb    output, the pointer to the beginning of `xb`.\n @param p_size  output, the current size of `sb` in number of float values."]
-    pub fn faiss_IndexFlat_xb(index: *mut FaissIndexFlat, p_xb: *mut *mut f32, p_size: *mut usize);
-}
-extern "C" {
-    pub fn faiss_IndexFlat_cast(arg1: *mut FaissIndex) -> *mut FaissIndexFlat;
-}
-extern "C" {
-    pub fn faiss_IndexFlat_free(obj: *mut FaissIndexFlat);
-}
-extern "C" {
-    #[doc = " compute distance with a subset of vectors\n\n @param index   opaque pointer to index object\n @param x       query vectors, size n * d\n @param labels  indices of the vectors that should be compared\n                for each query vector, size n * k\n @param distances\n                corresponding output distances, size n * k"]
-    pub fn faiss_IndexFlat_compute_distance_subset(
-        index: *mut FaissIndex,
-        n: idx_t,
-        x: *const f32,
-        k: idx_t,
-        distances: *mut f32,
-        labels: *const idx_t,
-    ) -> ::std::os::raw::c_int;
-}
-pub type FaissIndexFlatIP = FaissIndex_H;
-extern "C" {
-    pub fn faiss_IndexFlatIP_cast(arg1: *mut FaissIndex) -> *mut FaissIndexFlatIP;
-}
-extern "C" {
-    pub fn faiss_IndexFlatIP_free(obj: *mut FaissIndexFlatIP);
-}
-extern "C" {
-    #[doc = " Opaque type for IndexFlatIP"]
-    pub fn faiss_IndexFlatIP_new(p_index: *mut *mut FaissIndexFlatIP) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn faiss_IndexFlatIP_new_with(
-        p_index: *mut *mut FaissIndexFlatIP,
-        d: idx_t,
-    ) -> ::std::os::raw::c_int;
-}
-pub type FaissIndexFlatL2 = FaissIndex_H;
-extern "C" {
-    pub fn faiss_IndexFlatL2_cast(arg1: *mut FaissIndex) -> *mut FaissIndexFlatL2;
-}
-extern "C" {
-    pub fn faiss_IndexFlatL2_free(obj: *mut FaissIndexFlatL2);
-}
-extern "C" {
-    #[doc = " Opaque type for IndexFlatL2"]
-    pub fn faiss_IndexFlatL2_new(p_index: *mut *mut FaissIndexFlatL2) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn faiss_IndexFlatL2_new_with(
-        p_index: *mut *mut FaissIndexFlatL2,
-        d: idx_t,
-    ) -> ::std::os::raw::c_int;
-}
-pub type FaissIndexRefineFlat = FaissIndex_H;
-extern "C" {
-    #[doc = " Opaque type for IndexRefineFlat\n\n Index that queries in a base_index (a fast one) and refines the\n results with an exact search, hopefully improving the results."]
-    pub fn faiss_IndexRefineFlat_new(
-        p_index: *mut *mut FaissIndexRefineFlat,
-        base_index: *mut FaissIndex,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn faiss_IndexRefineFlat_free(obj: *mut FaissIndexRefineFlat);
-}
-extern "C" {
-    pub fn faiss_IndexRefineFlat_cast(arg1: *mut FaissIndex) -> *mut FaissIndexRefineFlat;
-}
-extern "C" {
-    pub fn faiss_IndexRefineFlat_own_fields(
-        arg1: *const FaissIndexRefineFlat,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn faiss_IndexRefineFlat_set_own_fields(
-        arg1: *mut FaissIndexRefineFlat,
-        arg2: ::std::os::raw::c_int,
-    );
-}
-extern "C" {
-    pub fn faiss_IndexRefineFlat_k_factor(arg1: *const FaissIndexRefineFlat) -> f32;
-}
-extern "C" {
-    pub fn faiss_IndexRefineFlat_set_k_factor(arg1: *mut FaissIndexRefineFlat, arg2: f32);
-}
-pub type FaissIndexFlat1D = FaissIndex_H;
-extern "C" {
-    pub fn faiss_IndexFlat1D_cast(arg1: *mut FaissIndex) -> *mut FaissIndexFlat1D;
-}
-extern "C" {
-    pub fn faiss_IndexFlat1D_free(obj: *mut FaissIndexFlat1D);
-}
-extern "C" {
-    #[doc = " Opaque type for IndexFlat1D\n\n optimized version for 1D \"vectors\""]
-    pub fn faiss_IndexFlat1D_new(p_index: *mut *mut FaissIndexFlat1D) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn faiss_IndexFlat1D_new_with(
-        p_index: *mut *mut FaissIndexFlat1D,
-        continuous_update: ::std::os::raw::c_int,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn faiss_IndexFlat1D_update_permutation(
-        index: *mut FaissIndexFlat1D,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Write index to a file.\n This is equivalent to `faiss::write_index` when a file descriptor is\n provided."]
-    pub fn faiss_write_index(idx: *const FaissIndex, f: *mut FILE) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Write index to a file.\n This is equivalent to `faiss::write_index` when a file path is provided."]
-    pub fn faiss_write_index_fname(
-        idx: *const FaissIndex,
-        fname: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Read index from a file.\n This is equivalent to `faiss:read_index` when a file descriptor is given."]
-    pub fn faiss_read_index(
-        f: *mut FILE,
-        io_flags: ::std::os::raw::c_int,
-        p_out: *mut *mut FaissIndex,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Read index from a file.\n This is equivalent to `faiss:read_index` when a file path is given."]
-    pub fn faiss_read_index_fname(
-        fname: *const ::std::os::raw::c_char,
-        io_flags: ::std::os::raw::c_int,
-        p_out: *mut *mut FaissIndex,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Write index to a file.\n This is equivalent to `faiss::write_index_binary` when a file descriptor is\n provided."]
-    pub fn faiss_write_index_binary(
-        idx: *const FaissIndexBinary,
-        f: *mut FILE,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Write index to a file.\n This is equivalent to `faiss::write_index_binary` when a file path is\n provided."]
-    pub fn faiss_write_index_binary_fname(
-        idx: *const FaissIndexBinary,
-        fname: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Read index from a file.\n This is equivalent to `faiss:read_index_binary` when a file descriptor is\n given."]
-    pub fn faiss_read_index_binary(
-        f: *mut FILE,
-        io_flags: ::std::os::raw::c_int,
-        p_out: *mut *mut FaissIndexBinary,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Read index from a file.\n This is equivalent to `faiss:read_index_binary` when a file path is given."]
-    pub fn faiss_read_index_binary_fname(
-        fname: *const ::std::os::raw::c_char,
-        io_flags: ::std::os::raw::c_int,
-        p_out: *mut *mut FaissIndexBinary,
-    ) -> ::std::os::raw::c_int;
-}
 pub type FaissSearchParametersIVF = FaissSearchParameters_H;
 extern "C" {
     pub fn faiss_SearchParametersIVF_free(obj: *mut FaissSearchParametersIVF);
@@ -1454,78 +1438,6 @@ extern "C" {
 extern "C" {
     #[doc = " global var that collects all statists"]
     pub fn faiss_get_indexIVF_stats() -> *mut FaissIndexIVFStats;
-}
-pub type FaissIndexIVFFlat = FaissIndex_H;
-extern "C" {
-    pub fn faiss_IndexIVFFlat_free(obj: *mut FaissIndexIVFFlat);
-}
-extern "C" {
-    pub fn faiss_IndexIVFFlat_cast(arg1: *mut FaissIndex) -> *mut FaissIndexIVFFlat;
-}
-extern "C" {
-    pub fn faiss_IndexIVFFlat_nlist(arg1: *const FaissIndexIVFFlat) -> usize;
-}
-extern "C" {
-    pub fn faiss_IndexIVFFlat_nprobe(arg1: *const FaissIndexIVFFlat) -> usize;
-}
-extern "C" {
-    pub fn faiss_IndexIVFFlat_set_nprobe(arg1: *mut FaissIndexIVFFlat, arg2: usize);
-}
-extern "C" {
-    pub fn faiss_IndexIVFFlat_quantizer(arg1: *const FaissIndexIVFFlat) -> *mut FaissIndex;
-}
-extern "C" {
-    pub fn faiss_IndexIVFFlat_quantizer_trains_alone(
-        arg1: *const FaissIndexIVFFlat,
-    ) -> ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn faiss_IndexIVFFlat_own_fields(arg1: *const FaissIndexIVFFlat) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn faiss_IndexIVFFlat_set_own_fields(
-        arg1: *mut FaissIndexIVFFlat,
-        arg2: ::std::os::raw::c_int,
-    );
-}
-extern "C" {
-    #[doc = " whether object owns the quantizer"]
-    pub fn faiss_IndexIVFFlat_new(p_index: *mut *mut FaissIndexIVFFlat) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn faiss_IndexIVFFlat_new_with(
-        p_index: *mut *mut FaissIndexIVFFlat,
-        quantizer: *mut FaissIndex,
-        d: usize,
-        nlist: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn faiss_IndexIVFFlat_new_with_metric(
-        p_index: *mut *mut FaissIndexIVFFlat,
-        quantizer: *mut FaissIndex,
-        d: usize,
-        nlist: usize,
-        metric: FaissMetricType,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn faiss_IndexIVFFlat_add_core(
-        index: *mut FaissIndexIVFFlat,
-        n: idx_t,
-        x: *const f32,
-        xids: *const idx_t,
-        precomputed_idx: *const i64,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Update a subset of vectors.\n\n The index must have a direct_map\n\n @param nv     nb of vectors to update\n @param idx    vector indices to update, size nv\n @param v      vectors of new values, size nv*d"]
-    pub fn faiss_IndexIVFFlat_update_vectors(
-        index: *mut FaissIndexIVFFlat,
-        nv: ::std::os::raw::c_int,
-        idx: *mut idx_t,
-        v: *const f32,
-    ) -> ::std::os::raw::c_int;
 }
 pub type FaissIndexLSH = FaissIndex_H;
 extern "C" {
@@ -2091,6 +2003,109 @@ extern "C" {
 extern "C" {
     #[doc = " get a pointer to the sub-index (the `index` field).\n The outputs of this function become invalid after any operation that can\n modify the index.\n\n @param index   opaque pointer to index object"]
     pub fn faiss_IndexIDMap2_sub_index(index: *mut FaissIndexIDMap2) -> *mut FaissIndex;
+}
+pub type FILE = [u64; 27usize];
+extern "C" {
+    #[doc = " Clone an index. This is equivalent to `faiss::clone_index`"]
+    pub fn faiss_clone_index(
+        arg1: *const FaissIndex,
+        p_out: *mut *mut FaissIndex,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Clone a binary index. This is equivalent to `faiss::clone_index_binary`"]
+    pub fn faiss_clone_index_binary(
+        arg1: *const FaissIndexBinary,
+        p_out: *mut *mut FaissIndexBinary,
+    ) -> ::std::os::raw::c_int;
+}
+#[doc = " No error"]
+pub const FaissErrorCode_OK: FaissErrorCode = 0;
+#[doc = " Any exception other than Faiss or standard C++ library exceptions"]
+pub const FaissErrorCode_UNKNOWN_EXCEPT: FaissErrorCode = -1;
+#[doc = " Faiss library exception"]
+pub const FaissErrorCode_FAISS_EXCEPT: FaissErrorCode = -2;
+#[doc = " Standard C++ library exception"]
+pub const FaissErrorCode_STD_EXCEPT: FaissErrorCode = -4;
+#[doc = " An error code which depends on the exception thrown from the previous\n operation. See `faiss_get_last_error` to retrieve the error message."]
+pub type FaissErrorCode = ::std::os::raw::c_int;
+extern "C" {
+    #[doc = " Get the error message of the last failed operation performed by Faiss.\n The given pointer is only invalid until another Faiss function is\n called."]
+    pub fn faiss_get_last_error() -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    #[doc = " Build an index with the sequence of processing steps described in\n  the string."]
+    pub fn faiss_index_factory(
+        p_index: *mut *mut FaissIndex,
+        d: ::std::os::raw::c_int,
+        description: *const ::std::os::raw::c_char,
+        metric: FaissMetricType,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Build a binary index with the sequence of processing steps described in\n  the string."]
+    pub fn faiss_index_binary_factory(
+        p_index: *mut *mut FaissIndexBinary,
+        d: ::std::os::raw::c_int,
+        description: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Write index to a file.\n This is equivalent to `faiss::write_index` when a file descriptor is\n provided."]
+    pub fn faiss_write_index(idx: *const FaissIndex, f: *mut FILE) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Write index to a file.\n This is equivalent to `faiss::write_index` when a file path is provided."]
+    pub fn faiss_write_index_fname(
+        idx: *const FaissIndex,
+        fname: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Read index from a file.\n This is equivalent to `faiss:read_index` when a file descriptor is given."]
+    pub fn faiss_read_index(
+        f: *mut FILE,
+        io_flags: ::std::os::raw::c_int,
+        p_out: *mut *mut FaissIndex,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Read index from a file.\n This is equivalent to `faiss:read_index` when a file path is given."]
+    pub fn faiss_read_index_fname(
+        fname: *const ::std::os::raw::c_char,
+        io_flags: ::std::os::raw::c_int,
+        p_out: *mut *mut FaissIndex,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Write index to a file.\n This is equivalent to `faiss::write_index_binary` when a file descriptor is\n provided."]
+    pub fn faiss_write_index_binary(
+        idx: *const FaissIndexBinary,
+        f: *mut FILE,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Write index to a file.\n This is equivalent to `faiss::write_index_binary` when a file path is\n provided."]
+    pub fn faiss_write_index_binary_fname(
+        idx: *const FaissIndexBinary,
+        fname: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Read index from a file.\n This is equivalent to `faiss:read_index_binary` when a file descriptor is\n given."]
+    pub fn faiss_read_index_binary(
+        f: *mut FILE,
+        io_flags: ::std::os::raw::c_int,
+        p_out: *mut *mut FaissIndexBinary,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Read index from a file.\n This is equivalent to `faiss:read_index_binary` when a file path is given."]
+    pub fn faiss_read_index_binary_fname(
+        fname: *const ::std::os::raw::c_char,
+        io_flags: ::std::os::raw::c_int,
+        p_out: *mut *mut FaissIndexBinary,
+    ) -> ::std::os::raw::c_int;
 }
 extern "C" {
     #[doc = " Compute pairwise distances between sets of vectors"]

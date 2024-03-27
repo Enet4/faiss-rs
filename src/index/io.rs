@@ -2,7 +2,10 @@
 
 use crate::error::{Error, Result};
 use crate::faiss_try;
-use crate::index::{CpuIndex, FromInnerPtr, IndexImpl, NativeIndex};
+use crate::index::{
+    CpuIndex, FromInnerPtr, IndexImpl, NativeIndex, 
+    CpuIndexBinary, FromInnerPtrBinary, BinaryIndexImpl, NativeIndexBinary
+};
 use faiss_sys::*;
 use std::ffi::CString;
 use std::os::raw::c_int;
@@ -31,6 +34,28 @@ where
     }
 }
 
+
+/// Write a binary index to a file.
+///
+/// # Error
+///
+/// This function returns an error if the description contains any byte with the value `\0` (since
+/// it cannot be converted to a C string), or if the internal index writing operation fails.
+pub fn write_index_binary<I, P>(index: &I, file_name: P) -> Result<()>
+where
+    I: NativeIndexBinary,
+    I: CpuIndexBinary,
+    P: AsRef<str>,
+{
+    unsafe {
+        let f = file_name.as_ref();
+        let f = CString::new(f).map_err(|_| Error::BadFilePath)?;
+
+        faiss_try(faiss_write_index_binary_fname(index.inner_ptr(), f.as_ptr()))?;
+        Ok(())
+    }
+}
+
 /// Read an index from a file.
 ///
 /// # Error
@@ -51,6 +76,30 @@ where
             &mut inner,
         ))?;
         Ok(IndexImpl::from_inner_ptr(inner))
+    }
+}
+
+
+/// Read a binary index from a file.
+///
+/// # Error
+///
+/// This function returns an error if the description contains any byte with the value `\0` (since
+/// it cannot be converted to a C string), or if the internal index reading operation fails.
+pub fn read_index_binary<P>(file_name: P) -> Result<BinaryIndexImpl>
+where
+    P: AsRef<str>,
+{
+    unsafe {
+        let f = file_name.as_ref();
+        let f = CString::new(f).map_err(|_| Error::BadFilePath)?;
+        let mut inner = ptr::null_mut();
+        faiss_try(faiss_read_index_binary_fname(
+            f.as_ptr(),
+            IoFlags::MEM_RESIDENT.into(),
+            &mut inner,
+        ))?;
+        Ok(BinaryIndexImpl::from_inner_ptr(inner))
     }
 }
 
@@ -78,6 +127,33 @@ where
         Ok(IndexImpl::from_inner_ptr(inner))
     }
 }
+
+
+/// Read a binary index from a file with I/O flags.
+///
+/// You can memory map some index types with this.
+///
+/// # Error
+///
+/// This function returns an error if the description contains any byte with the value `\0` (since
+/// it cannot be converted to a C string), or if the internal index reading operation fails.
+pub fn read_index_binary_with_flags<P>(file_name: P, io_flags: IoFlags) -> Result<BinaryIndexImpl>
+where
+    P: AsRef<str>,
+{
+    unsafe {
+        let f = file_name.as_ref();
+        let f = CString::new(f).map_err(|_| Error::BadFilePath)?;
+        let mut inner = ptr::null_mut();
+        faiss_try(faiss_read_index_binary_fname(
+            f.as_ptr(),
+            io_flags.0 as c_int,
+            &mut inner,
+        ))?;
+        Ok(BinaryIndexImpl::from_inner_ptr(inner))
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
