@@ -294,7 +294,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::index::pretransform::PreTransformIndexImpl;
+    use crate::index::UpcastIndex as _;
     use crate::metric::MetricType;
     use crate::{
         index::{index_factory, ConcurrentIndex, Idx, Index},

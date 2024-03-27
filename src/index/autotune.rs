@@ -63,7 +63,7 @@ impl Drop for ParameterSpace {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::index::autotune::ParameterSpace;
     use crate::index::index_factory;
     use crate::metric::MetricType;
 
