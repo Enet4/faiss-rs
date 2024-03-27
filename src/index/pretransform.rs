@@ -2,13 +2,9 @@
 
 use super::*;
 
-use crate::error::{Error, Result};
-use crate::faiss_try;
 use crate::vector_transform::NativeVectorTransform;
 use std::marker::PhantomData;
-use std::mem;
 use std::os::raw::c_int;
-use std::ptr;
 
 /// Alias for the native implementation of a PreTransform index.
 pub type PreTransformIndex<I> = PreTransformIndexImpl<I>;
@@ -298,7 +294,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::index::pretransform::PreTransformIndexImpl;
+    use crate::index::UpcastIndex as _;
     use crate::metric::MetricType;
     use crate::{
         index::{index_factory, ConcurrentIndex, Idx, Index},

@@ -2,11 +2,7 @@
 
 use super::*;
 
-use crate::error::Result;
-use crate::faiss_try;
-use std::mem;
 use std::os::raw::{c_char, c_int};
-use std::ptr;
 
 /// Alias for the native implementation of a flat index.
 pub type IVFFlatIndex = IVFFlatIndexImpl;

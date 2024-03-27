@@ -1,10 +1,6 @@
 use std::ffi;
-use std::ptr;
 
 use super::*;
-
-use crate::error::{Error, Result};
-use crate::faiss_try;
 
 /// Uses a-priori knowledge on the Faiss indexes to extract tunable parameters.
 pub struct ParameterSpace {
@@ -67,7 +63,7 @@ impl Drop for ParameterSpace {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::index::autotune::ParameterSpace;
     use crate::index::index_factory;
     use crate::metric::MetricType;
 
