@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ master, "change/faiss-v1.8.0" ]
+    branches: [ master ]
 
 env:
   CARGO_TERM_COLOR: always
