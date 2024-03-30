@@ -982,7 +982,7 @@ mod tests {
     }
     #[test]
     fn index_binary_clone() {
-        let mut index = index_binary_factory(16 / 8, "BFlat").unwrap();
+        let mut index = index_binary_factory(16, "BFlat").unwrap();
 
         let some_data = &[
             0, 1, 2, 3
@@ -1026,7 +1026,7 @@ mod tests {
 
     #[test]
     fn search_index_binary() {
-        let mut index = index_binary_factory(256 / 8, "BFlat").unwrap();
+        let mut index = index_binary_factory(256, "BFlat").unwrap();
         let some_data = &[
             255u8; 32
         ];

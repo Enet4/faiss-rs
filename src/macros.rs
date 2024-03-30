@@ -203,7 +203,7 @@ macro_rules! impl_native_binary_index {
 
             fn add(&mut self, x: &[u8]) -> Result<()> {
                 unsafe {
-                    let n = x.len() / self.d() as usize;
+                    let n = (x.len() * 8) / self.d() as usize;
                     faiss_try(faiss_IndexBinary_add(
                         self.inner_ptr(),
                         n as i64,
@@ -215,7 +215,7 @@ macro_rules! impl_native_binary_index {
 
             fn add_with_ids(&mut self, x: &[u8], xids: &[crate::index::Idx]) -> Result<()> {
                 unsafe {
-                    let n = x.len() / self.d() as usize;
+                    let n = (x.len() * 8) / self.d() as usize;
                     faiss_try(faiss_IndexBinary_add_with_ids(
                         self.inner_ptr(),
                         n as i64,
@@ -227,7 +227,7 @@ macro_rules! impl_native_binary_index {
             }
             fn train(&mut self, x: &[u8]) -> Result<()> {
                 unsafe {
-                    let n = x.len() / self.d() as usize;
+                    let n = (x.len() * 8) / self.d() as usize;
                     faiss_try(faiss_IndexBinary_train(
                         self.inner_ptr(),
                         n as i64,
@@ -242,7 +242,7 @@ macro_rules! impl_native_binary_index {
                 k: usize,
             ) -> Result<crate::index::AssignSearchResult> {
                 unsafe {
-                    let nq = query.len() / self.d() as usize;
+                    let nq = (query.len() * 8) / self.d() as usize;
                     let mut out_labels = vec![Idx::none(); k * nq];
                     faiss_try(faiss_IndexBinary_assign(
                         self.inner_ptr(),
@@ -260,7 +260,7 @@ macro_rules! impl_native_binary_index {
                 k: usize,
             ) -> Result<crate::index::SearchResultBinary> {
                 unsafe {
-                    let nq = query.len() / self.d() as usize;
+                    let nq = (query.len() * 8) / self.d() as usize;
                     let mut distances = vec![0_i32; k * nq];
                     let mut labels = vec![Idx::none(); k * nq];
                     faiss_try(faiss_IndexBinary_search(
@@ -280,7 +280,7 @@ macro_rules! impl_native_binary_index {
                 radius: i32,
             ) -> Result<crate::index::RangeSearchResult> {
                 unsafe {
-                    let nq = (query.len() / self.d() as usize) as idx_t;
+                    let nq = ((query.len() * 8) / self.d() as usize) as idx_t;
                     let mut p_res: *mut FaissRangeSearchResult = ::std::ptr::null_mut();
                     faiss_try(faiss_RangeSearchResult_new(&mut p_res, nq))?;
                     faiss_try(faiss_IndexBinary_range_search(
