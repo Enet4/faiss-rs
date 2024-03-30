@@ -986,7 +986,26 @@ mod tests {
         let r = index_factory(64, "Flat\0Flat", MetricType::L2);
         assert!(r.is_err());
     }
+    #[test]
+    fn index_binary_clone() {
+        let mut index = index_binary_factory(16, "BFlat").unwrap();
 
+        let some_data = &[
+            0, 1, 2, 3
+        ];
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 2);
+
+        let mut index2 = index.try_clone().unwrap();
+        assert_eq!(index2.ntotal(), 2);
+
+        let some_more_data = &[
+            4, 5, 6, 7
+        ];
+        index2.add(some_more_data).unwrap();
+        assert_eq!(index.ntotal(), 2);
+        assert_eq!(index2.ntotal(), 4);
+    }
     #[test]
     fn index_clone() {
         let mut index = index_factory(4, "Flat", MetricType::L2).unwrap();
@@ -1011,6 +1030,20 @@ mod tests {
         assert_eq!(index2.ntotal(), 10);
     }
 
+    #[test]
+    fn search_index_binary() {
+        let mut index = index_binary_factory(256, "BFlat").unwrap();
+        let some_data = &[
+            255u8; 32
+        ];
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 1);
+        let my_query = [254u8; 32];
+        let result = index.search(&my_query, 1).unwrap();
+        assert_eq!(result.labels, vec![Idx(0)]);
+        assert_eq!(result.distances.len(), 1);
+        assert!(result.distances.iter().all(|x| *x == 32));
+    }
     #[test]
     fn flat_index_search() {
         let mut index = index_factory(8, "Flat", MetricType::L2).unwrap();
