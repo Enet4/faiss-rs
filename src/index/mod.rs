@@ -126,7 +126,6 @@ impl PartialOrd<Idx> for Idx {
     }
 }
 
-
 /// Interface for a Faiss binary index. Most methods in this trait match the ones in
 /// the native library, whereas some others serve as getters to the index'
 /// parameters.
@@ -139,7 +138,6 @@ impl PartialOrd<Idx> for Idx {
 ///
 /// [`BinaryFlatIndex`]: flat/struct.BinaryFlatIndex.html
 pub trait IndexBinary {
-
     /// Whether the BinaryIndex does not require training, or if training is done already
     fn is_trained(&self) -> bool;
 
@@ -252,7 +250,7 @@ pub trait Index {
 
 impl<BI> IndexBinary for Box<BI>
 where
-    BI: IndexBinary
+    BI: IndexBinary,
 {
     fn is_trained(&self) -> bool {
         (**self).is_trained()
@@ -404,7 +402,6 @@ pub trait ConcurrentIndexBinary: IndexBinary {
     fn range_search(&self, q: &[u8], radius: i32) -> Result<RangeSearchResult>;
 }
 
-
 impl<CIB: ConcurrentIndexBinary> ConcurrentIndexBinary for Box<CIB> {
     fn assign(&self, q: &[u8], k: usize) -> Result<AssignSearchResult> {
         (**self).assign(q, k)
@@ -418,7 +415,6 @@ impl<CIB: ConcurrentIndexBinary> ConcurrentIndexBinary for Box<CIB> {
         (**self).range_search(q, radius)
     }
 }
-
 
 /// Trait for Faiss index types known to be running on the CPU.
 pub trait CpuIndexBinary: IndexBinary {}
@@ -460,7 +456,6 @@ pub trait TryFromInnerPtrBinary: NativeIndexBinary {
     where
         Self: Sized;
 }
-
 
 /// Sub-trait for native implementations of a Faiss index.
 pub trait NativeIndex: Index {
@@ -579,8 +574,13 @@ where
 {
     unsafe {
         let mut new_index_ptr = ::std::ptr::null_mut();
-        faiss_try(faiss_clone_index_binary(val.inner_ptr(), &mut new_index_ptr))?;
-        Ok(crate::index::FromInnerPtrBinary::from_inner_ptr(new_index_ptr))
+        faiss_try(faiss_clone_index_binary(
+            val.inner_ptr(),
+            &mut new_index_ptr,
+        ))?;
+        Ok(crate::index::FromInnerPtrBinary::from_inner_ptr(
+            new_index_ptr,
+        ))
     }
 }
 
@@ -716,7 +716,6 @@ impl Drop for IndexImpl {
     }
 }
 
-
 impl Drop for BinaryIndexImpl {
     fn drop(&mut self) {
         unsafe {
@@ -736,7 +735,6 @@ impl IndexImpl {
         self.inner
     }
 }
-
 
 impl NativeIndexBinary for BinaryIndexImpl {
     fn inner_ptr(&self) -> *mut FaissIndexBinary {
@@ -809,7 +807,6 @@ pub trait UpcastIndex: NativeIndex {
     fn upcast(self) -> IndexImpl;
 }
 
-
 /// BinaryIndex upcast trait.
 ///
 /// If you need to store several different types of binary indexes in one collection,
@@ -827,7 +824,6 @@ impl<NI: NativeIndex> UpcastIndex for NI {
         unsafe { IndexImpl::from_inner_ptr(inner_ptr) }
     }
 }
-
 
 impl<NIB: NativeIndexBinary> UpcastIndexBinary for NIB {
     fn upcast(self) -> BinaryIndexImpl {
@@ -849,7 +845,6 @@ impl TryClone for IndexImpl {
         try_clone_from_inner_ptr(self)
     }
 }
-
 
 impl TryClone for BinaryIndexImpl {
     fn try_clone(&self) -> Result<Self>
@@ -887,7 +882,6 @@ where
     }
 }
 
-
 /// Use the index binary factory to create a native instance of a Faiss binary index, for `d`-dimensional
 /// vectors. `description` should follow the exact guidelines as the native Faiss interface
 /// (see the [Faiss wiki](https://github.com/facebookresearch/faiss/wiki/Binary-indexes) for examples).
@@ -915,7 +909,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{index_factory, Idx, Index, TryClone, index_binary_factory, IndexBinary};
+    use super::{index_binary_factory, index_factory, Idx, Index, IndexBinary, TryClone};
     use crate::metric::MetricType;
 
     #[test]

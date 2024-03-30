@@ -176,7 +176,6 @@ macro_rules! impl_native_index {
     };
 }
 
-
 /// A macro which provides a native binary index implementation to the given type.
 macro_rules! impl_native_binary_index {
     ($t:ty) => {
@@ -195,9 +194,9 @@ macro_rules! impl_native_binary_index {
 
             fn metric_type(&self) -> crate::metric::MetricType {
                 unsafe {
-                    crate::metric::MetricType::from_code(
-                        faiss_IndexBinary_metric_type(self.inner_ptr()) as u32
-                    )
+                    crate::metric::MetricType::from_code(faiss_IndexBinary_metric_type(
+                        self.inner_ptr(),
+                    ) as u32)
                     .unwrap()
                 }
             }
@@ -205,7 +204,11 @@ macro_rules! impl_native_binary_index {
             fn add(&mut self, x: &[u8]) -> Result<()> {
                 unsafe {
                     let n = x.len() / self.d() as usize;
-                    faiss_try(faiss_IndexBinary_add(self.inner_ptr(), n as i64, x.as_ptr()))?;
+                    faiss_try(faiss_IndexBinary_add(
+                        self.inner_ptr(),
+                        n as i64,
+                        x.as_ptr(),
+                    ))?;
                     Ok(())
                 }
             }
@@ -225,7 +228,11 @@ macro_rules! impl_native_binary_index {
             fn train(&mut self, x: &[u8]) -> Result<()> {
                 unsafe {
                     let n = x.len() / self.d() as usize;
-                    faiss_try(faiss_IndexBinary_train(self.inner_ptr(), n as i64, x.as_ptr()))?;
+                    faiss_try(faiss_IndexBinary_train(
+                        self.inner_ptr(),
+                        n as i64,
+                        x.as_ptr(),
+                    ))?;
                     Ok(())
                 }
             }
@@ -247,7 +254,11 @@ macro_rules! impl_native_binary_index {
                     Ok(crate::index::AssignSearchResult { labels: out_labels })
                 }
             }
-            fn search(&mut self, query: &[u8], k: usize) -> Result<crate::index::SearchResultBinary> {
+            fn search(
+                &mut self,
+                query: &[u8],
+                k: usize,
+            ) -> Result<crate::index::SearchResultBinary> {
                 unsafe {
                     let nq = query.len() / self.d() as usize;
                     let mut distances = vec![0_i32; k * nq];
@@ -308,7 +319,10 @@ macro_rules! impl_native_binary_index {
 
             fn set_verbose(&mut self, value: bool) {
                 unsafe {
-                    faiss_IndexBinary_set_verbose(self.inner_ptr(), std::os::raw::c_int::from(value));
+                    faiss_IndexBinary_set_verbose(
+                        self.inner_ptr(),
+                        std::os::raw::c_int::from(value),
+                    );
                 }
             }
         }
@@ -374,7 +388,6 @@ macro_rules! impl_native_binary_index {
 //         }
 //     };
 // }
-
 
 /// A macro which provides a concurrent binary index implementation to the given type.
 macro_rules! impl_concurrent_index {

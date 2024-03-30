@@ -3,8 +3,8 @@
 use crate::error::{Error, Result};
 use crate::faiss_try;
 use crate::index::{
-    CpuIndex, FromInnerPtr, IndexImpl, NativeIndex, 
-    CpuIndexBinary, FromInnerPtrBinary, BinaryIndexImpl, NativeIndexBinary
+    BinaryIndexImpl, CpuIndex, CpuIndexBinary, FromInnerPtr, FromInnerPtrBinary, IndexImpl,
+    NativeIndex, NativeIndexBinary,
 };
 use faiss_sys::*;
 use std::ffi::CString;
@@ -34,7 +34,6 @@ where
     }
 }
 
-
 /// Write a binary index to a file.
 ///
 /// # Error
@@ -51,7 +50,10 @@ where
         let f = file_name.as_ref();
         let f = CString::new(f).map_err(|_| Error::BadFilePath)?;
 
-        faiss_try(faiss_write_index_binary_fname(index.inner_ptr(), f.as_ptr()))?;
+        faiss_try(faiss_write_index_binary_fname(
+            index.inner_ptr(),
+            f.as_ptr(),
+        ))?;
         Ok(())
     }
 }
@@ -78,7 +80,6 @@ where
         Ok(IndexImpl::from_inner_ptr(inner))
     }
 }
-
 
 /// Read a binary index from a file.
 ///
@@ -128,7 +129,6 @@ where
     }
 }
 
-
 /// Read a binary index from a file with I/O flags.
 ///
 /// You can memory map some index types with this.
@@ -153,7 +153,6 @@ where
         Ok(BinaryIndexImpl::from_inner_ptr(inner))
     }
 }
-
 
 #[cfg(test)]
 mod tests {

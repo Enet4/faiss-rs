@@ -92,19 +92,19 @@ pub mod error;
 pub mod index;
 pub mod metric;
 pub mod selector;
-pub mod vector_transform;
 pub mod utils;
+pub mod vector_transform;
 
 #[cfg(feature = "gpu")]
 pub mod gpu;
 
 pub use index::flat::FlatIndex;
 pub use index::id_map::IdMap;
-pub use index::io::{read_index, write_index, read_index_binary, write_index_binary};
+pub use index::io::{read_index, read_index_binary, write_index, write_index_binary};
 pub use index::lsh::LshIndex;
 pub use index::{
-    index_factory, ConcurrentIndex, Idx, Index,
-    index_binary_factory, ConcurrentIndexBinary, IndexBinary,
+    index_binary_factory, index_factory, ConcurrentIndex, ConcurrentIndexBinary, Idx, Index,
+    IndexBinary,
 };
 pub use metric::MetricType;
 

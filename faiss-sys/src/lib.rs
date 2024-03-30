@@ -35,8 +35,7 @@ mod tests {
     fn flat_index_binary() {
         const D: usize = 8;
         unsafe {
-            let description =
-                CString::new::<&str>("BFlat".as_ref()).unwrap();
+            let description = CString::new::<&str>("BFlat".as_ref()).unwrap();
             let mut index_ptr = ::std::ptr::null_mut();
             let code = faiss_index_binary_factory(
                 &mut index_ptr,
