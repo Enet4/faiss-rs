@@ -814,18 +814,6 @@ pub trait UpcastIndex: NativeIndex {
 ///
 /// If you need to store several different types of binary indexes in one collection,
 /// you can cast all binary indexes to the common type `BinaryIndexImpl`.
-/// # Examples
-///
-/// ```
-/// # use faiss::{index::{BinaryIndexImpl, UpcastIndexBinary}, BinaryFlatIndex, index_binary_factory};
-/// let f1 = BinaryFlatIndex::new(128).unwrap();
-/// let f2 = index_binary_factory(128, "BFlat").unwrap();
-/// let v: Vec<BinaryIndexImpl> = vec![
-///     f1.upcast(),
-///     f2,
-/// ];
-/// ```
-///
 pub trait UpcastIndexBinary: NativeIndexBinary {
     /// Convert an index to the base `BinaryIndexImpl` type
     fn upcast(self) -> BinaryIndexImpl;
