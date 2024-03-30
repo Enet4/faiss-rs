@@ -315,63 +315,65 @@ macro_rules! impl_native_binary_index {
     };
 }
 
-/// A macro which provides a concurrent index implementation to the given type.
-macro_rules! impl_concurrent_binary_index {
-    ($t:ty) => {
-        impl crate::index::ConcurrentIndexBinary for $t
-        where
-            Self: crate::index::IndexBinary + crate::index::NativeIndexBinary,
-        {
-            fn assign(&self, query: &[u8], k: usize) -> Result<AssignSearchResult> {
-                unsafe {
-                    let nq = query.len() / self.d() as usize;
-                    let mut out_labels = vec![Idx::none(); k * nq];
-                    faiss_try(faiss_IndexBinary_assign(
-                        self.inner_ptr(),
-                        nq as idx_t,
-                        query.as_ptr(),
-                        out_labels.as_mut_ptr() as *mut _,
-                        k as i64,
-                    ))?;
-                    Ok(AssignSearchResult { labels: out_labels })
-                }
-            }
+// FIXME: Reinstate this once there are other concrete implementations for Binary Indexes.
+//        For now, this is just a red herring for CI since we have `-D unused-macros`
+// /// A macro which provides a concurrent index implementation to the given type.
+// macro_rules! impl_concurrent_binary_index {
+//     ($t:ty) => {
+//         impl crate::index::ConcurrentIndexBinary for $t
+//         where
+//             Self: crate::index::IndexBinary + crate::index::NativeIndexBinary,
+//         {
+//             fn assign(&self, query: &[u8], k: usize) -> Result<AssignSearchResult> {
+//                 unsafe {
+//                     let nq = query.len() / self.d() as usize;
+//                     let mut out_labels = vec![Idx::none(); k * nq];
+//                     faiss_try(faiss_IndexBinary_assign(
+//                         self.inner_ptr(),
+//                         nq as idx_t,
+//                         query.as_ptr(),
+//                         out_labels.as_mut_ptr() as *mut _,
+//                         k as i64,
+//                     ))?;
+//                     Ok(AssignSearchResult { labels: out_labels })
+//                 }
+//             }
 
-            fn search(&self, query: &[u8], k: usize) -> Result<SearchResultBinary> {
-                unsafe {
-                    let nq = query.len() / self.d() as usize;
-                    let mut distances = vec![0_i32; k * nq];
-                    let mut labels = vec![Idx::none(); k * nq];
-                    faiss_try(faiss_IndexBinary_search(
-                        self.inner_ptr(),
-                        nq as idx_t,
-                        query.as_ptr(),
-                        k as idx_t,
-                        distances.as_mut_ptr(),
-                        labels.as_mut_ptr() as *mut _,
-                    ))?;
-                    Ok(SearchResultBinary { distances, labels })
-                }
-            }
+//             fn search(&self, query: &[u8], k: usize) -> Result<SearchResultBinary> {
+//                 unsafe {
+//                     let nq = query.len() / self.d() as usize;
+//                     let mut distances = vec![0_i32; k * nq];
+//                     let mut labels = vec![Idx::none(); k * nq];
+//                     faiss_try(faiss_IndexBinary_search(
+//                         self.inner_ptr(),
+//                         nq as idx_t,
+//                         query.as_ptr(),
+//                         k as idx_t,
+//                         distances.as_mut_ptr(),
+//                         labels.as_mut_ptr() as *mut _,
+//                     ))?;
+//                     Ok(SearchResultBinary { distances, labels })
+//                 }
+//             }
 
-            fn range_search(&self, query: &[u8], radius: i32) -> Result<RangeSearchResult> {
-                unsafe {
-                    let nq = (query.len() / self.d() as usize) as idx_t;
-                    let mut p_res: *mut FaissRangeSearchResult = ptr::null_mut();
-                    faiss_try(faiss_RangeSearchResult_new(&mut p_res, nq))?;
-                    faiss_try(faiss_IndexBinary_range_search(
-                        self.inner_ptr(),
-                        nq,
-                        query.as_ptr(),
-                        radius,
-                        p_res,
-                    ))?;
-                    Ok(RangeSearchResult { inner: p_res })
-                }
-            }
-        }
-    };
-}
+//             fn range_search(&self, query: &[u8], radius: i32) -> Result<RangeSearchResult> {
+//                 unsafe {
+//                     let nq = (query.len() / self.d() as usize) as idx_t;
+//                     let mut p_res: *mut FaissRangeSearchResult = ptr::null_mut();
+//                     faiss_try(faiss_RangeSearchResult_new(&mut p_res, nq))?;
+//                     faiss_try(faiss_IndexBinary_range_search(
+//                         self.inner_ptr(),
+//                         nq,
+//                         query.as_ptr(),
+//                         radius,
+//                         p_res,
+//                     ))?;
+//                     Ok(RangeSearchResult { inner: p_res })
+//                 }
+//             }
+//         }
+//     };
+// }
 
 
 /// A macro which provides a concurrent binary index implementation to the given type.
