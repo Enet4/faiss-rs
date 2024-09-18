@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 env:
   CARGO_TERM_COLOR: always
@@ -19,25 +19,25 @@ jobs:
           - stable
           - beta
     steps:
-    - uses: actions/checkout@v3
-    - name: Cache Faiss shared objects
-      uses: actions/cache@v3
-      with:
-        path: ~/.faiss_c
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-libfaiss
-    - name: Install CMake
-      uses: lukka/get-cmake@latest
-    - name: Download and build Faiss
-      run: ./faiss-sys/ci/install_faiss_c.sh
-    - name: Install Faiss
-      run: sudo cp $HOME/.faiss_c/lib*.so /usr/lib/
-    - uses: actions-rust-lang/setup-rust-toolchain@v1
-      with:
-        toolchain: ${{ matrix.rust }}
-        cache: true
-    # Build and run tests
-    - name: Run tests
-      run: cargo test --verbose
+      - uses: actions/checkout@v3
+      - name: Cache Faiss shared objects
+        uses: actions/cache@v3
+        with:
+          path: ~/.faiss_c
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-libfaiss
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+      - name: Download and build Faiss
+        run: ./faiss-sys/ci/install_faiss_c.sh
+      - name: Install Faiss
+        run: sudo cp $HOME/.faiss_c/lib*.so /usr/lib/
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          cache: true
+      # Build and run tests
+      - name: Run tests
+        run: cargo test --verbose
 
   # test `faiss` crates with static linking
   build-static:
@@ -47,20 +47,20 @@ jobs:
         rust:
           - stable
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-    - uses: actions-rust-lang/setup-rust-toolchain@v1
-      with:
-        toolchain: ${{ matrix.rust }}
-        cache: true
-    - name: Install CMake
-      uses: lukka/get-cmake@latest
-    - run: gcc -v
-    - run: cmake --version
-    # Build everything and run tests
-    - name: Run tests
-      run: cargo test --verbose --features static
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          cache: true
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+      - run: gcc -v
+      - run: cmake --version
+      # Build everything and run tests
+      - name: Run tests
+        run: cargo test --verbose --features static
 
   clippy:
     name: Clippy
