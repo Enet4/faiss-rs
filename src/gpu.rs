@@ -110,6 +110,14 @@ impl StandardGpuResources {
     }
 }
 
+impl Drop for StandardGpuResources {
+    fn drop(&mut self) {
+        unsafe {
+            faiss_StandardGpuResources_free(self.inner);
+        }
+    }
+}
+
 impl GpuResourcesProvider for StandardGpuResources {
     fn inner_ptr(&self) -> *mut FaissGpuResourcesProvider {
         self.inner as *mut _
@@ -168,5 +176,21 @@ mod tests {
     #[test]
     fn smoke_detector() {
         StandardGpuResources::new().unwrap();
+    }
+
+    // The test marked as ignored because it takes a significant amount of time.
+    #[ignore]
+    #[test]
+    fn resources_leak() {
+        use crate::{index_factory, MetricType};
+
+        // Try to allocate gpu resources multiple times in a loop.
+        // If resources are not properly deallocated this will cause out-of-memory error.
+        for _ in 0..50 {
+            let res = StandardGpuResources::new().unwrap();
+            // We need to create an index because `StandardGpuResources` constructor does not allocate actual resources.
+            let index = index_factory(32, "Flat", MetricType::InnerProduct).unwrap();
+            let _gpu_index = index.into_gpu(&res, 0).unwrap();
+        }
     }
 }
