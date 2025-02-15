@@ -313,6 +313,52 @@ impl<I> Index for IdMap<I> {
             faiss_Index_set_verbose(self.inner_ptr(), c_int::from(value));
         }
     }
+
+    
+            
+    fn reconstruct(
+        &self,
+        idx: Idx,
+        output: &mut [f32]
+    ) -> Result<()> {
+        unsafe {
+            let d = self.d() as usize;
+            if d != output.len() {
+                return Err(crate::error::Error::BadDimension);
+            }
+            
+            faiss_try(faiss_Index_reconstruct(
+                self.inner_ptr(),
+                idx.0,
+                output.as_mut_ptr()
+            ))?;
+
+            Ok(())
+        }
+    }
+
+    fn reconstruct_n(
+        &self, 
+        first_key: Idx, 
+        count: usize, 
+        output: &mut [f32]
+    ) -> Result<()> {
+        unsafe {
+            let d = self.d() as usize;
+            if count * d != output.len() {
+                return Err(crate::error::Error::BadDimension);
+            }
+            
+            faiss_try(faiss_Index_reconstruct_n(
+                self.inner_ptr(),
+                first_key.0,
+                count as i64,
+                output.as_mut_ptr()
+            ))?;
+
+            Ok(())
+        }
+    }
 }
 
 impl<I> ConcurrentIndex for IdMap<I>

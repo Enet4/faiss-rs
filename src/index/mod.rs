@@ -174,6 +174,10 @@ pub trait Index {
     /// by the given radius.
     fn range_search(&mut self, q: &[f32], radius: f32) -> Result<RangeSearchResult>;
 
+    fn reconstruct(&self, key: Idx, output: &mut [f32]) -> Result<()>;
+
+    fn reconstruct_n(&self, first_key: Idx, count: usize, output: &mut [f32]) -> Result<()>;
+
     /// Clear the entire index.
     fn reset(&mut self) -> Result<()>;
 
@@ -229,6 +233,14 @@ where
 
     fn range_search(&mut self, q: &[f32], radius: f32) -> Result<RangeSearchResult> {
         (**self).range_search(q, radius)
+    }
+
+    fn reconstruct(&self, key: Idx, output: &mut [f32]) -> Result<()> {
+        (**self).reconstruct(key, output)
+    }
+
+    fn reconstruct_n(&self, first_key: Idx, count: usize, output: &mut [f32]) -> Result<()> {
+        (**self).reconstruct_n(first_key, count, output)
     }
 
     fn reset(&mut self) -> Result<()> {

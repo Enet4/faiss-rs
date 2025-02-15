@@ -83,6 +83,7 @@ macro_rules! impl_native_index {
                     Ok(())
                 }
             }
+
             fn train(&mut self, x: &[f32]) -> Result<()> {
                 unsafe {
                     let n = x.len() / self.d() as usize;
@@ -90,6 +91,7 @@ macro_rules! impl_native_index {
                     Ok(())
                 }
             }
+
             fn assign(
                 &mut self,
                 query: &[f32],
@@ -108,6 +110,7 @@ macro_rules! impl_native_index {
                     Ok(crate::index::AssignSearchResult { labels: out_labels })
                 }
             }
+
             fn search(&mut self, query: &[f32], k: usize) -> Result<crate::index::SearchResult> {
                 unsafe {
                     let nq = query.len() / self.d() as usize;
@@ -124,6 +127,7 @@ macro_rules! impl_native_index {
                     Ok(crate::index::SearchResult { distances, labels })
                 }
             }
+
             fn range_search(
                 &mut self,
                 query: &[f32],
@@ -141,6 +145,50 @@ macro_rules! impl_native_index {
                         p_res,
                     ))?;
                     Ok(crate::index::RangeSearchResult { inner: p_res })
+                }
+            }
+            
+            fn reconstruct(
+                &self,
+                idx: Idx,
+                output: &mut [f32]
+            ) -> Result<()> {
+                unsafe {
+                    let d = self.d() as usize;
+                    if d != output.len() {
+                        return Err(crate::error::Error::BadDimension);
+                    }
+                    
+                    faiss_try(faiss_Index_reconstruct(
+                        self.inner_ptr(),
+                        idx.0,
+                        output.as_mut_ptr()
+                    ))?;
+
+                    Ok(())
+                }
+            }
+
+            fn reconstruct_n(
+                &self, 
+                first_key: Idx, 
+                count: usize, 
+                output: &mut [f32]
+            ) -> Result<()> {
+                unsafe {
+                    let d = self.d() as usize;
+                    if count * d != output.len() {
+                        return Err(crate::error::Error::BadDimension);
+                    }
+                    
+                    faiss_try(faiss_Index_reconstruct_n(
+                        self.inner_ptr(),
+                        first_key.0,
+                        count as i64,
+                        output.as_mut_ptr()
+                    ))?;
+
+                    Ok(())
                 }
             }
 
