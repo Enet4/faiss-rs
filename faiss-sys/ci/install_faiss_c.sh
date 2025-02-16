@@ -2,7 +2,7 @@
 set -eu
 
 repo_url=https://github.com/facebookresearch/faiss
-repo_rev=v1.7.2
+repo_rev=v1.8.0
 
 git clone "$repo_url" faiss --branch "$repo_rev" --depth 1
 
