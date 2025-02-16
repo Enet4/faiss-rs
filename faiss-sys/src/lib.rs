@@ -31,6 +31,20 @@ mod tests {
             assert!(!last_error.is_null());
         }
     }
+    #[test]
+    fn flat_index_binary() {
+        const D: usize = 8;
+        unsafe {
+            let description = CString::new::<&str>("BFlat".as_ref()).unwrap();
+            let mut index_ptr = ::std::ptr::null_mut();
+            let code = faiss_index_binary_factory(
+                &mut index_ptr,
+                (D & 0x7FFF_FFFF) as i32,
+                description.as_ptr(),
+            );
+            assert_eq!(code, 0);
+        }
+    }
 
     #[test]
     fn flat_index() {

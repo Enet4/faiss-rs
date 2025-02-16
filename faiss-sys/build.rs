@@ -11,11 +11,10 @@ fn static_link_faiss() {
     cfg.define("FAISS_ENABLE_C_API", "ON")
         .define("BUILD_SHARED_LIBS", "OFF")
         .define("CMAKE_BUILD_TYPE", "Release")
-        .define("FAISS_ENABLE_GPU", if cfg!(feature = "gpu") {
-            "ON"
-        } else {
-            "OFF"
-        })
+        .define(
+            "FAISS_ENABLE_GPU",
+            if cfg!(feature = "gpu") { "ON" } else { "OFF" },
+        )
         .define("FAISS_ENABLE_PYTHON", "OFF")
         .define("BUILD_TESTING", "OFF")
         .very_verbose(true);
