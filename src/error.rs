@@ -24,6 +24,8 @@ pub enum Error {
     ParameterName,
     /// The number of GPU resources and devices do not match.
     GpuResourcesMatch,
+    /// The dimension of the vector does not match the dimension of the index
+    BadDimension,
 }
 
 impl fmt::Display for Error {
@@ -37,6 +39,7 @@ impl fmt::Display for Error {
             Error::GpuResourcesMatch => {
                 fmt.write_str("Number of GPU resources and devices do not match")
             }
+            Error::BadDimension => fmt.write_str("invalid vector dimension")
         }
     }
 }
