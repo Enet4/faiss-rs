@@ -92,8 +92,8 @@ pub mod error;
 pub mod index;
 pub mod metric;
 pub mod selector;
-pub mod vector_transform;
 pub mod utils;
+pub mod vector_transform;
 
 #[cfg(feature = "gpu")]
 pub mod gpu;
