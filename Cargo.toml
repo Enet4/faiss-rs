@@ -23,3 +23,6 @@ path = "faiss-sys"
 
 [package.metadata.docs.rs]
 features = ["gpu"]
+
+[workspace]
+members = ["faiss-sys"]

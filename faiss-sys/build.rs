@@ -8,20 +8,30 @@ fn main() {
 #[cfg(feature = "static")]
 fn static_link_faiss() {
     let mut cfg = cmake::Config::new("faiss");
+
     cfg.define("FAISS_ENABLE_C_API", "ON")
         .define("BUILD_SHARED_LIBS", "OFF")
-        .define("CMAKE_BUILD_TYPE", "Release")
-        .define("FAISS_ENABLE_GPU", if cfg!(feature = "gpu") {
-            "ON"
-        } else {
-            "OFF"
-        })
+        .define(
+            "FAISS_ENABLE_GPU",
+            if cfg!(feature = "gpu") { "ON" } else { "OFF" },
+        )
         .define("FAISS_ENABLE_PYTHON", "OFF")
         .define("BUILD_TESTING", "OFF")
         .very_verbose(true);
+
+    let profile = cfg.get_profile().to_owned();
     let dst = cfg.build();
+
     let faiss_location = dst.join("lib");
+
+    // CMake on Windows puts the C API library in a subfolder based on the build
+    // profile
+    #[cfg(windows)]
+    let faiss_c_location = dst.join("build\\c_api").join(profile);
+
+    #[cfg(not(windows))]
     let faiss_c_location = dst.join("build/c_api");
+
     println!(
         "cargo:rustc-link-search=native={}",
         faiss_location.display()
