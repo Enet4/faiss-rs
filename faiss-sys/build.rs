@@ -19,6 +19,7 @@ fn static_link_faiss() {
         )
         .define("FAISS_ENABLE_PYTHON", "OFF")
         .define("BUILD_TESTING", "OFF")
+        .profile("RelWithDebInfo")
         .very_verbose(true);
 
     let profile = cfg.get_profile().to_owned();
