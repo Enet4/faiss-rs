@@ -68,6 +68,21 @@ Compiling Faiss with GPU support is also possible.
 "faiss" = { version = "0.11.0", features = ["static", "gpu"] }
 ```
 
+## Troubleshooting on Windows
+
+Getting this library to work properly on Windows is non-trivial because FAISS
+requires a BLAS, and Windows doesn't have a default one. There are a few
+options for your BLAS.
+
+### Intel oneAPI
+
+Intel's MKL can function as a BLAS, and the typical way it is installed on
+Windows is through Intel's
+[oneAPI](https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-download.html).
+Set the `ONEAPI_ROOT` environment variable while building to the folder where
+oneAPI is installed (typically `C:\Program Files (x86)\Intel\oneAPI`) and the
+build script of `faiss-rs` should pick it up automatically.
+
 ## Using
 
 A basic example is seen below. Please check out the [documentation](https://docs.rs/faiss) for more.
