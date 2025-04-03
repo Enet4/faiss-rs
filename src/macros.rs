@@ -143,6 +143,31 @@ macro_rules! impl_native_index {
                     Ok(crate::index::RangeSearchResult { inner: p_res })
                 }
             }
+            fn search_with_filter(
+                &mut self,
+                q: &[f32],
+                k: usize,
+                sel: &IdSelector,
+            ) -> Result<SearchResult> {
+                unsafe {
+                    let nq = q.len() / self.d() as usize;
+                    let mut distances = vec![0_f32; k * nq];
+                    let mut labels = vec![Idx::none(); k * nq];
+                    let sel = sel.inner_ptr();
+                    let mut param: *mut FaissSearchParameters = ::std::ptr::null_mut();
+                    faiss_try(faiss_SearchParameters_new(&mut param, sel))?;
+                    faiss_try(faiss_Index_search_with_params(
+                        self.inner_ptr(),
+                        nq as idx_t,
+                        q.as_ptr(),
+                        k as idx_t,
+                        param,
+                        distances.as_mut_ptr(),
+                        labels.as_mut_ptr() as *mut _,
+                    ))?;
+                    Ok(SearchResult { distances, labels })
+                }
+            }
 
             fn reset(&mut self) -> Result<()> {
                 unsafe {

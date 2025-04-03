@@ -174,6 +174,9 @@ pub trait Index {
     /// by the given radius.
     fn range_search(&mut self, q: &[f32], radius: f32) -> Result<RangeSearchResult>;
 
+    fn search_with_filter(&mut self, q: &[f32], k: usize, sel: &IdSelector)
+        -> Result<SearchResult>;
+
     /// Clear the entire index.
     fn reset(&mut self) -> Result<()>;
 
@@ -229,6 +232,15 @@ where
 
     fn range_search(&mut self, q: &[f32], radius: f32) -> Result<RangeSearchResult> {
         (**self).range_search(q, radius)
+    }
+
+    fn search_with_filter(
+        &mut self,
+        q: &[f32],
+        k: usize,
+        sel: &IdSelector,
+    ) -> Result<SearchResult> {
+        (**self).search_with_filter(q, k, sel)
     }
 
     fn reset(&mut self) -> Result<()> {
