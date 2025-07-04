@@ -174,8 +174,14 @@ pub trait Index {
     /// by the given radius.
     fn range_search(&mut self, q: &[f32], radius: f32) -> Result<RangeSearchResult>;
 
+    /// Reconstruct a single stored vector (or an approximation if lossy coding)
+    ///
+    /// This function may not be defined for some indexes.
     fn reconstruct(&self, key: Idx, output: &mut [f32]) -> Result<()>;
 
+    /// Reconstruct vectors `i0` to `i0 + ni - 1`.
+    ///
+    /// This function may not be defined for some indexes.
     fn reconstruct_n(&self, first_key: Idx, count: usize, output: &mut [f32]) -> Result<()>;
 
     /// Clear the entire index.
