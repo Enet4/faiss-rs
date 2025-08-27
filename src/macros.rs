@@ -41,7 +41,7 @@ macro_rules! impl_native_linear_transform {
 /// A macro which provides a native index implementation to the given type.
 macro_rules! impl_native_index {
     ($t:ty) => {
-        impl crate::index::Index for $t {
+        impl crate::index::Index<f32, f32> for $t {
             fn is_trained(&self) -> bool {
                 unsafe { faiss_Index_is_trained(self.inner_ptr()) != 0 }
             }
@@ -229,7 +229,7 @@ macro_rules! impl_concurrent_index {
     ($t:ty) => {
         impl crate::index::ConcurrentIndex for $t
         where
-            Self: crate::index::Index + crate::index::NativeIndex,
+            Self: crate::index::Index<f32, f32> + crate::index::NativeIndex,
         {
             fn assign(&self, query: &[f32], k: usize) -> Result<AssignSearchResult> {
                 unsafe {
@@ -276,6 +276,145 @@ macro_rules! impl_concurrent_index {
                         p_res,
                     ))?;
                     Ok(RangeSearchResult { inner: p_res })
+                }
+            }
+        }
+    };
+}
+
+
+/// A macro which provides a native index implementation to the given type.
+macro_rules! impl_native_index_binary {
+    ($t:ty) => {
+        impl crate::index::Index<u8, i32> for $t {
+            fn is_trained(&self) -> bool {
+                unsafe { faiss_IndexBinary_is_trained(self.inner_ptr()) != 0 }
+            }
+
+            fn ntotal(&self) -> u64 {
+                unsafe { faiss_IndexBinary_ntotal(self.inner_ptr()) as u64 }
+            }
+
+            fn d(&self) -> u32 {
+                unsafe { faiss_IndexBinary_d(self.inner_ptr()) as u32 }
+            }
+
+            fn metric_type(&self) -> crate::metric::MetricType {
+                unsafe {
+                    crate::metric::MetricType::from_code(
+                        faiss_IndexBinary_metric_type(self.inner_ptr()) as u32
+                    )
+                    .unwrap()
+                }
+            }
+
+            fn add(&mut self, x: &[u8]) -> Result<()> {
+                unsafe {
+                    let n = x.len() / (self.d() as usize / 8);
+                    faiss_try(faiss_IndexBinary_add(self.inner_ptr(), n as i64, x.as_ptr()))?;
+                    Ok(())
+                }
+            }
+
+            fn add_with_ids(&mut self, x: &[u8], xids: &[crate::index::Idx]) -> Result<()> {
+                unsafe {
+                    let n = x.len() / (self.d() as usize / 8);
+                    faiss_try(faiss_IndexBinary_add_with_ids(
+                        self.inner_ptr(),
+                        n as i64,
+                        x.as_ptr(),
+                        xids.as_ptr() as *const _,
+                    ))?;
+                    Ok(())
+                }
+            }
+            fn train(&mut self, x: &[u8]) -> Result<()> {
+                unsafe {
+                    let n = x.len() / (self.d() as usize / 8);
+                    faiss_try(faiss_IndexBinary_train(self.inner_ptr(), n as i64, x.as_ptr()))?;
+                    Ok(())
+                }
+            }
+            fn assign(
+                &mut self,
+                query: &[u8],
+                k: usize,
+            ) -> Result<crate::index::AssignSearchResult> {
+                unsafe {
+                    let nq = query.len() / (self.d() as usize / 8);
+                    let mut out_labels = vec![Idx::none(); k * nq];
+                    faiss_try(faiss_IndexBinary_assign(
+                        self.inner_ptr(),
+                        nq as idx_t,
+                        query.as_ptr(),
+                        out_labels.as_mut_ptr() as *mut _,
+                        k as i64,
+                    ))?;
+                    Ok(crate::index::AssignSearchResult { labels: out_labels })
+                }
+            }
+            fn search(&mut self, query: &[u8], k: usize) -> Result<crate::index::SearchResult<i32>> {
+                unsafe {
+                    let nq = query.len() / (self.d() as usize / 8);
+                    let mut distances = vec![0_i32; k * nq];
+                    let mut labels = vec![Idx::none(); k * nq];
+                    faiss_try(faiss_IndexBinary_search(
+                        self.inner_ptr(),
+                        nq as idx_t,
+                        query.as_ptr(),
+                        k as idx_t,
+                        distances.as_mut_ptr(),
+                        labels.as_mut_ptr() as *mut _,
+                    ))?;
+                    Ok(crate::index::SearchResult { distances, labels })
+                }
+            }
+            fn range_search(
+                &mut self,
+                query: &[u8],
+                radius: i32,
+            ) -> Result<crate::index::RangeSearchResult> {
+                unsafe {
+                    let nq = (query.len() / (self.d() as usize / 8)) as idx_t;
+                    let mut p_res: *mut FaissRangeSearchResult = ::std::ptr::null_mut();
+                    faiss_try(faiss_RangeSearchResult_new(&mut p_res, nq))?;
+                    faiss_try(faiss_IndexBinary_range_search(
+                        self.inner_ptr(),
+                        nq,
+                        query.as_ptr(),
+                        radius,
+                        p_res,
+                    ))?;
+                    Ok(crate::index::RangeSearchResult { inner: p_res })
+                }
+            }
+
+            fn reset(&mut self) -> Result<()> {
+                unsafe {
+                    faiss_try(faiss_IndexBinary_reset(self.inner_ptr()))?;
+                    Ok(())
+                }
+            }
+
+            fn remove_ids(&mut self, sel: &IdSelector) -> Result<usize> {
+                unsafe {
+                    let mut n_removed = 0;
+                    faiss_try(faiss_IndexBinary_remove_ids(
+                        self.inner_ptr(),
+                        sel.inner_ptr(),
+                        &mut n_removed,
+                    ))?;
+                    Ok(n_removed)
+                }
+            }
+
+            fn verbose(&self) -> bool {
+                unsafe { faiss_IndexBinary_verbose(self.inner_ptr()) != 0 }
+            }
+
+            fn set_verbose(&mut self, value: bool) {
+                unsafe {
+                    faiss_IndexBinary_set_verbose(self.inner_ptr(), std::os::raw::c_int::from(value));
                 }
             }
         }

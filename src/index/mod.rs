@@ -137,7 +137,7 @@ impl PartialOrd<Idx> for Idx {
 /// to understand which index algorithms support which operations.
 ///
 /// [`FlatIndex`]: flat/struct.FlatIndex.html
-pub trait Index {
+pub trait Index<Data = f32, Radius = f32> {
     /// Whether the Index does not require training, or if training is done already
     fn is_trained(&self) -> bool;
 
@@ -153,26 +153,26 @@ pub trait Index {
     /// Add new data vectors to the index.
     /// This assumes a C-contiguous memory slice of vectors, where the total
     /// number of vectors is `x.len() / d`.
-    fn add(&mut self, x: &[f32]) -> Result<()>;
+    fn add(&mut self, x: &[Data]) -> Result<()>;
 
     /// Add new data vectors to the index with IDs.
     /// This assumes a C-contiguous memory slice of vectors, where the total
     /// number of vectors is `x.len() / d`.
     /// Not all index types may support this operation.
-    fn add_with_ids(&mut self, x: &[f32], xids: &[Idx]) -> Result<()>;
+    fn add_with_ids(&mut self, x: &[Data], xids: &[Idx]) -> Result<()>;
 
     /// Train the underlying index with the given data.
-    fn train(&mut self, x: &[f32]) -> Result<()>;
+    fn train(&mut self, x: &[Data]) -> Result<()>;
 
     /// Similar to `search`, but only provides the labels.
-    fn assign(&mut self, q: &[f32], k: usize) -> Result<AssignSearchResult>;
+    fn assign(&mut self, q: &[Data], k: usize) -> Result<AssignSearchResult>;
 
     /// Perform a search for the `k` closest vectors to the given query vectors.
-    fn search(&mut self, q: &[f32], k: usize) -> Result<SearchResult>;
+    fn search(&mut self, q: &[Data], k: usize) -> Result<SearchResult<Radius>>;
 
     /// Perform a ranged search for the vectors closest to the given query vectors
     /// by the given radius.
-    fn range_search(&mut self, q: &[f32], radius: f32) -> Result<RangeSearchResult>;
+    fn range_search(&mut self, q: &[Data], radius: Radius) -> Result<RangeSearchResult>;
 
     /// Reconstruct a single stored vector (or an approximation if lossy coding)
     ///
@@ -197,9 +197,9 @@ pub trait Index {
     fn set_verbose(&mut self, value: bool);
 }
 
-impl<I> Index for Box<I>
+impl<I, Data, Radius> Index<Data, Radius> for Box<I>
 where
-    I: Index,
+    I: Index<Data, Radius>,
 {
     fn is_trained(&self) -> bool {
         (**self).is_trained()
@@ -217,27 +217,27 @@ where
         (**self).metric_type()
     }
 
-    fn add(&mut self, x: &[f32]) -> Result<()> {
+    fn add(&mut self, x: &[Data]) -> Result<()> {
         (**self).add(x)
     }
 
-    fn add_with_ids(&mut self, x: &[f32], xids: &[Idx]) -> Result<()> {
+    fn add_with_ids(&mut self, x: &[Data], xids: &[Idx]) -> Result<()> {
         (**self).add_with_ids(x, xids)
     }
 
-    fn train(&mut self, x: &[f32]) -> Result<()> {
+    fn train(&mut self, x: &[Data]) -> Result<()> {
         (**self).train(x)
     }
 
-    fn assign(&mut self, q: &[f32], k: usize) -> Result<AssignSearchResult> {
+    fn assign(&mut self, q: &[Data], k: usize) -> Result<AssignSearchResult> {
         (**self).assign(q, k)
     }
 
-    fn search(&mut self, q: &[f32], k: usize) -> Result<SearchResult> {
+    fn search(&mut self, q: &[Data], k: usize) -> Result<SearchResult<Radius>> {
         (**self).search(q, k)
     }
 
-    fn range_search(&mut self, q: &[f32], radius: f32) -> Result<RangeSearchResult> {
+    fn range_search(&mut self, q: &[Data], radius: Radius) -> Result<RangeSearchResult> {
         (**self).range_search(q, radius)
     }
 
@@ -267,13 +267,25 @@ where
 }
 
 /// Sub-trait for native implementations of a Faiss index.
-pub trait NativeIndex: Index {
+pub trait NativeIndex: Index<f32, f32> {
     /// Retrieve a pointer to the native index object.
     fn inner_ptr(&self) -> *mut FaissIndex;
 }
 
+/// Sub-trait for native implementations of a Faiss binary index.
+pub trait NativeIndexBinary: Index<u8, i32> {
+    /// Retrieve a pointer to the native index binary object.
+    fn inner_ptr(&self) -> *mut FaissIndexBinary;
+}
+
 impl<NI: NativeIndex> NativeIndex for Box<NI> {
     fn inner_ptr(&self) -> *mut FaissIndex {
+        (**self).inner_ptr()
+    }
+}
+
+impl<NI: NativeIndexBinary> NativeIndexBinary for Box<NI> {
+    fn inner_ptr(&self) -> *mut FaissIndexBinary {
         (**self).inner_ptr()
     }
 }
@@ -286,36 +298,64 @@ impl<NI: NativeIndex> NativeIndex for Box<NI> {
 ///
 /// Users of these methods should still note that batched querying is
 /// considerably faster than running queries one by one, even in parallel.
-pub trait ConcurrentIndex: Index {
+pub trait ConcurrentIndex<Data = f32, Radius = f32>: Index<Data, Radius> {
     /// Similar to `search`, but only provides the labels.
-    fn assign(&self, q: &[f32], k: usize) -> Result<AssignSearchResult>;
+    fn assign(&self, q: &[Data], k: usize) -> Result<AssignSearchResult>;
 
     /// Perform a search for the `k` closest vectors to the given query vectors.
-    fn search(&self, q: &[f32], k: usize) -> Result<SearchResult>;
+    fn search(&self, q: &[Data], k: usize) -> Result<SearchResult<Data>>;
 
     /// Perform a ranged search for the vectors closest to the given query vectors
     /// by the given radius.
-    fn range_search(&self, q: &[f32], radius: f32) -> Result<RangeSearchResult>;
+    fn range_search(&self, q: &[Data], radius: Radius) -> Result<RangeSearchResult>;
 }
 
-impl<CI: ConcurrentIndex> ConcurrentIndex for Box<CI> {
-    fn assign(&self, q: &[f32], k: usize) -> Result<AssignSearchResult> {
+impl<Data, Radius, CI: ConcurrentIndex<Data, Radius>> ConcurrentIndex<Data, Radius> for Box<CI> {
+    fn assign(&self, q: &[Data], k: usize) -> Result<AssignSearchResult> {
         (**self).assign(q, k)
     }
 
-    fn search(&self, q: &[f32], k: usize) -> Result<SearchResult> {
+    fn search(&self, q: &[Data], k: usize) -> Result<SearchResult<Data>> {
         (**self).search(q, k)
     }
 
-    fn range_search(&self, q: &[f32], radius: f32) -> Result<RangeSearchResult> {
+    fn range_search(&self, q: &[Data], radius: Radius) -> Result<RangeSearchResult> {
+        (**self).range_search(q, radius)
+    }
+}
+
+pub trait ConcurrentIndexBinary: Index<u8, i32> {
+    /// Similar to `search`, but only provides the labels.
+    fn assign(&self, q: &[u8], k: usize) -> Result<AssignSearchResult>;
+
+    /// Perform a search for the `k` closest vectors to the given query vectors.
+    fn search(&self, q: &[u8], k: usize) -> Result<SearchResult<i32>>;
+
+    /// Perform a ranged search for the vectors closest to the given query vectors
+    /// by the given radius.
+    fn range_search(&self, q: &[u8], radius: i32) -> Result<RangeSearchResult>;
+}
+
+impl<CI: ConcurrentIndexBinary> ConcurrentIndexBinary for Box<CI> {
+    fn assign(&self, q: &[u8], k: usize) -> Result<AssignSearchResult> {
+        (**self).assign(q, k)
+    }
+    fn search(&self, q: &[u8], k: usize) -> Result<SearchResult<i32>> {
+        (**self).search(q, k)
+    }
+    fn range_search(&self, q: &[u8], radius: i32) -> Result<RangeSearchResult> {
         (**self).range_search(q, radius)
     }
 }
 
 /// Trait for Faiss index types known to be running on the CPU.
-pub trait CpuIndex: Index {}
+pub trait CpuIndex<Data = f32, Radius = f32>: Index<Data, Radius> {}
 
-impl<CI: CpuIndex> CpuIndex for Box<CI> {}
+impl<Data, Radius, CI: CpuIndex<Data, Radius>> CpuIndex<Data, Radius> for Box<CI> {}
+
+pub trait CpuIndexBinary: Index<u8, i32> {}
+
+impl<CI: CpuIndexBinary> CpuIndexBinary for Box<CI> {}
 
 /// Trait for Faiss index types which can be built from a pointer
 /// to a native implementation.
@@ -353,6 +393,40 @@ pub trait TryFromInnerPtr: NativeIndex {
         Self: Sized;
 }
 
+/// Trait for Faiss binary index types which can be built from a pointer
+/// to a native implementation.
+pub trait FromInnerPtrBinary: NativeIndexBinary {
+    /// Create a binary index using the given pointer to a native object.
+    ///
+    /// # Safety
+    ///
+    /// `inner_ptr` must point to a valid, non-freed CPU binary index, and cannot be
+    /// shared across multiple instances. The inner index must also be
+    /// compatible with the target `NativeIndexBinary` type according to the native
+    /// class hierarchy.
+    unsafe fn from_inner_ptr_binary(inner_ptr: *mut FaissIndexBinary) -> Self;
+}
+
+/// Trait for Faiss binary index types which can be built from a pointer
+/// to a native implementation.
+pub trait TryFromInnerPtrBinary: NativeIndexBinary {
+    /// Create an index using the given pointer to a native object,
+    /// checking that the index behind the given pointer
+    /// is compatible with the target index type.
+    /// If the inner index is not compatible with the intended target type
+    /// (e.g. creating a `FlatIndex` out of a `FaissIndexLSH`),
+    /// an error is returned.
+    ///
+    /// # Safety
+    ///
+    /// This function is unable to check that
+    /// `inner_ptr` points to a valid, non-freed CPU binary index.
+    /// Moreover, `inner_ptr` must not be shared across multiple instances.
+    unsafe fn try_from_inner_ptr_binary(inner_ptr: *mut FaissIndexBinary) -> Result<Self>
+    where
+        Self: Sized;
+}
+
 /// A trait which provides a Clone implementation to native index types.
 pub trait TryClone {
     /// Create an independent clone of this index.
@@ -377,6 +451,22 @@ where
     }
 }
 
+pub fn try_clone_from_inner_ptr_binary<T>(val: &T) -> Result<T>
+where
+    T: FromInnerPtrBinary,
+{
+    unsafe {
+        let mut new_index_ptr = ::std::ptr::null_mut();
+        faiss_try(faiss_clone_index_binary(
+            val.inner_ptr(),
+            &mut new_index_ptr,
+        ))?;
+        Ok(crate::index::FromInnerPtrBinary::from_inner_ptr_binary(
+            new_index_ptr,
+        ))
+    }
+}
+
 /// The outcome of an index assign operation.
 #[derive(Debug, Clone, PartialEq)]
 pub struct AssignSearchResult {
@@ -385,8 +475,8 @@ pub struct AssignSearchResult {
 
 /// The outcome of an index search operation.
 #[derive(Debug, Clone, PartialEq)]
-pub struct SearchResult {
-    pub distances: Vec<f32>,
+pub struct SearchResult<Data = f32> {
+    pub distances: Vec<Data>,
     pub labels: Vec<Idx>,
 }
 
@@ -426,7 +516,7 @@ impl RangeSearchResult {
 
     /// getter for labels and respective distances (not sorted):
     /// result for query `i` is `labels[lims[i] .. lims[i+1]]`
-    pub fn distance_and_labels_mut(&self) -> (&mut [f32], &mut [Idx]) {
+    pub fn distance_and_labels_mut(&mut self) -> (&mut [f32], &mut [Idx]) {
         unsafe {
             let buf_size = faiss_RangeSearchResult_buffer_size(self.inner);
             let mut distances_ptr = ptr::null_mut();
@@ -468,6 +558,61 @@ impl Drop for RangeSearchResult {
         unsafe {
             faiss_RangeSearchResult_free(self.inner);
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct IndexBinaryImpl {
+    pub(crate) inner: *mut FaissIndexBinary,
+}
+
+unsafe impl Send for IndexBinaryImpl {}
+unsafe impl Sync for IndexBinaryImpl {}
+
+impl CpuIndexBinary for IndexBinaryImpl {}
+impl Drop for IndexBinaryImpl {
+    fn drop(&mut self) {
+        unsafe {
+            faiss_IndexBinary_free(self.inner);
+        }
+    }
+}
+impl IndexBinaryImpl {
+    pub fn inner_ptr(&self) -> *mut FaissIndexBinary {
+        self.inner
+    }
+}
+
+impl NativeIndexBinary for IndexBinaryImpl {
+    fn inner_ptr(&self) -> *mut FaissIndexBinary {
+        self.inner
+    }
+}
+
+impl FromInnerPtrBinary for IndexBinaryImpl {
+    unsafe fn from_inner_ptr_binary(inner_ptr: *mut FaissIndexBinary) -> Self {
+        IndexBinaryImpl { inner: inner_ptr }
+    }
+}
+
+impl TryFromInnerPtrBinary for IndexBinaryImpl {
+    unsafe fn try_from_inner_ptr_binary(inner_ptr: *mut FaissIndexBinary) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        if inner_ptr.is_null() {
+            Err(Error::BadCast)
+        } else {
+            Ok(IndexBinaryImpl { inner: inner_ptr })
+        }
+    }
+}
+
+impl<NIB: NativeIndexBinary> UpcastIndexBinary for NIB {
+    fn upcast(self) -> IndexBinaryImpl {
+        let inner_ptr = self.inner_ptr();
+        mem::forget(self);
+        unsafe { IndexBinaryImpl::from_inner_ptr_binary(inner_ptr) }
     }
 }
 
@@ -543,6 +688,11 @@ pub trait UpcastIndex: NativeIndex {
     fn upcast(self) -> IndexImpl;
 }
 
+pub trait UpcastIndexBinary: NativeIndexBinary {
+    /// Convert an index to the base `IndexImpl` type
+    fn upcast(self) -> IndexBinaryImpl;
+}
+
 impl<NI: NativeIndex> UpcastIndex for NI {
     fn upcast(self) -> IndexImpl {
         let inner_ptr = self.inner_ptr();
@@ -553,6 +703,7 @@ impl<NI: NativeIndex> UpcastIndex for NI {
 }
 
 impl_native_index!(IndexImpl);
+impl_native_index_binary!(IndexBinaryImpl);
 
 impl TryClone for IndexImpl {
     fn try_clone(&self) -> Result<Self>
@@ -560,6 +711,15 @@ impl TryClone for IndexImpl {
         Self: Sized,
     {
         try_clone_from_inner_ptr(self)
+    }
+}
+
+impl TryClone for IndexBinaryImpl {
+    fn try_clone(&self) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        try_clone_from_inner_ptr_binary(self)
     }
 }
 
@@ -590,9 +750,37 @@ where
     }
 }
 
+/// Use the index binary factory to create a native instance of a Faiss binary index, for `d`-dimensional
+/// vectors. `description` should follow the exact guidelines as the native Faiss interface
+/// (see the [Faiss wiki](https://github.com/facebookresearch/faiss/wiki/Binary-indexes) for examples).
+///
+/// These indexes store vectors as array of bytes, so that a vector of size `d` takes only `d / 8` bytes in memory.
+/// Only vectors with sizes multiple of 8 are supported.
+///
+/// # Error
+///
+/// This function returns an error if the description contains any byte with the value `\0` (since
+/// it cannot be converted to a C string), or if the internal index factory operation fails.
+pub fn index_binary_factory<D>(d: u32, description: D) -> Result<IndexBinaryImpl>
+where
+    D: AsRef<str>,
+{
+    unsafe {
+        let description =
+            CString::new(description.as_ref()).map_err(|_| Error::IndexDescription)?;
+        let mut index_ptr = ::std::ptr::null_mut();
+        faiss_try(faiss_index_binary_factory(
+            &mut index_ptr,
+            (d & 0x7FFF_FFFF) as i32,
+            description.as_ptr(),
+        ))?;
+        Ok(IndexBinaryImpl { inner: index_ptr })
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{index_factory, Idx, Index, TryClone};
+    use super::{index_binary_factory, index_factory, Idx, Index, TryClone};
     use crate::metric::MetricType;
 
     #[test]
@@ -600,6 +788,19 @@ mod tests {
         let index = index_factory(64, "Flat", MetricType::L2).unwrap();
         assert_eq!(index.is_trained(), true); // Flat index does not need training
         assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn index_binary_factory_flat() {
+        let index = index_binary_factory(256, "BFlat").unwrap();
+        assert_eq!(index.is_trained(), true);
+        assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn bad_dimension_index_binary_factory_not_divisible_by_8_flat() {
+        let r = index_binary_factory(9, "BFlat");
+        assert!(r.is_err());
     }
 
     #[test]
@@ -611,8 +812,23 @@ mod tests {
     }
 
     #[test]
+    fn index_binary_factory_flat_boxed() {
+        let index = index_binary_factory(256, "BFlat").unwrap();
+        let boxed = Box::new(index);
+        assert_eq!(boxed.is_trained(), true);
+        assert_eq!(boxed.ntotal(), 0);
+    }
+
+    #[test]
     fn index_factory_ivf_flat() {
         let index = index_factory(64, "IVF8,Flat", MetricType::L2).unwrap();
+        assert_eq!(index.is_trained(), false);
+        assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn index_binary_factory_ivf_flat() {
+        let index = index_binary_factory(256, "BIVF1024").unwrap();
         assert_eq!(index.is_trained(), false);
         assert_eq!(index.ntotal(), 0);
     }
@@ -658,6 +874,14 @@ mod tests {
     }
 
     #[test]
+    fn bad_index_binary_factory_description() {
+        let r = index_binary_factory(64, "Bjkads");
+        assert!(r.is_err());
+        let r = index_binary_factory(64, "Flat");
+        assert!(r.is_err());
+    }
+
+    #[test]
     fn index_clone() {
         let mut index = index_factory(4, "Flat", MetricType::L2).unwrap();
         let some_data = &[
@@ -679,6 +903,24 @@ mod tests {
         index2.add(some_more_data).unwrap();
         assert_eq!(index.ntotal(), 6);
         assert_eq!(index2.ntotal(), 10);
+    }
+
+    #[test]
+    fn index_binary_clone() {
+        let mut index = index_binary_factory(16, "BFlat").unwrap();
+        let some_data = &[255u8, 0, 1, 16];
+
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 2);
+
+        let mut index2 = index.try_clone().unwrap();
+        assert_eq!(index2.ntotal(), 2);
+
+        let some_more_data = &[2u8, 3, 4, 5];
+
+        index2.add(some_more_data).unwrap();
+        assert_eq!(index.ntotal(), 2);
+        assert_eq!(index2.ntotal(), 4);
     }
 
     #[test]
