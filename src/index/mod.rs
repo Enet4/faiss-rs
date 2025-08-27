@@ -404,7 +404,7 @@ pub trait FromInnerPtrBinary: NativeIndexBinary {
     /// shared across multiple instances. The inner index must also be
     /// compatible with the target `NativeIndexBinary` type according to the native
     /// class hierarchy.
-    unsafe fn from_inner_ptr_binary(inner_ptr: *mut FaissIndexBinary) -> Self;
+    unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndexBinary) -> Self;
 }
 
 /// Trait for Faiss binary index types which can be built from a pointer
@@ -422,7 +422,7 @@ pub trait TryFromInnerPtrBinary: NativeIndexBinary {
     /// This function is unable to check that
     /// `inner_ptr` points to a valid, non-freed CPU binary index.
     /// Moreover, `inner_ptr` must not be shared across multiple instances.
-    unsafe fn try_from_inner_ptr_binary(inner_ptr: *mut FaissIndexBinary) -> Result<Self>
+    unsafe fn try_from_inner_ptr(inner_ptr: *mut FaissIndexBinary) -> Result<Self>
     where
         Self: Sized;
 }
@@ -461,7 +461,7 @@ where
             val.inner_ptr(),
             &mut new_index_ptr,
         ))?;
-        Ok(crate::index::FromInnerPtrBinary::from_inner_ptr_binary(
+        Ok(crate::index::FromInnerPtrBinary::from_inner_ptr(
             new_index_ptr,
         ))
     }
@@ -590,13 +590,13 @@ impl NativeIndexBinary for IndexBinaryImpl {
 }
 
 impl FromInnerPtrBinary for IndexBinaryImpl {
-    unsafe fn from_inner_ptr_binary(inner_ptr: *mut FaissIndexBinary) -> Self {
+    unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndexBinary) -> Self {
         IndexBinaryImpl { inner: inner_ptr }
     }
 }
 
 impl TryFromInnerPtrBinary for IndexBinaryImpl {
-    unsafe fn try_from_inner_ptr_binary(inner_ptr: *mut FaissIndexBinary) -> Result<Self>
+    unsafe fn try_from_inner_ptr(inner_ptr: *mut FaissIndexBinary) -> Result<Self>
     where
         Self: Sized,
     {
@@ -612,7 +612,7 @@ impl<NIB: NativeIndexBinary> UpcastIndexBinary for NIB {
     fn upcast(self) -> IndexBinaryImpl {
         let inner_ptr = self.inner_ptr();
         mem::forget(self);
-        unsafe { IndexBinaryImpl::from_inner_ptr_binary(inner_ptr) }
+        unsafe { IndexBinaryImpl::from_inner_ptr(inner_ptr) }
     }
 }
 
