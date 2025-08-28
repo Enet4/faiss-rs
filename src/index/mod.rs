@@ -426,7 +426,7 @@ impl RangeSearchResult {
 
     /// getter for labels and respective distances (not sorted):
     /// result for query `i` is `labels[lims[i] .. lims[i+1]]`
-    pub fn distance_and_labels_mut(&self) -> (&mut [f32], &mut [Idx]) {
+    pub fn distance_and_labels_mut(&mut self) -> (&mut [f32], &mut [Idx]) {
         unsafe {
             let buf_size = faiss_RangeSearchResult_buffer_size(self.inner);
             let mut distances_ptr = ptr::null_mut();
