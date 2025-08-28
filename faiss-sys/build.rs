@@ -11,20 +11,24 @@ fn static_link_faiss() {
     cfg.define("FAISS_ENABLE_C_API", "ON")
         .define("BUILD_SHARED_LIBS", "OFF")
         .define("CMAKE_BUILD_TYPE", "Release")
-        .define("FAISS_ENABLE_GPU", if cfg!(feature = "gpu") {
-            "ON"
-        } else {
-            "OFF"
-        })
+        .define(
+            "FAISS_ENABLE_GPU",
+            if cfg!(feature = "gpu") { "ON" } else { "OFF" },
+        )
         .define("FAISS_ENABLE_PYTHON", "OFF")
         .define("BUILD_TESTING", "OFF")
         .very_verbose(true);
     let dst = cfg.build();
     let faiss_location = dst.join("lib");
+    let faiss64_location = dst.join("lib64");
     let faiss_c_location = dst.join("build/c_api");
     println!(
         "cargo:rustc-link-search=native={}",
         faiss_location.display()
+    );
+    println!(
+        "cargo:rustc-link-search=native={}",
+        faiss64_location.display()
     );
     println!(
         "cargo:rustc-link-search=native={}",
