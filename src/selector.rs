@@ -43,6 +43,22 @@ impl IdSelector {
         })
     }
 
+    pub fn bitmap(bitmap: &[u8]) -> Result<Self> {
+        let n = bitmap.len();
+        let mut p_sel = ptr::null_mut();
+        unsafe {
+            faiss_try(faiss_IDSelectorBitmap_new(
+                &mut p_sel, 
+                n, 
+                bitmap.as_ptr()
+            ))?;
+        }
+
+        Ok(IdSelector {
+            inner: p_sel as *mut _
+        })
+    }
+
     /// Return the inner pointer
     pub fn inner_ptr(&self) -> *mut FaissIDSelector {
         self.inner

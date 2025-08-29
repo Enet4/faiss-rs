@@ -9,7 +9,7 @@ if ! which bindgen > /dev/null; then
 fi
 
 repo_url=https://github.com/facebookresearch/faiss
-repo_rev=v1.10.0
+repo_rev=v1.12.0
 cuda_root=/usr/local/cuda
 
 if [ ! -d faiss ]; then
