@@ -1054,4 +1054,21 @@ mod tests {
 
         assert_eq!(output, vec![7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1.]);
     }
+
+    #[test]
+    fn flat_index_binary_reconstruct() {
+        let mut index = index_binary_factory(16, "BFlat").unwrap();
+        let some_data = &[255u8, 0, 1, 16];
+
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 2);
+
+        let mut output = vec![0; 2];
+        index.reconstruct(Idx(0), &mut output).unwrap();
+        assert_eq!(output, vec![255u8, 0]);
+
+        let mut output = vec![0; 4];
+        index.reconstruct_n(Idx(0), 2, &mut output).unwrap();
+        assert_eq!(output, vec![255u8, 0, 1, 16]);
+    }
 }

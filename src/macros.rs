@@ -395,8 +395,8 @@ macro_rules! impl_native_index_binary {
                 output: &mut [u8]
             ) -> Result<()> {
                 unsafe {
-                    let d = self.d() as usize;
-                    if d != output.len() {
+                    let size = (self.d() as usize) / 8;
+                    if size != output.len() {
                         return Err(crate::error::Error::BadDimension);
                     }
                     
@@ -417,8 +417,8 @@ macro_rules! impl_native_index_binary {
                 output: &mut [u8]
             ) -> Result<()> {
                 unsafe {
-                    let d = self.d() as usize;
-                    if count * d != output.len() {
+                    let size = (self.d() as usize) / 8;
+                    if count * size != output.len() {
                         return Err(crate::error::Error::BadDimension);
                     }
                     
