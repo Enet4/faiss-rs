@@ -389,6 +389,50 @@ macro_rules! impl_native_index_binary {
                 }
             }
 
+            fn reconstruct(
+                &self,
+                idx: Idx,
+                output: &mut [u8]
+            ) -> Result<()> {
+                unsafe {
+                    let d = self.d() as usize;
+                    if d != output.len() {
+                        return Err(crate::error::Error::BadDimension);
+                    }
+                    
+                    faiss_try(faiss_IndexBinary_reconstruct(
+                        self.inner_ptr(),
+                        idx.0,
+                        output.as_mut_ptr()
+                    ))?;
+
+                    Ok(())
+                }
+            }
+
+            fn reconstruct_n(
+                &self, 
+                first_key: Idx, 
+                count: usize, 
+                output: &mut [u8]
+            ) -> Result<()> {
+                unsafe {
+                    let d = self.d() as usize;
+                    if count * d != output.len() {
+                        return Err(crate::error::Error::BadDimension);
+                    }
+                    
+                    faiss_try(faiss_IndexBinary_reconstruct_n(
+                        self.inner_ptr(),
+                        first_key.0,
+                        count as i64,
+                        output.as_mut_ptr()
+                    ))?;
+
+                    Ok(())
+                }
+            }
+
             fn reset(&mut self) -> Result<()> {
                 unsafe {
                     faiss_try(faiss_IndexBinary_reset(self.inner_ptr()))?;

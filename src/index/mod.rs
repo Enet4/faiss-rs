@@ -177,12 +177,12 @@ pub trait Index<Data = f32, Radius = f32> {
     /// Reconstruct a single stored vector (or an approximation if lossy coding)
     ///
     /// This function may not be defined for some indexes.
-    fn reconstruct(&self, key: Idx, output: &mut [f32]) -> Result<()>;
+    fn reconstruct(&self, key: Idx, output: &mut [Data]) -> Result<()>;
 
     /// Reconstruct vectors `i0` to `i0 + ni - 1`.
     ///
     /// This function may not be defined for some indexes.
-    fn reconstruct_n(&self, first_key: Idx, count: usize, output: &mut [f32]) -> Result<()>;
+    fn reconstruct_n(&self, first_key: Idx, count: usize, output: &mut [Data]) -> Result<()>;
 
     /// Clear the entire index.
     fn reset(&mut self) -> Result<()>;
@@ -241,11 +241,11 @@ where
         (**self).range_search(q, radius)
     }
 
-    fn reconstruct(&self, key: Idx, output: &mut [f32]) -> Result<()> {
+    fn reconstruct(&self, key: Idx, output: &mut [Data]) -> Result<()> {
         (**self).reconstruct(key, output)
     }
 
-    fn reconstruct_n(&self, first_key: Idx, count: usize, output: &mut [f32]) -> Result<()> {
+    fn reconstruct_n(&self, first_key: Idx, count: usize, output: &mut [Data]) -> Result<()> {
         (**self).reconstruct_n(first_key, count, output)
     }
 
@@ -1032,5 +1032,26 @@ mod tests {
         let (distances, labels) = result.distance_and_labels();
         assert!(labels == &[Idx(1), Idx(2)] || labels == &[Idx(2), Idx(1)]);
         assert!(distances.iter().all(|x| *x > 0.));
+    }
+
+    #[test]
+    fn flat_index_reconstruct() {
+        let mut index = index_factory(8, "Flat", MetricType::L2).unwrap();
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
+        ];
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        let mut output = vec![0.; 8];
+        index.reconstruct(Idx(0), &mut output).unwrap();
+        assert_eq!(output, vec![7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5]);
+
+        let mut output = vec![0.; 16];
+        index.reconstruct_n(Idx(0), 2, &mut output).unwrap();
+
+        assert_eq!(output, vec![7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1.]);
     }
 }
