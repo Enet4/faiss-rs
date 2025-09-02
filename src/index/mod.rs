@@ -561,6 +561,7 @@ impl Drop for RangeSearchResult {
     }
 }
 
+/// Native implementation of a Faiss Index running on the CPU.
 #[derive(Debug)]
 pub struct IndexBinaryImpl {
     pub(crate) inner: *mut FaissIndexBinary,
