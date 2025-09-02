@@ -3,8 +3,8 @@
 use crate::error::{Error, Result};
 use crate::faiss_try;
 use crate::index::{
-    CpuIndex, CpuIndexBinary, FromInnerPtr, FromInnerPtrBinary, IndexBinaryImpl, IndexImpl,
-    NativeIndex, NativeIndexBinary,
+    CpuIndex, FromInnerPtr, BinaryIndexImpl, IndexImpl,
+    NativeIndex,
 };
 use faiss_sys::*;
 use std::ffi::CString;
@@ -42,8 +42,8 @@ where
 /// it cannot be converted to a C string), or if the internal index writing operation fails.
 pub fn write_index_binary<I, P>(index: &I, file_name: P) -> Result<()>
 where
-    I: NativeIndexBinary,
-    I: CpuIndexBinary,
+    I: NativeIndex<u8, i32, FaissIndexBinary>,
+    I: CpuIndex<u8, i32>,
     P: AsRef<str>,
 {
     unsafe {
@@ -87,7 +87,7 @@ where
 ///
 /// This function returns an error if the description contains any byte with the value `\0` (since
 /// it cannot be converted to a C string), or if the internal index reading operation fails.
-pub fn read_index_binary<P>(file_name: P) -> Result<IndexBinaryImpl>
+pub fn read_index_binary<P>(file_name: P) -> Result<BinaryIndexImpl>
 where
     P: AsRef<str>,
 {
@@ -100,7 +100,7 @@ where
             IoFlags::MEM_RESIDENT.into(),
             &mut inner,
         ))?;
-        Ok(IndexBinaryImpl::from_inner_ptr(inner))
+        Ok(BinaryIndexImpl::from_inner_ptr(inner))
     }
 }
 
@@ -137,7 +137,7 @@ where
 ///
 /// This function returns an error if the description contains any byte with the value `\0` (since
 /// it cannot be converted to a C string), or if the internal index reading operation fails.
-pub fn read_index_binary_with_flags<P>(file_name: P, io_flags: IoFlags) -> Result<IndexBinaryImpl>
+pub fn read_index_binary_with_flags<P>(file_name: P, io_flags: IoFlags) -> Result<BinaryIndexImpl>
 where
     P: AsRef<str>,
 {
@@ -150,7 +150,7 @@ where
             io_flags.0 as c_int,
             &mut inner,
         ))?;
-        Ok(IndexBinaryImpl::from_inner_ptr(inner))
+        Ok(BinaryIndexImpl::from_inner_ptr(inner))
     }
 }
 
