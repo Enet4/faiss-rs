@@ -229,7 +229,7 @@ impl Clustering {
      */
     pub fn train<I>(&mut self, x: &[f32], index: &mut I) -> Result<()>
     where
-        I: ?Sized + NativeIndex,
+        I: ?Sized + NativeIndex<Inner = FaissIndex>,
     {
         unsafe {
             let n = x.len() / self.d() as usize;

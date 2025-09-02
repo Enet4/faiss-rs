@@ -267,14 +267,19 @@ where
 }
 
 /// Sub-trait for native implementations of a Faiss index.
-pub trait NativeIndex<Data = f32, Radius = f32, I = FaissIndex>: Index<Data, Radius> {
+/// Anything that implements NativeIndex should provide which native
+/// index (i.e. one of [`FaissIndex`] or [`FaissIndexBinary`]) can be it 
+/// represented as.
+pub trait NativeIndex<Data = f32, Radius = f32>: Index<Data, Radius> {
+    /// The underlying native Faiss index.
+    type Inner;
     /// Retrieve a pointer to the native index object.
-    // fn inner_ptr(&self) -> *mut FaissIndex;
-    fn inner_ptr(&self) -> *mut I;
+    fn inner_ptr(&self) -> *mut Self::Inner;
 }
 
-impl<Data, Radius, I, NI: NativeIndex<Data, Radius, I>> NativeIndex<Data, Radius, I> for Box<NI> {
-    fn inner_ptr(&self) -> *mut I {
+impl<Data, Radius, NI: NativeIndex<Data, Radius>> NativeIndex<Data, Radius> for Box<NI> {
+    type Inner = NI::Inner;
+    fn inner_ptr(&self) -> *mut Self::Inner {
         (**self).inner_ptr()
     }
 }
@@ -320,7 +325,7 @@ impl<Data, Radius, CI: CpuIndex<Data, Radius>> CpuIndex<Data, Radius> for Box<CI
 
 /// Trait for Faiss index types which can be built from a pointer
 /// to a native implementation.
-pub trait FromInnerPtr<Data = f32, Radius = f32, I = FaissIndex>: NativeIndex<Data, Radius, I> {
+pub trait FromInnerPtr<Data = f32, Radius = f32>: NativeIndex<Data, Radius> {
     /// Create an index using the given pointer to a native object.
     ///
     /// # Safety
@@ -331,12 +336,12 @@ pub trait FromInnerPtr<Data = f32, Radius = f32, I = FaissIndex>: NativeIndex<Da
     /// class hierarchy. For example, creating an `IndexImpl` out of a pointer
     /// to `FaissIndexFlatL2` is valid, but creating a `FlatIndex` out of a
     /// plain `FaissIndex` can cause undefined behavior.
-    unsafe fn from_inner_ptr(inner_ptr: *mut I) -> Self;
+    unsafe fn from_inner_ptr(inner_ptr: *mut Self::Inner) -> Self;
 }
 
 /// Trait for Faiss index types which can be built from a pointer
 /// to a native implementation.
-pub trait TryFromInnerPtr<Data = f32, Radius = f32, I = FaissIndex>: NativeIndex<Data, Radius, I> {
+pub trait TryFromInnerPtr<Data = f32, Radius = f32>: NativeIndex<Data, Radius> {
     /// Create an index using the given pointer to a native object,
     /// checking that the index behind the given pointer
     /// is compatible with the target index type.
@@ -349,7 +354,7 @@ pub trait TryFromInnerPtr<Data = f32, Radius = f32, I = FaissIndex>: NativeIndex
     /// This function is unable to check that
     /// `inner_ptr` points to a valid, non-freed CPU index.
     /// Moreover, `inner_ptr` must not be shared across multiple instances.
-    unsafe fn try_from_inner_ptr(inner_ptr: *mut I) -> Result<Self>
+    unsafe fn try_from_inner_ptr(inner_ptr: *mut Self::Inner) -> Result<Self>
     where
         Self: Sized;
 }
@@ -369,7 +374,7 @@ pub trait TryClone {
 
 pub fn try_clone_from_inner_ptr<T>(val: &T) -> Result<T>
 where
-    T: FromInnerPtr<f32, f32, FaissIndex>,
+    T: FromInnerPtr<f32, f32, Inner = FaissIndex>,
 {
     unsafe {
         let mut new_index_ptr = ::std::ptr::null_mut();
@@ -378,19 +383,15 @@ where
     }
 }
 
-pub fn try_clone_from_inner_ptr_binary<T>(val: &T) -> Result<T>
+
+pub fn try_clone_binary_from_inner_ptr<T>(val: &T) -> Result<T>
 where
-    T: FromInnerPtr<u8, i32, FaissIndexBinary>,
+    T: FromInnerPtr<u8, i32, Inner = FaissIndexBinary>,
 {
     unsafe {
         let mut new_index_ptr = ::std::ptr::null_mut();
-        faiss_try(faiss_clone_index_binary(
-            val.inner_ptr(),
-            &mut new_index_ptr,
-        ))?;
-        Ok(crate::index::FromInnerPtrBinary::from_inner_ptr(
-            new_index_ptr,
-        ))
+        faiss_try(faiss_clone_index_binary(val.inner_ptr(), &mut new_index_ptr))?;
+        Ok(crate::index::FromInnerPtr::from_inner_ptr(new_index_ptr))
     }
 }
 
@@ -497,6 +498,8 @@ pub struct BinaryIndexImpl {
 unsafe impl Send for BinaryIndexImpl {}
 unsafe impl Sync for BinaryIndexImpl {}
 
+impl CpuIndex<u8, i32> for BinaryIndexImpl {}
+
 impl Drop for BinaryIndexImpl {
     fn drop(&mut self) {
         unsafe {
@@ -510,19 +513,20 @@ impl BinaryIndexImpl {
     }
 }
 
-impl NativeIndex<u8, i32, FaissIndexBinary> for BinaryIndexImpl {
+impl NativeIndex<u8, i32> for BinaryIndexImpl {
+    type Inner = FaissIndexBinary;
     fn inner_ptr(&self) -> *mut FaissIndexBinary {
         self.inner
     }
 }
 
-impl FromInnerPtr<u8, i32, FaissIndexBinary> for BinaryIndexImpl {
+impl FromInnerPtr<u8, i32> for BinaryIndexImpl {
     unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndexBinary) -> Self {
         BinaryIndexImpl { inner: inner_ptr }
     }
 }
 
-impl TryFromInnerPtr<u8, i32, FaissIndexBinary> for BinaryIndexImpl {
+impl TryFromInnerPtr<u8, i32> for BinaryIndexImpl {
     unsafe fn try_from_inner_ptr(inner_ptr: *mut FaissIndexBinary) -> Result<Self>
         where
             Self: Sized {
@@ -561,7 +565,8 @@ impl IndexImpl {
 }
 
 impl NativeIndex for IndexImpl {
-    fn inner_ptr(&self) -> *mut FaissIndex {
+    type Inner = FaissIndex;
+    fn inner_ptr(&self) -> *mut Self::Inner {
         self.inner
     }
 }
@@ -601,14 +606,14 @@ impl TryFromInnerPtr for IndexImpl {
 /// ];
 /// ```
 ///
-pub trait UpcastIndex<Data = f32, Radius = f32, I = FaissIndex>: NativeIndex<Data, Radius, I> 
+pub trait UpcastIndex<Data = f32, Radius = f32>: NativeIndex<Data, Radius> 
 {
     /// The output type that can be converted into the base `IndexImpl`(`BinaryIndexImpl`) types.
-    type Output: FromInnerPtr<Data, Radius, I>;
+    type Output: FromInnerPtr<Data, Radius, Inner = Self::Inner>;
     fn upcast(self) -> Self::Output;
 }
 
-impl<NI: NativeIndex<f32, f32, FaissIndex>> UpcastIndex<f32, f32, FaissIndex> for NI {
+impl<NI: NativeIndex<f32, f32, Inner = FaissIndex>> UpcastIndex<f32, f32> for NI {
     type Output = IndexImpl;
     fn upcast(self) -> Self::Output {
         let inner_ptr = self.inner_ptr();
@@ -618,7 +623,7 @@ impl<NI: NativeIndex<f32, f32, FaissIndex>> UpcastIndex<f32, f32, FaissIndex> fo
     }
 }
 
-impl<NI: NativeIndex<u8, i32, FaissIndexBinary>> UpcastIndex<u8, i32, FaissIndexBinary> for NI {
+impl<NI: NativeIndex<u8, i32, Inner = FaissIndexBinary>> UpcastIndex<u8, i32> for NI {
     type Output = BinaryIndexImpl;
     fn upcast(self) -> Self::Output {
         let inner_ptr = self.inner_ptr();
@@ -645,7 +650,7 @@ impl TryClone for BinaryIndexImpl {
     where
         Self: Sized,
     {
-        try_clone_from_inner_ptr_binary(self)
+        try_clone_binary_from_inner_ptr(self)
     }
 }
 
@@ -700,7 +705,7 @@ where
             (d & 0x7FFF_FFFF) as i32,
             description.as_ptr(),
         ))?;
-        Ok(IndexBinaryImpl { inner: index_ptr })
+        Ok(BinaryIndexImpl { inner: index_ptr })
     }
 }
 

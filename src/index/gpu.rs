@@ -73,7 +73,7 @@ where
     /// [`into_gpu`]: ../struct.IndexImpl.html#method.into_gpu
     pub(crate) fn from_cpu<G>(index: &I, gpu_res: &G, device: i32) -> Result<Self>
     where
-        I: NativeIndex,
+        I: NativeIndex<Inner = FaissIndex>,
         I: CpuIndex,
         G: GpuResourcesProvider,
     {
@@ -104,7 +104,7 @@ where
     /// [`into_gpu`]: ../struct.IndexImpl.html#method.into_gpu
     pub(crate) fn from_cpu_multiple<G>(index: &I, gpu_res: &[G], devices: &[i32]) -> Result<Self>
     where
-        I: NativeIndex,
+        I: NativeIndex<Inner = FaissIndex>,
         I: CpuIndex,
         G: GpuResourcesProvider,
     {
@@ -399,6 +399,7 @@ impl<'g, I> NativeIndex for GpuIndexImpl<'g, I>
 where
     I: NativeIndex,
 {
+    type Inner = FaissIndex;
     fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
     }

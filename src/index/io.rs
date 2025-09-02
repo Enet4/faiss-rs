@@ -21,7 +21,7 @@ pub use super::io_flags::IoFlags;
 /// it cannot be converted to a C string), or if the internal index writing operation fails.
 pub fn write_index<I, P>(index: &I, file_name: P) -> Result<()>
 where
-    I: NativeIndex,
+    I: NativeIndex<Inner = FaissIndex>,
     I: CpuIndex,
     P: AsRef<str>,
 {
@@ -42,7 +42,7 @@ where
 /// it cannot be converted to a C string), or if the internal index writing operation fails.
 pub fn write_index_binary<I, P>(index: &I, file_name: P) -> Result<()>
 where
-    I: NativeIndex<u8, i32, FaissIndexBinary>,
+    I: NativeIndex<u8, i32, Inner = FaissIndexBinary>,
     I: CpuIndex<u8, i32>,
     P: AsRef<str>,
 {

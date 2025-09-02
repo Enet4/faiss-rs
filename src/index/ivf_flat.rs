@@ -123,6 +123,7 @@ impl TrainType {
 }
 
 impl NativeIndex for IVFFlatIndexImpl {
+    type Inner = FaissIndex;
     fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
     }
