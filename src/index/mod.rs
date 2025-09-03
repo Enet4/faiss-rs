@@ -267,6 +267,7 @@ where
 }
 
 /// Sub-trait for native implementations of a Faiss index.
+///
 /// Anything that implements NativeIndex should provide which native
 /// index (i.e. one of [`FaissIndex`] or [`FaissIndexBinary`]) can be it 
 /// represented as.
