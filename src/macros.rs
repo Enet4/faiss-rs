@@ -469,9 +469,9 @@ macro_rules! impl_native_index_binary {
 /// A macro which provides a concurrent index implementation to the given type.
 macro_rules! impl_concurrent_index_binary {
     ($t:ty) => {
-        impl crate::index::ConcurrentIndexBinary for $t
+        impl crate::index::ConcurrentIndex<u8, i32> for $t
         where
-            Self: crate::index::Index<u8, i32> + crate::index::NativeIndexBinary,
+            Self: crate::index::Index<u8, i32> + crate::index::NativeIndex<u8, i32>,
         {
             fn assign(&self, query: &[u8], k: usize) -> Result<AssignSearchResult> {
                 unsafe {

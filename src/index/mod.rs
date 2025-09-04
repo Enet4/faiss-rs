@@ -298,7 +298,7 @@ pub trait ConcurrentIndex<Data = f32, Radius = f32>: Index<Data, Radius> {
     fn assign(&self, q: &[Data], k: usize) -> Result<AssignSearchResult>;
 
     /// Perform a search for the `k` closest vectors to the given query vectors.
-    fn search(&self, q: &[Data], k: usize) -> Result<SearchResult<Data>>;
+    fn search(&self, q: &[Data], k: usize) -> Result<SearchResult<Radius>>;
 
     /// Perform a ranged search for the vectors closest to the given query vectors
     /// by the given radius.
@@ -310,7 +310,7 @@ impl<Data, Radius, CI: ConcurrentIndex<Data, Radius>> ConcurrentIndex<Data, Radi
         (**self).assign(q, k)
     }
 
-    fn search(&self, q: &[Data], k: usize) -> Result<SearchResult<Data>> {
+    fn search(&self, q: &[Data], k: usize) -> Result<SearchResult<Radius>> {
         (**self).search(q, k)
     }
 
