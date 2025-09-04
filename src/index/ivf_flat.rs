@@ -170,10 +170,10 @@ mod binary {
     use super::*;
     use crate::index::BinaryIndexImpl;
 
-    /// Alias for the native implementation of a flat index.
+    /// Alias for the native implementation of a binary IVF index.
     pub type BinaryIVFIndex = BinaryIVFIndexImpl;
 
-    /// Native implementation of a flat index.
+    /// Native implementation of a binary IVF index.
     #[derive(Debug)]
     pub struct BinaryIVFIndexImpl {
         inner: *mut FaissIndexBinaryIVF,
@@ -284,8 +284,9 @@ mod tests {
 
     use super::IVFFlatIndexImpl;
     use crate::index::flat::FlatIndexImpl;
+    use crate::index::ivf_flat::BinaryIVFIndexImpl;
     use crate::index::{index_factory, ConcurrentIndex, Idx, Index, UpcastIndex};
-    use crate::MetricType;
+    use crate::{index_binary_factory, MetricType};
 
     const D: u32 = 8;
 
@@ -414,5 +415,33 @@ mod tests {
 
         let index_impl = index.upcast();
         assert_eq!(index_impl.d(), D);
+    }
+
+    #[test]
+    fn binary_ivf_index_from_cast() {
+        let mut index = index_binary_factory(16, "BIVF2").unwrap();
+        let some_data = &[
+            255u8,127,
+            1,1,
+            2,2,
+            10,10
+        ];
+        index.train(some_data).unwrap();
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 4);
+
+        let mut index: BinaryIVFIndexImpl = index.into_binary_ivf().unwrap();
+        assert_eq!(index.is_trained(), true);
+        assert_eq!(index.ntotal(), 4);
+        index.set_nprobe(3);
+        assert_eq!(index.nprobe(), 3);
+        index.set_max_codes(1);
+        assert_eq!(index.max_codes(), 1);
+
+        let hits = index.search(&[1, 1], 1).unwrap();
+        assert_eq!(hits.distances.len(), 1);
+        assert_eq!(hits.distances[0], 0);
+        assert_eq!(hits.labels.len(), 1);
+        assert_eq!(hits.labels[0].get().unwrap(), 1);
     }
 }
