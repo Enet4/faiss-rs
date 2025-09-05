@@ -3,26 +3,36 @@
 //!
 //! # Preparing
 //!
-//! This crate requires Faiss and the C API to be built beforehand by the
-//! developer. Please follow the instructions
-//! [here](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md),
-//! and build the dynamic library with the C API (instructions
-//! [here](https://github.com/facebookresearch/faiss/blob/master/c_api/INSTALL.md))
+//! This crate has two modes of linking.
+//!
+//! #### Dynamic linking
+//!
+//! By default, Faiss is dynamically linked,
+//! so it requires Faiss and the C API
+//! to be built beforehand by the developer.
+//! Please follow the instructions
+//! [here](https://github.com/facebookresearch/faiss/blob/main/INSTALL.md),
+//! and build the dynamic library with the C API (additional instructions
+//! [here](https://github.com/facebookresearch/faiss/blob/main/c_api/INSTALL.md))
 //!
 //! This will result in the dynamic library `faiss_c` ("libfaiss_c.so" in Linux),
 //! which needs to be installed in a place where your system will pick up. In
 //! Linux, try somewhere in the `LD_LIBRARY_PATH` environment variable, such as
 //! "/usr/lib", or try adding a new path to this variable.
 //!
+//! #### Static linking
+//! 
+//! Alternatively to the above, enable the `static` Cargo feature
+//! to let Rust build Faiss for you.
+//! You will still need the dependencies required to build and run Faiss
+//! as described in their [INSTALL.md](https://github.com/facebookresearch/faiss/blob/main/INSTALL.md#building-from-source),
+//! namely a compatible C++ compiler and a BLAS implementation.
+//!
 //! ## GPU support
 //!
-//! In order to have GPU support, the `gpufaiss_c` library from the main project
-//! needs to be built instead. Then, enable the `gpu` Cargo feature for this crate.
-//!
-//! ```toml
-//! [dependencies]
-//! "faiss" = {version = "0.12.0", features = ["gpu"]}
-//! ```
+//! Enable the cargo feature `gpu` for GPU support.
+//! If you are using dynamic linking,
+//! the Faiss library needs to be built with GPU capabilities.
 //!
 //! # Examples
 //!
@@ -82,7 +92,6 @@
 //! the [Faiss wiki](https://github.com/facebookresearch/faiss/wiki)
 //! for additional guidance.
 //!
-#![doc(html_root_url = "https://docs.rs/faiss/0.12.0")]
 
 #[macro_use]
 mod macros;

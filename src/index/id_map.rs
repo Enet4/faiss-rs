@@ -139,7 +139,7 @@ where
     /// While this method is safe, note that the returned index pointer is
     /// already owned by this ID map. Therefore, it is undefined behavior to
     /// create a high-level index value from this pointer without first
-    /// decoupling this ownership. See [`into_inner`] for a safe alternative.
+    /// decoupling this ownership. See [`into_inner`](Self::into_inner) for a safe alternative.
     pub fn index_inner_ptr(&self) -> *mut FaissIndex {
         self.index_inner
     }

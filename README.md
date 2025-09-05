@@ -14,8 +14,7 @@ By default, this crate is dynamically linked with the Faiss library installed in
 so it does not build Faiss automatically for you.
 To build the library yourself:
 
-  1. Follow the instructions [here](https://github.com/Enet4/faiss/tree/c_api_head/INSTALL.md#step-1-invoking-cmake)
-     to build Faiss using CMake,
+  1. Follow the [instructions to build Faiss using CMake](https://github.com/Enet4/faiss/tree/c_api_head/INSTALL.md#step-1-invoking-cmake),
      enabling the variables `FAISS_ENABLE_C_API` and `BUILD_SHARED_LIBS`.
      The crate is currently only compatible with version v1.7.2.
      Consider building Faiss from [this fork, `c_api_head` branch](https://github.com/Enet4/faiss/tree/c_api_head),
@@ -39,14 +38,14 @@ To build the library yourself:
 
      ```toml
      [dependencies]
-     "faiss" = "0.11.0"
+     "faiss" = "0.13.0"
      ```
 
 If you have built Faiss with GPU support, you can include the "gpu" Cargo feature:
 
 ```toml
 [dependencies]
-"faiss" = { version = "0.11.0", features = ["gpu"] }
+"faiss" = { version = "0.13.0", features = ["gpu"] }
 ```
 
 ## Installing with static linking
@@ -58,14 +57,14 @@ namely a compatible C++ compiler and a BLAS implementation.
 
 ```toml
 [dependencies]
-"faiss" = { version = "0.11.0", features = ["static"] }
+"faiss" = { version = "0.13.0", features = ["static"] }
 ```
 
 Compiling Faiss with GPU support is also possible.
 
 ```toml
 [dependencies]
-"faiss" = { version = "0.11.0", features = ["static", "gpu"] }
+"faiss" = { version = "0.13.0", features = ["static", "gpu"] }
 ```
 
 ## Using
