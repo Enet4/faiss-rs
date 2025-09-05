@@ -31,7 +31,7 @@ impl<I> Drop for PreTransformIndexImpl<I> {
 
 impl<I> PreTransformIndexImpl<I>
 where
-    I: NativeIndex,
+    I: NativeIndex<Inner = FaissIndex>,
 {
     pub fn new<LT: NativeVectorTransform>(lt: LT, sub_index: I) -> Result<Self> {
         let index = PreTransformIndexImpl::new_helper(&lt, &sub_index, true)?;
@@ -91,6 +91,7 @@ impl IndexImpl {
 }
 
 impl<I> NativeIndex for PreTransformIndexImpl<I> {
+    type Inner = FaissIndex;
     fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
     }

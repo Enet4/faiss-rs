@@ -86,6 +86,7 @@ unsafe impl<I: Sync> Sync for IdMap<I> {}
 impl<I: CpuIndex> CpuIndex for IdMap<I> {}
 
 impl<I> NativeIndex for IdMap<I> {
+    type Inner = FaissIndex;
     fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
     }
@@ -101,7 +102,7 @@ impl<I> Drop for IdMap<I> {
 
 impl<I> IdMap<I>
 where
-    I: NativeIndex,
+    I: NativeIndex<Inner = FaissIndex>,
 {
     /// Augment an index with arbitrary ID mapping.
     pub fn new(index: I) -> Result<Self> {
@@ -175,7 +176,7 @@ where
     /// Specialization of the index type inside `IdMap`.
     pub fn try_cast_inner_index<B>(self) -> Result<IdMap<B>>
     where
-        B: index::TryFromInnerPtr,
+        B: index::TryFromInnerPtr<Inner = FaissIndex>,
     {
         // safety: index_inner is expected to always point to a valid index
         let r = unsafe { B::try_from_inner_ptr(self.index_inner) };

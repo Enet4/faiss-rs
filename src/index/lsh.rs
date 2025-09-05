@@ -30,6 +30,7 @@ impl Drop for LshIndex {
 }
 
 impl NativeIndex for LshIndex {
+    type Inner = FaissIndex;
     fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
     }

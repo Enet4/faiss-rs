@@ -108,6 +108,7 @@ impl IndexImpl {
 }
 
 impl NativeIndex for FlatIndexImpl {
+    type Inner = FaissIndex;
     fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
     }

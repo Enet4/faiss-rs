@@ -21,7 +21,7 @@ impl ParameterSpace {
     /// Set one of the parameters
     pub fn set_index_parameter<I, V>(&self, index: &I, name: &str, value: V) -> Result<()>
     where
-        I: NativeIndex,
+        I: NativeIndex<Inner = FaissIndex>,
         V: Into<f64>,
     {
         unsafe {

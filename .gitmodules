@@ -1,4 +1,4 @@
 [submodule "faiss-sys/faiss"]
 	path = faiss-sys/faiss
 	url = https://github.com/Enet4/faiss.git
-	branch = c_api_head
+	branch = c_api/v1.12.0

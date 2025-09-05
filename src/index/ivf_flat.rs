@@ -123,6 +123,7 @@ impl TrainType {
 }
 
 impl NativeIndex for IVFFlatIndexImpl {
+    type Inner = FaissIndex;
     fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
     }
@@ -164,13 +165,128 @@ impl IndexImpl {
     }
 }
 
+
+mod binary {
+    use super::*;
+    use crate::index::BinaryIndexImpl;
+
+    /// Alias for the native implementation of a binary IVF index.
+    pub type BinaryIVFIndex = BinaryIVFIndexImpl;
+
+    /// Native implementation of a binary IVF index.
+    #[derive(Debug)]
+    pub struct BinaryIVFIndexImpl {
+        inner: *mut FaissIndexBinaryIVF,
+    }
+
+    unsafe impl Send for BinaryIVFIndexImpl {}
+    unsafe impl Sync for BinaryIVFIndexImpl {}
+
+    impl CpuIndex<u8, i32> for BinaryIVFIndexImpl {}
+
+    impl Drop for BinaryIVFIndexImpl {
+        fn drop(&mut self) {
+            unsafe {
+                faiss_IndexBinaryIVF_free(self.inner);
+            }
+        }
+    }
+
+    impl NativeIndex<u8, i32> for BinaryIVFIndexImpl {
+        type Inner = FaissIndexBinary;
+        fn inner_ptr(&self) -> *mut FaissIndexBinary {
+            self.inner
+        }
+    }
+
+    impl FromInnerPtr<u8, i32> for BinaryIVFIndexImpl {
+        unsafe fn from_inner_ptr(inner_ptr: *mut FaissIndexBinary) -> Self {
+            BinaryIVFIndexImpl {
+                inner: inner_ptr as *mut FaissIndexBinaryIVF,
+            }
+        }
+    }
+
+    impl BinaryIVFIndexImpl {
+
+        /// Get number of probes at query time
+        pub fn nprobe(&self) -> u32 {
+            unsafe { faiss_IndexBinaryIVF_nprobe(self.inner_ptr()) as u32 }
+        }
+
+        /// Set number of probes at query time
+        pub fn set_nprobe(&mut self, value: u32) {
+            unsafe {
+                faiss_IndexBinaryIVF_set_nprobe(self.inner_ptr(), value as usize);
+            }
+        }
+
+        /// Get number of possible key values
+        pub fn nlist(&self) -> u32 {
+            unsafe { faiss_IndexBinaryIVF_nlist(self.inner_ptr()) as u32 }
+        }
+
+        /// Get max number of codes to visit to do a query
+        pub fn max_codes(&self) -> u32 {
+            unsafe { faiss_IndexBinaryIVF_max_codes(self.inner_ptr()) as u32 }
+        }
+
+        /// Set max number of codes to visit to do a query
+        pub fn set_max_codes(&self, value: u32) {
+            unsafe {
+                faiss_IndexBinaryIVF_set_max_codes(self.inner_ptr(), value as usize);
+            }
+        }
+
+        /// Check the inverted lists' imbalance factor.
+        /// 
+        /// 1 = perfectly balanced, > 1: imbalanced
+        pub fn imbalance_factor(&self) -> f64 {
+            unsafe { faiss_IndexBinaryIVF_imbalance_factor(self.inner_ptr()) }
+        }
+    }
+
+    impl_native_index_binary!(BinaryIVFIndexImpl);
+
+    impl TryClone for BinaryIVFIndexImpl {
+        fn try_clone(&self) -> Result<Self>
+        where
+            Self: Sized,
+        {
+            try_clone_binary_from_inner_ptr(self)
+        }
+    }
+
+    impl_concurrent_index_binary!(BinaryIVFIndexImpl);
+
+    impl BinaryIndexImpl {
+        /// 
+        /// Attempt a dynamic cast of a binary index to the Binary IVF index type.
+        pub fn into_binary_ivf(self) -> Result<BinaryIVFIndexImpl> {
+            unsafe {
+                let new_inner = faiss_IndexBinaryIVF_cast(self.inner_ptr());
+                if new_inner.is_null() {
+                    Err(Error::BadCast)
+                } else {
+                    mem::forget(self);
+                    Ok(BinaryIVFIndexImpl { inner: new_inner })
+                }
+            }
+        }
+    }
+
+}
+pub use binary::*;
+
+
 #[cfg(test)]
 mod tests {
 
     use super::IVFFlatIndexImpl;
     use crate::index::flat::FlatIndexImpl;
+    use crate::index::ivf_flat::BinaryIVFIndexImpl;
     use crate::index::{index_factory, ConcurrentIndex, Idx, Index, UpcastIndex};
-    use crate::MetricType;
+    use crate::{index_binary_factory, MetricType};
 
     const D: u32 = 8;
 
@@ -299,5 +415,33 @@ mod tests {
 
         let index_impl = index.upcast();
         assert_eq!(index_impl.d(), D);
+    }
+
+    #[test]
+    fn binary_ivf_index_from_cast() {
+        let mut index = index_binary_factory(16, "BIVF2").unwrap();
+        let some_data = &[
+            255u8,127,
+            1,1,
+            2,2,
+            10,10
+        ];
+        index.train(some_data).unwrap();
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 4);
+
+        let mut index: BinaryIVFIndexImpl = index.into_binary_ivf().unwrap();
+        assert_eq!(index.is_trained(), true);
+        assert_eq!(index.ntotal(), 4);
+        index.set_nprobe(3);
+        assert_eq!(index.nprobe(), 3);
+        index.set_max_codes(1);
+        assert_eq!(index.max_codes(), 1);
+
+        let hits = index.search(&[1, 1], 1).unwrap();
+        assert_eq!(hits.distances.len(), 1);
+        assert_eq!(hits.distances[0], 0);
+        assert_eq!(hits.labels.len(), 1);
+        assert_eq!(hits.labels[0].get().unwrap(), 1);
     }
 }

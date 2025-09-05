@@ -28,14 +28,14 @@ impl<BI> Drop for RefineFlatIndexImpl<BI> {
     }
 }
 
-impl<BI: NativeIndex> RefineFlatIndexImpl<BI> {
+impl<BI: NativeIndex<Inner = FaissIndex>> RefineFlatIndexImpl<BI> {
     pub fn new(base_index: BI) -> Result<Self> {
         let index = RefineFlatIndexImpl::new_helper(&base_index, true)?;
         mem::forget(base_index);
         Ok(index)
     }
 
-    fn new_helper<I: NativeIndex>(base_index: &I, own_fields: bool) -> Result<Self> {
+    fn new_helper<I: NativeIndex<Inner = FaissIndex>>(base_index: &I, own_fields: bool) -> Result<Self> {
         unsafe {
             let mut inner = ptr::null_mut();
             faiss_try(faiss_IndexRefineFlat_new(
@@ -62,6 +62,7 @@ impl<BI: NativeIndex> RefineFlatIndexImpl<BI> {
 }
 
 impl<BI> NativeIndex for RefineFlatIndexImpl<BI> {
+    type Inner = FaissIndex;
     fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
     }

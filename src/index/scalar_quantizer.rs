@@ -86,6 +86,7 @@ impl ScalarQuantizerIndexImpl {
 }
 
 impl NativeIndex for ScalarQuantizerIndexImpl {
+    type Inner = FaissIndex;
     fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
     }
@@ -152,7 +153,7 @@ impl<Q> Drop for IVFScalarQuantizerIndexImpl<Q> {
 
 impl<Q> IVFScalarQuantizerIndexImpl<Q>
 where
-    Q: NativeIndex,
+    Q: NativeIndex<Inner = FaissIndex>,
 {
     /// Create a new IVF scalar quantizer index with metric.
     /// The index owns the quantizer.
@@ -260,6 +261,7 @@ where
 }
 
 impl<Q> NativeIndex for IVFScalarQuantizerIndexImpl<Q> {
+    type Inner = FaissIndex;
     fn inner_ptr(&self) -> *mut FaissIndex {
         self.inner
     }
