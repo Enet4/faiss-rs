@@ -13,6 +13,7 @@
 use crate::error::{Error, Result};
 use crate::faiss_try;
 use crate::metric::MetricType;
+use crate::search_params::SearchParameters;
 use crate::selector::IdSelector;
 use std::ffi::CString;
 use std::fmt::{self, Display, Formatter, Write};
@@ -654,6 +655,63 @@ impl TryClone for BinaryIndexImpl {
         try_clone_binary_from_inner_ptr(self)
     }
 }
+
+pub trait SearchWithParamsMut<Data, Radius> {
+    fn search_with_params(&mut self, query: &[Data], k: usize, params: &SearchParameters) -> Result<SearchResult<Radius>>;
+}
+
+impl<I> SearchWithParamsMut<f32, f32> for I
+where 
+    I: NativeIndex<f32, f32, Inner = FaissIndex>
+{
+    fn search_with_params(&mut self, query: &[f32], k: usize, params: &SearchParameters) -> Result<SearchResult<f32>> {
+        unsafe {
+            let nq = query.len() / (self.d() as usize);
+            let mut distances = vec![0.; k * nq];
+            let mut labels = vec![Idx::none(); k * nq];
+            faiss_try(faiss_Index_search_with_params(
+                self.inner_ptr(),
+                nq as idx_t,
+                query.as_ptr(),
+                k as idx_t,
+                params.inner_ptr() as *const _,
+                distances.as_mut_ptr(),
+                labels.as_mut_ptr() as *mut _,
+            ))?;
+            Ok(SearchResult { distances, labels })
+        }
+    }
+}
+
+
+pub trait SearchWithParams<Data, Radius> {
+    fn search_with_params(&self, query: &[Data], k: usize, params: &SearchParameters) -> Result<SearchResult<Radius>>;
+}
+
+impl<I> SearchWithParams<f32, f32> for I
+where 
+    I: NativeIndex<f32, f32, Inner = FaissIndex>,
+    I: ConcurrentIndex<f32, f32>,
+{
+    fn search_with_params(&self, query: &[f32], k: usize, params: &SearchParameters) -> Result<SearchResult<f32>> {
+        unsafe {
+            let nq = query.len() / (self.d() as usize);
+            let mut distances = vec![0.; k * nq];
+            let mut labels = vec![Idx::none(); k * nq];
+            faiss_try(faiss_Index_search_with_params(
+                self.inner_ptr(),
+                nq as idx_t,
+                query.as_ptr(),
+                k as idx_t,
+                params.inner_ptr() as *const _,
+                distances.as_mut_ptr(),
+                labels.as_mut_ptr() as *mut _,
+            ))?;
+            Ok(SearchResult { distances, labels })
+        }
+    }
+}
+
 
 /// Use the index factory to create a native instance of a Faiss index, for `d`-dimensional
 /// vectors. `description` should follow the exact guidelines as the native Faiss interface
