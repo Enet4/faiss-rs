@@ -22,7 +22,7 @@
 //!
 //! #### Static linking
 //! 
-//! Alternatively to the above, enable the `static` Cargo featur
+//! Alternatively to the above, enable the `static` Cargo feature
 //! to let Rust build Faiss for you.
 //! You will still need the dependencies required to build and run Faiss
 //! as described in their [INSTALL.md](https://github.com/facebookresearch/faiss/blob/main/INSTALL.md#building-from-source),
