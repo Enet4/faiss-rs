@@ -258,6 +258,19 @@ where
             faiss_IndexIVFScalarQuantizer_set_nprobe(self.inner_ptr(), value as usize);
         }
     }
+
+    /// Specialize the quantizer to a native concrete type.
+    pub fn assume_quantizer<B>(self) -> IVFScalarQuantizerIndex<B> 
+    where 
+        B: NativeIndex<Inner = FaissIndex>
+    {
+        let index = IVFScalarQuantizerIndexImpl {
+            inner: self.inner,
+            quantizer: PhantomData
+        };
+        mem::forget(self);
+        index
+    }
 }
 
 impl<Q> NativeIndex for IVFScalarQuantizerIndexImpl<Q> {
@@ -713,6 +726,10 @@ mod tests {
         assert_eq!(index.ntotal(), 5);
 
         let index = index.into_ivf_scalar_quantizer().unwrap();
+        assert_eq!(index.is_trained(), true);
+        assert_eq!(index.ntotal(), 5);
+
+        let index: IVFScalarQuantizerIndexImpl<ScalarQuantizerIndexImpl> = index.assume_quantizer();
         assert_eq!(index.is_trained(), true);
         assert_eq!(index.ntotal(), 5);
     }
