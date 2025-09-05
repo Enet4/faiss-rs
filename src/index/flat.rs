@@ -158,10 +158,11 @@ impl_concurrent_index!(FlatIndexImpl);
 mod tests {
     use super::FlatIndexImpl;
     use crate::index::{
-        index_factory, ConcurrentIndex, FromInnerPtr, Idx, Index, NativeIndex, TryClone,
-        UpcastIndex,
+        index_factory, ConcurrentIndex, FromInnerPtr, Idx, Index, NativeIndex, SearchWithParams, TryClone, UpcastIndex
     };
     use crate::metric::MetricType;
+    use crate::search_params::SearchParametersImpl;
+    use crate::selector::IdSelector;
 
     const D: u32 = 8;
 
@@ -367,5 +368,35 @@ mod tests {
             }
         };
         assert_eq!(index.ntotal(), 5);
+    }
+
+    #[test]
+    fn flat_index_search_with_params() {
+        let mut index = FlatIndexImpl::new(D, MetricType::L2).unwrap();
+        assert_eq!(index.d(), D);
+        assert_eq!(index.ntotal(), 0);
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 0., 0.,
+            0., 1., 1., 0., 0., -1., 100., 100., 100., 100., -100., 100., 100., 100., 120., 100.,
+            100., 105., -100., 100., 100., 105.,
+        ];
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        let selector = IdSelector::range(Idx::new(0), Idx::new(10)).unwrap();
+        let search_params = SearchParametersImpl::new(selector).unwrap();
+
+        let my_query = [0.; D as usize];
+        let result = index.search_with_params(&my_query, 5, &search_params).unwrap();
+        
+        assert_eq!(
+            result.labels,
+            vec![2, 1, 0, 3, 4]
+                .into_iter()
+                .map(Idx::new)
+                .collect::<Vec<_>>()
+        );
+        assert!(result.distances.iter().all(|x| *x > 0.));
+
     }
 }

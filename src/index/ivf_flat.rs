@@ -285,7 +285,9 @@ mod tests {
     use super::IVFFlatIndexImpl;
     use crate::index::flat::FlatIndexImpl;
     use crate::index::ivf_flat::BinaryIVFIndexImpl;
-    use crate::index::{index_factory, ConcurrentIndex, Idx, Index, UpcastIndex};
+    use crate::index::{index_factory, ConcurrentIndex, Idx, Index, SearchWithParams, UpcastIndex};
+    use crate::search_params::SearchParametersIVFImpl;
+    use crate::selector::IdSelector;
     use crate::{index_binary_factory, MetricType};
 
     const D: u32 = 8;
@@ -323,6 +325,53 @@ mod tests {
 
         index.reset().unwrap();
         assert_eq!(index.ntotal(), 0);
+    }
+
+    #[test]
+    fn index_search_with_params_ivf() {
+        let q = FlatIndexImpl::new_l2(D).unwrap();
+        let mut index = IVFFlatIndexImpl::new_l2(q, D, 1).unwrap();
+        assert_eq!(index.d(), D);
+        assert_eq!(index.ntotal(), 0);
+        let some_data = &[
+            7.5_f32, -7.5, 7.5, -7.5, 7.5, 7.5, 7.5, 7.5, -1., 1., 1., 1., 1., 1., 1., -1., 4.,
+            -4., -8., 1., 1., 2., 4., -1., 8., 8., 10., -10., -10., 10., -10., 10., 16., 16., 32.,
+            25., 20., 20., 40., 15.,
+        ];
+        index.train(some_data).unwrap();
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 5);
+
+        let my_query = [0.; D as usize];
+
+        // set the selector to mask out the entire dataset 
+        // so any search would result in an empty queryset even though there 
+        // exists other vectors in the dataset.
+        let selector = IdSelector::range(Idx::new(6), Idx::new(10)).unwrap();
+        let params = SearchParametersIVFImpl::new_with(selector, 10, 100).unwrap();
+        let hits = index.search_with_params(&my_query, 5, &params.upcast()).unwrap();
+        assert!(hits.labels.into_iter().all(Idx::is_none));
+
+        // now filter the search to include only vectors with id in [0, 2).
+        let selector = IdSelector::range(Idx::new(0), Idx::new(2)).unwrap();
+        let params = SearchParametersIVFImpl::new_with(selector, 10, 1000).unwrap();
+        // we're asking for 5 neighbors but 3 of them have been masked out
+        // so we expect to get only 2 hits (i.e. ids 0 and 1).
+        let hits = index.search_with_params(&my_query, 5, &params.upcast()).unwrap();
+
+        let mut observed_labels = 
+            hits.labels
+            .into_iter()
+            .filter_map(|v| v.get())
+            .collect::<Vec<_>>();
+
+        observed_labels.sort();
+
+        assert_eq!(
+            observed_labels,
+            vec![0, 1]
+        );
+
     }
 
     #[test]
@@ -443,5 +492,37 @@ mod tests {
         assert_eq!(hits.distances[0], 0);
         assert_eq!(hits.labels.len(), 1);
         assert_eq!(hits.labels[0].get().unwrap(), 1);
+    }
+
+    #[test]
+    fn binary_ivf_range_search() {
+        let mut index = index_binary_factory(16, "BIVF2").unwrap();
+        let some_data = &[
+            255u8,127,
+            1,1,
+            2,2,
+            10,10
+        ];
+        index.train(some_data).unwrap();
+        index.add(some_data).unwrap();
+        assert_eq!(index.ntotal(), 4);
+
+        let mut index: BinaryIVFIndexImpl = index.into_binary_ivf().unwrap();
+        assert_eq!(index.is_trained(), true);
+        assert_eq!(index.ntotal(), 4);
+        index.set_nprobe(3);
+        assert_eq!(index.nprobe(), 3);
+        index.set_max_codes(1);
+        assert_eq!(index.max_codes(), 1);
+
+        let hits = index.range_search(&[1, 1], 5).unwrap();
+
+        let (distances, labels) = hits.distance_and_labels();
+        assert_eq!(distances.len(), 2);
+
+        for (distance, label) in distances.iter().zip(labels) {
+            assert!(*distance < 5.);
+            assert!(label.is_some());
+        }
     }
 }
