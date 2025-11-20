@@ -15,9 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust:
-          - stable
-          - beta
+        rust: ["stable", "beta"]
+        simd_ext: ["avx2"]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,11 +27,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.faiss_c
-          key: libfaiss-${{ runner.os }}-${{ hashFiles('.git/modules/faiss-sys/faiss/HEAD') }}
+          key: libfaiss-${{ runner.os }}-${{ matrix.simd_ext }}-${{ hashFiles('.git/modules/faiss-sys/faiss/HEAD') }}
       - name: Install CMake
         uses: lukka/get-cmake@latest
       - name: Download and build Faiss
-        run: ./faiss-sys/ci/install_faiss_c.sh
+        run: ./faiss-sys/ci/install_faiss_c.sh ${{ matrix.simd_ext }}
       - name: Install Faiss
         run: sudo cp $HOME/.faiss_c/lib*.so /usr/lib/
       - uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -45,6 +44,14 @@ jobs:
       # Check that GPU modules compile
       - name: Check GPU feature
         run: cargo check --features=gpu
+      # Run benchmarks
+      - name: Run benchmarks
+        run: cargo bench --verbose
+      # Collect criterion reports.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: benchmarks-${{ runner.os }}-${{ matrix.rust }}-${{ matrix.simd_ext }}-${{ hashFiles('.git/modules/faiss-sys/faiss/HEAD') }}
+          path: target/criterion
 
   # test `faiss` crates with static linking
   build-static:
@@ -70,6 +77,14 @@ jobs:
       # Build everything and run tests
       - name: Run tests
         run: cargo test --verbose --features static
+      # Run benchmarks
+      - name: Run benchmarks
+        run: cargo bench --verbose --features static
+      # Collect criterion reports.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: benchmarks-${{ matrix.rust }}
+          path: target/criterion
 
   clippy:
     name: Clippy
