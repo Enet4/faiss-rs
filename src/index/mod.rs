@@ -411,7 +411,7 @@ pub struct SearchResult<Data = f32> {
 }
 
 /// The outcome of an index range search operation.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct RangeSearchResult {
     inner: *mut FaissRangeSearchResult,
 }
